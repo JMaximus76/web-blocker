@@ -9,7 +9,8 @@
         "48": "icons/icon-48.png"
     },
 
-    "background": [
-        "backgorund_scripts/block-checker.js"
-    ]
+    "background": {
+        "scripts": ["backgorund_scripts/block-checker.js"],
+        "persistent": false
+    }
 }
