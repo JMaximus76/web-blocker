@@ -1,8 +1,16 @@
-var id = 0;
+
+const blockList = browser.storage.local.get("blockList");
+blockList.catch((error) => console.log(error));
+
+console.log(blockList);
+
+
+
 
 browser.webNavigation.onBeforeNavigate.addListener((nav) => {
-    console.log("------------------------------ NEW onBeforeNavigte EVENT ------------------------------");
+    //console.log("------------------------------ NEW onBeforeNavigte EVENT ------------------------------");
     const url = new URL(nav.url);
+
 
     function isBlocked(item) {
         const list = item.blockList;
@@ -10,30 +18,25 @@ browser.webNavigation.onBeforeNavigate.addListener((nav) => {
 
         for(const key in list) {
 
+            const listURL = new URL(list[key].url);
 
-
-            console.debug(`mine: ${new URL(list[key].url).hostname}`);
-            console.debug(`theres: ${url.hostname}`);
+            //console.debug(`mine: ${listURL.hostname}`);
+            //console.debug(`theres: ${url.hostname}`);
             
 
-            if(new URL(list[key].url).hostname === url.hostname) {
-                console.log("THIS SITE IS BOCKED");
-                return { cancel: true };
+            if (listURL.hostname === url.hostname && nav.frameId === 0) {
+                console.log(`${nav.url}  --  THIS SITE IS BLOCKED`);
+                return true;
             }
         }
     }
 
-
-    const blockList = browser.storage.local.get("blockList")
+    const item = browser.storage.local.get("blockList")
         .then(isBlocked)
         .catch((error) => console.log(error));
     
-    
-    
-    
-    
-
-    
-
 
 });
+
+
+

@@ -12,8 +12,12 @@
     "permissions": [
         "storage",
         "webNavigation",
-        "<all_urls>"
+        "<all_urls>",
+        "tabs",
+        "webRequest"
     ],
+
+    
 
     "background": {
         "scripts": [
