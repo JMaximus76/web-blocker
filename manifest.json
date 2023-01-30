@@ -9,8 +9,17 @@
         "48": "icons/icon-48.png"
     },
 
+    "permissions": [
+        "storage",
+        "webNavigation",
+        "<all_urls>"
+    ],
+
     "background": {
-        "scripts": ["backgorund_scripts/block-checker.js"],
+        "scripts": [
+            "background_scripts/init.js",
+            "background_scripts/blocker.js"
+        ],
         "persistent": false
     }
 }
