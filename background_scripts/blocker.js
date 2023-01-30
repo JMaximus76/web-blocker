@@ -1,12 +1,3 @@
-
-const blockList = browser.storage.local.get("blockList");
-blockList.catch((error) => console.log(error));
-
-console.log(blockList);
-
-
-
-
 browser.webNavigation.onBeforeNavigate.addListener((nav) => {
     //console.log("------------------------------ NEW onBeforeNavigte EVENT ------------------------------");
     const url = new URL(nav.url);
