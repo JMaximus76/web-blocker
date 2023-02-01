@@ -14,11 +14,13 @@ browser.runtime.onInstalled.addListener(() => {
         }
     }
 
-    const settings = {
-        "goesBackAfterBlock": true
-    }
+    const goesBackAfterBlock = true;
 
 
+
+
+
+    
 
     function onStorage() {
         console.log(`item was put into storage.local`);
@@ -33,7 +35,7 @@ browser.runtime.onInstalled.addListener(() => {
     browser.storage.local.set({blockList})
         .then(onStorage, onError);
 
-    browser.storage.local.set({settings})
+    browser.storage.local.set({ "goesBackAfterBlock": goesBackAfterBlock })
         .then(onStorage, onError);
 
         

@@ -12,7 +12,7 @@
     "permissions": [
         "storage",
         "webNavigation",
-
+        "<all_urls>",
         "tabs",
         "notifications"
 
