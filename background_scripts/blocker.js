@@ -1,33 +1,97 @@
-browser.webNavigation.onBeforeNavigate.addListener((nav) => {
-    //console.log("------------------------------ NEW onBeforeNavigte EVENT ------------------------------");
-    const url = new URL(nav.url);
+function handelError(error) {console.error(error);}
 
 
-    function isBlocked(item) {
-        const list = item.blockList;
+browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
+    const url = new URL(navigate.url);
 
 
-        for(const key in list) {
+    function checkBlocking(item) {
+        const blockList = item.blockList;
 
-            const listURL = new URL(list[key].url);
+        for (const key in blockList) {
+            const listURL = new URL(blockList[key].url);
 
-            //console.debug(`mine: ${listURL.hostname}`);
-            //console.debug(`theres: ${url.hostname}`);
-            
+            return listURL.hostname === url.hostname && navigate.frameId === 0;
+        }
+    }  
 
-            if (listURL.hostname === url.hostname && nav.frameId === 0) {
-                console.log(`${nav.url}  --  THIS SITE IS BLOCKED`);
-                return true;
-            }
+  
+
+    function handleBlocking(canBlock) {
+        if (canBlock) {
+            console.log("-------------------- NEW BLOCKING EVENT --------------------");
+            const blockedPage = browser.runtime.getURL("blocked_page/blocked.html");
+            browser.tabs.update(navigate.tabId, { "url": blockedPage, "loadReplace": false }).catch(handelError);
         }
     }
 
-    const item = browser.storage.local.get("blockList")
-        .then(isBlocked)
-        .catch((error) => console.log(error));
-    
 
+
+    browser.storage.local.get("blockList")
+        .then(checkBlocking)
+        .then(handleBlocking)
+        .catch((error) => console.log(error));
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//saving this in case I need something from it
+//DOES NOT WORK CORRECTLY
+
+// function handleBlocking(canBlock) {
+//     if (canBlock) {
+//         console.log("-------------------- NEW BLOCKING EVENT --------------------");
+
+
+//         browser.tabs.get(navigate.tabId)
+//             .then((tab) => {
+
+
+//                 browser.storage.local.get("settings")
+//                     .then((item) => {
+//                         const blockedPage = browser.runtime.getURL("blocked_page/blocked.html");
+
+//                         if (item.settings.goesBackAfterBlock) {
+//                             if (tab.url === "about:blank" || tab.url === "about:newtab") {
+//                                 return browser.tabs.update(navigate.tabId, { "url": blockedPage, "loadReplace": true });
+//                             }
+//                             else {
+//                                 return browser.tabs.update(navigate.tabId, { "url": tab.url, "loadReplace": false });
+//                             }
+//                         }
+//                         else {
+//                             return browser.tabs.update(navigate.tabId, { "url": blockedPage, "loadReplace": true });
+//                         }
+
+
+//                     })
+//                     .catch((error) => console.error(error));
+//             })
+//             .then(() => console.log("successfully updated tab"))
+//             .catch((error) => console.error(error));
+//     }
+// }
+
+
+
+
+
+
+
+
+
 
 
 

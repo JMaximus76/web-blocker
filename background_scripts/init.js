@@ -5,21 +5,23 @@ browser.runtime.onInstalled.addListener(() => {
     const blockList = {
         "youtube": {
             "url": "https://www.youtube.com",
-            "blackList": true,
             "whiteList": false
         },
 
         "freecodecamp": {
             "url": "https://www.freecodecamp.org",
-            "blackList": false,
             "whiteList": true
         }
+    }
+
+    const settings = {
+        "goesBackAfterBlock": true
     }
 
 
 
     function onStorage() {
-        console.log("blockList was put into storage.local");
+        console.log(`item was put into storage.local`);
     }
 
     function onError(error) {
@@ -29,6 +31,9 @@ browser.runtime.onInstalled.addListener(() => {
     console.log("browser.runtime.onInstalled was called");
 
     browser.storage.local.set({blockList})
+        .then(onStorage, onError);
+
+    browser.storage.local.set({settings})
         .then(onStorage, onError);
 
         

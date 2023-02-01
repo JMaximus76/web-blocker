@@ -12,12 +12,15 @@
     "permissions": [
         "storage",
         "webNavigation",
-        "<all_urls>",
+
         "tabs",
-        "webRequest"
+        "notifications"
+
     ],
 
-    
+    "web_accessible_resources": [
+        "blocked_page/blocked.html"
+    ],
 
     "background": {
         "scripts": [
