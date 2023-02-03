@@ -13,10 +13,17 @@
         "storage",
         "webNavigation",
         "<all_urls>",
-        "tabs",
-        "notifications"
-
+        "tabs"
+   
     ],
+
+    "browser_action": {
+        "default_icon": {
+            "19": "icons/icon-19.png"
+        },
+        "default_title": "Web Block",
+        "default_popup": "/popup/popup.html"
+    },
 
     "web_accessible_resources": [
         "blocked_page/blocked.html"
@@ -24,8 +31,7 @@
 
     "background": {
         "scripts": [
-            "background_scripts/init.js",
-            "background_scripts/blocker.js"
+            "background_scripts/background.js"
         ],
         "persistent": false
     }
