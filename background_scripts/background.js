@@ -5,20 +5,24 @@ function handelError(error) {
     console.error(error);
 }
 
+function trimWWW(url) {
+    return url.replace("www.", "");
+}
+
 
 
 browser.runtime.onInstalled.addListener(() => {
 
     const settings = {
-        goesBackAfterBlock: true,
+        goesBackAfterBlock: false,
         blockingMode: "blockList"
     };
 
     const blockList = {
         type: "blockList",
         list: [
-            { url: "https://www.youtube.com" },
-            { url: "https://www.netflix.com" }
+            { url: "https://youtube.com" },
+            { url: "https://netflix.com" }
         ]
     };
 
@@ -26,9 +30,9 @@ browser.runtime.onInstalled.addListener(() => {
     const allowList = {
         type: "allowList",
         list: [
-            { url: "https://www.freecodecamp.org" },
-            { url: "https://www.learncpp.com" },
-            { url: "https://www.google.com" }
+            { url: "https://freecodecamp.org" },
+            { url: "https://learncpp.com" },
+            { url: "https://google.com" }
         ]
     };
 
@@ -51,9 +55,15 @@ browser.runtime.onInstalled.addListener(() => {
 
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
+    
+
+    navigate.url = trimWWW(navigate.url);
 
     if (navigate.url === blockedPageURL) return;
     if (navigate.url.includes("about:")) return;
+    if (navigate.frameId === 0)          return;
+
+    console.log(`navigating to ${navigate.url}`);
 
     function getList() {
         return browser.storage.local.get(settings.blockingMode);   
@@ -70,16 +80,20 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
             const listURL = new URL(i.url);
 
-            if (listURL.hostname === url.hostname && navigate.frameId === 0) {
+            if (listURL.hostname === url.hostname) {
+                console.log(`found match of hostnames ${listURL.hostname} and ${url.hostname}`);
+
                 return mode;
             } 
         }
+
+        console.log(`didn't find a match of hostnames for ${url.hostname} full url: ${url}`);
         return !mode;
     }  
 
     
     function blockPage() {
-        console.log(`trying to block an page of url ${navigate.url}`);
+        console.log(`------------------ BLOCKING a page with a url of ${navigate.url}`);
         return browser.tabs
             .query({ active: true, currentWindow: true })
             .then((tabs) => tabs[0].id !== navigate.tabId)
@@ -121,7 +135,6 @@ const filter = {
 
 browser.tabs.onUpdated.addListener((tabId) => {
 
-    console.log("tab was updated");
 
     function goBack(doesGoBack) {
         if(doesGoBack) {
