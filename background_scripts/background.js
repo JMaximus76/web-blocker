@@ -61,7 +61,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
     if (navigate.url === blockedPageURL) return;
     if (navigate.url.includes("about:")) return;
-    if (navigate.frameId === 0)          return;
+    if (navigate.frameId !== 0)          return;
 
     console.log(`navigating to ${navigate.url}`);
 
@@ -110,7 +110,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     browser.storage.local
         .get("settings")
         .then((item) => settings =  item.settings)
-        .then(getList)
+        .then(() => browser.storage.local.get(settings.blockingMode))
         .then(checkBlocking)
         .then((doBlocking) => { if(doBlocking) return blockPage() })
         .catch(handelError)
