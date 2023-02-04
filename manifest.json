@@ -1,5 +1,5 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "version": "0.3",
     "name": "Web Block",
 
@@ -12,12 +12,14 @@
     "permissions": [
         "storage",
         "webNavigation",
-        "<all_urls>",
         "tabs"
-   
     ],
 
-    "browser_action": {
+    "host_permissions": [
+        "<all_urls>"
+    ],
+
+    "action": {
         "default_icon": {
             "19": "icons/icon-19.png"
         },
@@ -25,14 +27,11 @@
         "default_popup": "/popup/popup.html"
     },
 
-    "web_accessible_resources": [
-        "blocked_page/blocked.html"
-    ],
+    
 
     "background": {
         "scripts": [
             "background_scripts/background.js"
-        ],
-        "persistent": false
+        ]
     }
 }

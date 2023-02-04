@@ -1,5 +1,5 @@
 
-const blockedPageURL = browser.runtime.getURL("/blocked_page/index.html");
+const blockedPageURL = browser.runtime.getURL("/blocked_page/blocked-page.html");
 
 function handelError(error) {
     console.error(error);
@@ -21,7 +21,7 @@ browser.runtime.onInstalled.addListener(() => {
         list: [
             { domain: "youtube.com" },
             { domain: "netflix.com" },
-            { domain: "commons.wikimedia.org" }
+            { url: "https://commons.wikimedia.org/wiki/Main_Page" }
         ]
     };
 
@@ -58,7 +58,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
     
 
-    if (navigate.url === blockedPageURL) return;
+    if (navigate.url.includes(blockedPageURL)) return;
     if (navigate.url.includes("about:")) return;
     if (navigate.frameId !== 0)          return;
 
@@ -76,7 +76,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
         for (const entry of item.list) {
 
 
-            if (navigate.url.includes(entry.domain ? entry.domain : entry.url)) {
+            if ((entry.domain ? navigate.url.includes(entry.domain) : navigate.url === entry.url)) {
                 console.log(`found match with ${entry.domain ? entry.domain : entry.url} on ${navigate.url}`);
 
                 return mode;
@@ -93,9 +93,8 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
         return browser.tabs
             .query({ active: true, currentWindow: true })
             .then((tabs) => tabs[0].id !== navigate.tabId)
-            .then((loadReplace) => {
-                browser.tabs.update(navigate.tabId, { url: blockedPageURL, loadReplace: loadReplace });
-            });
+            .then((loadReplace) => browser.tabs.update(navigate.tabId, { url: blockedPageURL+`?url=${navigate.url}`, loadReplace: loadReplace }));
+            
     }
 
    
