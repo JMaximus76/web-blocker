@@ -12,7 +12,7 @@ function buttonClickHandler(details) {
     if(details.target.id === "blockingMode") {
         settings.blockingMode = (settings.blockingMode === "blockList") ? "allowList" : "blockList";
 
-        document.getElementById("indecator").innerHTML = settings.blockingMode;
+        document.getElementById("indicator").innerHTML = settings.blockingMode;
 
         browser.storage.local
             .set({"settings": settings})
@@ -27,6 +27,6 @@ function buttonClickHandler(details) {
 browser.storage.local
     .get("settings")
     .then((item) => settings = item.settings)
-    .then(() => document.getElementById("indecator").innerHTML = settings.blockingMode)
+    .then(() => document.getElementById("indicator").innerHTML = settings.blockingMode)
     .then(() => document.addEventListener("click", buttonClickHandler))
     .catch(handelError);
