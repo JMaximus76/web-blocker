@@ -5,15 +5,37 @@ function handelError(error) {
     console.error(error);
 }
 
-
+function clipURL(url) {
+    return /^[^?#]*/.exec(url)[0];
+}
 
 
 
 browser.runtime.onInstalled.addListener(() => {
 
     const settings = {
+        active: true,
         goesBackAfterBlock: false,
-        blockingMode: "blockList"
+        blockingMode: "blockList",
+        useSchedule: false,
+
+        schedule: [
+            {
+                start: "0:0",
+                end: "11:59",
+                blockingMode: "blockList"
+            },
+            {
+                start: "12:0",
+                end: "19:59",
+                blockingMode: "allowList"
+            },
+            {
+                start: "20:0",
+                end: "23:59",
+                blockingMode: "blockList"
+            }
+        ]
     };
 
     const blockList = {
@@ -48,35 +70,43 @@ browser.runtime.onInstalled.addListener(() => {
 
 //  TO DO
 
-//  Correctly handel urls in the lists and checkBlocking function
-//  Add scheduals
+
+//  Add schedules
 
 
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     
-
     
-
+    //if (!active)                               return;
+    if (navigate.frameId !== 0)                return;
+    if (navigate.url.includes("about:"))       return;
     if (navigate.url.includes(blockedPageURL)) return;
-    if (navigate.url.includes("about:")) return;
-    if (navigate.frameId !== 0)          return;
-
+    
     console.log(`navigating to ${navigate.url}`);
 
-    function getList() {
-        return browser.storage.local.get(settings.blockingMode);   
+
+    function getBlockingMode() {
+        if(!useSchedule) return settings.blockingMode;
+
+
+
     }
+
 
     function checkBlocking(item) {
         item = item[settings.blockingMode];
-
+        const clipedURL = clipURL(navigate.url);
         const mode = item.type === "blockList";
+
+
+        console.table(item);
 
         for (const entry of item.list) {
 
-
-            if ((entry.domain ? navigate.url.includes(entry.domain) : navigate.url === entry.url)) {
+            //The turnary operator checks to see if entry.domain is defined, if it is, it checks the url with it,
+            //if not, then entry.url must be defined, so it checks with that. 
+            if ((entry.domain ? clipedURL.includes(entry.domain) : navigate.url === entry.url)) {
                 console.log(`found match with ${entry.domain ? entry.domain : entry.url} on ${navigate.url}`);
 
                 return mode;
@@ -104,10 +134,11 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     let settings;
     browser.storage.local
         .get("settings")
-        .then((item) => settings =  item.settings)
-        .then(() => browser.storage.local.get(settings.blockingMode))
+        .then((item) => settings = item.settings)
+        .then(getBlockingMode)
+        .then((blockingMode) => browser.storage.local.get(blockingMode))
         .then(checkBlocking)
-        .then((doBlocking) => { if(doBlocking) return blockPage() })
+        .then((doBlocking) => { if (doBlocking) return blockPage() })
         .catch(handelError)
 });
 
@@ -125,8 +156,6 @@ const filter = {
     urls: [blockedPageURL],
     properties: ["url"]
 };
-
-
 
 browser.tabs.onUpdated.addListener((tabId) => {
 

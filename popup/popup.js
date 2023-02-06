@@ -9,7 +9,7 @@ function handelError(error) { console.error(error); }
 
 
 function buttonClickHandler(details) {
-    if(details.target.id === "blockingMode") {
+    if (details.target.id === "blockingMode") {
         settings.blockingMode = (settings.blockingMode === "blockList") ? "allowList" : "blockList";
 
         document.getElementById("indicator").innerHTML = settings.blockingMode;
