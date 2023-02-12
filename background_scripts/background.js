@@ -14,28 +14,9 @@ function clipURL(url) {
 browser.runtime.onInstalled.addListener(() => {
 
     const settings = {
-        active: true,
-        goesBackAfterBlock: false,
+        isActive: true,
+        goesBackAfterBlock: true,
         blockingMode: "blockList",
-        useSchedule: false,
-
-        schedule: [
-            {
-                start: "0:0",
-                end: "11:59",
-                blockingMode: "blockList"
-            },
-            {
-                start: "12:0",
-                end: "19:59",
-                blockingMode: "allowList"
-            },
-            {
-                start: "20:0",
-                end: "23:59",
-                blockingMode: "blockList"
-            }
-        ]
     };
 
     const blockList = {
@@ -68,17 +49,13 @@ browser.runtime.onInstalled.addListener(() => {
 });
 
 
-//  TO DO
-
-
-//  Add schedules
 
 
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     
     
-    //if (!active)                               return;
+    
     if (navigate.frameId !== 0)                return;
     if (navigate.url.includes("about:"))       return;
     if (navigate.url.includes(blockedPageURL)) return;
@@ -86,59 +63,47 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     console.log(`navigating to ${navigate.url}`);
 
 
-    function getBlockingMode() {
-        if(!useSchedule) return settings.blockingMode;
-
-
-
+    function checkActive(storageItem) {
+        if (storageItem.settings.isActive) {
+            return browser.storage.local
+                .get(storageItem.settings.blockingMode)
+                .then(checkBlocking)
+                .then((doBlocking) => { if (doBlocking) return blockPage() });
+        }
     }
 
 
-    function checkBlocking(item) {
-        item = item[settings.blockingMode];
+    function checkBlocking(storageItem) {
+        const blockingList = Object.values(storageItem)[0];
         const clipedURL = clipURL(navigate.url);
-        const mode = item.type === "blockList";
 
-
-        console.table(item);
-
-        for (const entry of item.list) {
-
-            //The turnary operator checks to see if entry.domain is defined, if it is, it checks the url with it,
-            //if not, then entry.url must be defined, so it checks with that. 
+        for (const entry of blockingList.list) {
             if ((entry.domain ? clipedURL.includes(entry.domain) : navigate.url === entry.url)) {
-                console.log(`found match with ${entry.domain ? entry.domain : entry.url} on ${navigate.url}`);
+                console.log(`found ${blockingList.type} match with ${entry.domain ? entry.domain : entry.url} on ${navigate.url}`);
 
-                return mode;
+                return blockingList.type === "blockList";
             } 
         }
 
         console.log(`didn't find a match for ${navigate.url}`);
-        return !mode;
+        return blockingList.type === "allowList";
     }  
 
     
     function blockPage() {
-        console.log(`------------------------------------ BLOCKING a page with a url of ${navigate.url}`);
+        console.log(`--------- BLOCKING a page with a url of ${navigate.url}`);
         return browser.tabs
             .query({ active: true, currentWindow: true })
-            .then((tabs) => tabs[0].id !== navigate.tabId)
-            .then((loadReplace) => browser.tabs.update(navigate.tabId, { url: blockedPageURL+`?url=${navigate.url}`, loadReplace: loadReplace }));
+            .then((tabs) => tabs[0].id !== navigate.tabId)  //This is so that if the user wants to go 
+            .then((loadReplace) => browser.tabs.update(navigate.tabId, { url: blockedPageURL+`?url=${navigate.url}`, loadReplace: loadReplace }))
             
     }
 
    
 
-      
-
-    let settings;
     browser.storage.local
         .get("settings")
-        .then((item) => settings = item.settings)
-        .then(getBlockingMode)
-        .then((blockingMode) => browser.storage.local.get(blockingMode))
-        .then(checkBlocking)
-        .then((doBlocking) => { if (doBlocking) return blockPage() })
+        .then(checkActive)
         .catch(handelError)
 });
 
