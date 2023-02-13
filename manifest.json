@@ -1,35 +1,36 @@
 {
-    "manifest_version": 3,
-    "version": "0.4",
-    "name": "Web Block",
+  "manifest_version": 3,
 
-    "description": "Allows users to specify certain websites to be blocked.",
 
-    "icons": {
-        "48": "icons/icon-48.png"
+  "version": "0.2.0",
+  "name": "Web Block",
+  "description": "Allows users to specify certain websites to be blocked.",
+
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs"
+  ],
+
+  "{{chrome}}.host_permissions": [
+    "<all_urls>"
+  ],
+
+  "action": {
+    "default_icon": {
+      "19": "icons/icon-19.png"
     },
+    "default_title": "Web Block",
+    "default_popup": "src/popup/popup.html"
+  },
 
-    "permissions": [
-        "storage",
-        "webNavigation",
-        "tabs"
-    ],
 
-    
-
-    "action": {
-        "default_icon": {
-            "19": "icons/icon-19.png"
-        },
-        "default_title": "Web Block",
-        "default_popup": "/popup/popup.html"
-    },
-
-    
-
-    "background": {
-        "scripts": [
-            "background_scripts/background.js"
-        ]
-    }
+  "background": {
+    "{{chrome}}.service_worker": "src/background_scripts/background.js",
+    "{{firefox}}.scripts": ["src/background_scripts/background.js"]
+  }
 }

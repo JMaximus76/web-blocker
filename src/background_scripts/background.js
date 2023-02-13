@@ -1,5 +1,6 @@
+import browser from 'webextension-polyfill';
 
-const blockedPageURL = browser.runtime.getURL("/blocked_page/blocked-page.html");
+const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
 
 function handelError(error) {
     console.error(error);
