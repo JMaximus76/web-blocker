@@ -16,7 +16,6 @@ browser.runtime.onInstalled.addListener(() => {
 
     const settings = {
         isActive: true,
-        goesBackAfterBlock: true,
         blockingMode: "blockList",
     };
 
@@ -93,11 +92,8 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     
     function blockPage() {
         console.log(`--------- BLOCKING a page with a url of ${navigate.url}`);
-        return browser.tabs
-            .query({ active: true, currentWindow: true })
-            .then((tabs) => tabs[0].id !== navigate.tabId)  //This is so that if the user wants to go 
-            .then((loadReplace) => browser.tabs.update(navigate.tabId, { url: blockedPageURL+`?url=${navigate.url}`, loadReplace: loadReplace }))
-            
+        return chrome.tabs.update(navigate.tabId, { url: blockedPageURL + `?url=${navigate.url}` });
+
     }
 
    
@@ -107,36 +103,6 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
         .then(checkActive)
         .catch(handelError)
 });
-
-
-
-
-
-
-
-
-
-
-
-const filter = {
-    urls: [blockedPageURL],
-    properties: ["url"]
-};
-
-browser.tabs.onUpdated.addListener((tabId) => {
-
-
-    function goBack(doesGoBack) {
-        if(doesGoBack) {
-            return browser.tabs.goBack(tabId);
-        }
-    }
-
-    browser.storage.local.get("settings")
-        .then((item) => item.settings.goesBackAfterBlock)
-        .then(goBack)
-        .catch(handelError);
-}, filter);
 
 
 

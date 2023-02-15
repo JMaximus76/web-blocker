@@ -16,9 +16,7 @@
     "tabs"
   ],
 
-  "{{chrome}}.host_permissions": [
-    "<all_urls>"
-  ],
+
 
   "action": {
     "default_icon": {
@@ -29,8 +27,14 @@
   },
 
 
-  "background": {
-    "{{chrome}}.service_worker": "src/background_scripts/background.js",
-    "{{firefox}}.scripts": ["src/background_scripts/background.js"]
+  "{{chrome}}.background": {
+    "service_worker": "src/background_scripts/background.js",
+    "type": "module"
+  },
+
+  "{{firefox}}.background": {
+    "{{firefox}}.scripts": [
+      "src/background_scripts/background.js"
+    ]
   }
 }
