@@ -6,7 +6,19 @@ export interface BlockingList {
     list: Array<ListEntry>;
 }
 
-export type ListEntry = { url: string } | { domain: string };
+
+
+
+type ListEntry = {
+    domain?: string;
+    url?: string;
+};
+
+
+
+
+
+
 
 export interface Settings {
     isActive: boolean;
@@ -16,4 +28,4 @@ export interface Settings {
 //export type BlockingMode = "blockList" | "allowList";
 
 
-export type StorageItem<t> = {[key: string]: t};
+//export type StorageItem<t> = {[key: string]: t};

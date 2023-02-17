@@ -76,8 +76,9 @@ function matchAgainstList(blockingList: Types.BlockingList, url: string) {
 
 
 async function getCurrentList() {
-    const listName: string = await browser.storage.local.get("currentListName")
-    .then((a) => "a");
+    const listName: Record<string, any> = await browser.storage.local
+    .get("currentListName")
+    .then((listName: Record<string, any>) => browser.storage.local.get(listName));
 
     const list = await browser.storage.local.get(listName)
 }
@@ -104,7 +105,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
 
 
-    function checkActive(storageItem: Types.StorageItem<Types.Settings>) {
+    function checkActive(storageItem: Record<string, Types.Settings>) {
         if (storageItem.settings.isActive) {
             return browser.storage.local
                 .get(storageItem.settings.blockingMode)
