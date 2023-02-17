@@ -1,25 +1,33 @@
 import browser from 'webextension-polyfill';
 
 
-let settings = {};
+let settings: any;
 
 
-function handelError(error) { console.error(error); }
+function handelError(error: string) { console.error(error); }
 
 
 
 
 
-function buttonClickHandler(details) {
+function buttonClickHandler(details: any) {
     if (details.target.id === "blockingMode") {
         settings.blockingMode = (settings.blockingMode === "blockList") ? "allowList" : "blockList";
 
-        document.getElementById("indicator").innerHTML = settings.blockingMode;
+        setBlockingMode()
+
 
         browser.storage.local
             .set({"settings": settings})
-            .then(console.log(`${settings.blockingMode} was just put into local storage`))
+            .then(() => console.log(`${settings.blockingMode} was just put into local storage`))
             .catch(handelError);
+    }
+}
+
+function setBlockingMode() {
+    const indicator = document.getElementById("indicator");
+    if (indicator !== null) {
+        indicator.innerHTML = settings.blockingMode;
     }
 }
 
@@ -29,6 +37,6 @@ function buttonClickHandler(details) {
 browser.storage.local
     .get("settings")
     .then((item) => settings = item.settings)
-    .then(() => document.getElementById("indicator").innerHTML = settings.blockingMode)
+    .then(() => setBlockingMode())
     .then(() => document.addEventListener("click", buttonClickHandler))
     .catch(handelError);

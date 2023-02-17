@@ -28,10 +28,16 @@ export default defineConfig({
       assets: "public",
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: process.env.TARGET || "chrome",
+      browser: "firefox",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]
-    }),
+    })
   ],
+
+  build: {
+    minify: false,
+    sourcemap: false,
+    
+  }
 });
