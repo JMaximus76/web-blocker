@@ -1,42 +1,43 @@
-import browser from 'webextension-polyfill';
+import type { InfoList } from "../modules/types";
+import {getStorageItem, setStorageItem} from "../modules/storage"
 
 
-let settings: any;
+
 
 
 function handelError(error: string) { console.error(error); }
 
 
 
+async function buttonClickHandler(): Promise<void> {
+    const infoList: InfoList = await getStorageItem("infoList");
 
-
-function buttonClickHandler(details: any) {
-    if (details.target.id === "blockingMode") {
-        settings.blockingMode = (settings.blockingMode === "blockList") ? "allowList" : "blockList";
-
-        setBlockingMode()
-
-
-        browser.storage.local
-            .set({"settings": settings})
-            .then(() => console.log(`${settings.blockingMode} was just put into local storage`))
-            .catch(handelError);
+    if(infoList.current[0] === infoList.all.allowlist[0]) {
+        infoList.current[0] = infoList.all.blocklist[0];
     }
+    else {
+        infoList.current[0] = infoList.all.allowlist[0];
+    }
+
+    await setStorageItem({name: "infoList", item: infoList});
+
+    await updateIndicator();
 }
 
-function setBlockingMode() {
+
+
+
+async function updateIndicator(): Promise<void> {
+    const infoList: InfoList = await getStorageItem("infoList");
+
+
     const indicator = document.getElementById("indicator");
-    if (indicator !== null) {
-        indicator.innerHTML = settings.blockingMode;
-    }
+
+    console.log(`updateing indicator with ${infoList.current[0].name}`)
+    indicator.innerHTML = infoList.current[0].name;
 }
 
 
-
-
-browser.storage.local
-    .get("settings")
-    .then((item) => settings = item.settings)
-    .then(() => setBlockingMode())
+updateIndicator()
     .then(() => document.addEventListener("click", buttonClickHandler))
     .catch(handelError);

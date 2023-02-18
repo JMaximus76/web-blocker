@@ -28,13 +28,13 @@
 
 
   "{{chrome}}.background": {
-    "service_worker": "src/background_scripts/background.js",
+    "service_worker": "src/background_scripts/background.ts",
     "type": "module"
   },
 
   "{{firefox}}.background": {
     "{{firefox}}.scripts": [
-      "src/background_scripts/background.js"
+      "src/background_scripts/background.ts"
     ]
   }
 }
