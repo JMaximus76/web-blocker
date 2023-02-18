@@ -11,7 +11,7 @@ function loadWebExtConfig() {
 }
 
 function generateManifest() {
-  const manifest = readJsonFile("manifest.json");
+  const manifest = readJsonFile("src/manifest.json");
   const pkg = readJsonFile("package.json");
   return {
     name: pkg.name,
@@ -28,10 +28,16 @@ export default defineConfig({
       assets: "public",
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: process.env.TARGET || "chrome",
+      browser: "firefox",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]
-    }),
+    })
   ],
+
+  build: {
+    minify: false,
+    sourcemap: false,
+    
+  }
 });
