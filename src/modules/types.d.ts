@@ -1,56 +1,71 @@
 
-type BaseListInfo = { readonly name: string; };
-type BaseBlockInfo = { readonly mode: "blocklist" };
-type BaseAllowInfo = { readonly mode: "allowlist" };
 
 
-type BlockInfo = BaseListInfo & BaseBlockInfo;
-type AllowInfo = BaseListInfo & BaseAllowInfo;
-export type Info = BaseListInfo & (BaseBlockInfo | BaseAllowInfo);
 
+type BaseInfoList = { readonly name: string; };
+type BaseBlockInfo = { readonly mode: "block" };
+type BaseAllowInfo = { readonly mode: "allow" };
+
+type BlockInfo = BaseInfoList & BaseBlockInfo;
+type AllowInfo = BaseInfoList & BaseAllowInfo;
+
+
+export type InfoDetails = {
+    active: boolean = false;
+    locked: boolean = false;
+}
+
+// don't work but I spend like 3 hours on this so its saying for now
+// export type Or<T> = {
+//     [K in keyof T]: {
+//         [L in K]: never;
+//     } & {
+//         [P in Exclude<keyof T, K>]: T[P];
+        
+//     };
+// }[keyof T];
+
+
+export type Info = BaseInfoList & (BaseBlockInfo | BaseAllowInfo);
 
 
 export type InfoList = {
-    current: BlockInfo[] | AllowInfo[];
-    all: {
-        blocklist: BlockInfo[];
-        allowlist: AllowInfo[];
-    };
+    activeMode: "block" | "allow";
+    block: (BlockInfo & InfoDetails)[];
+    allow: (AllowInfo & InfoDetails)[];
+
 };
+
+export type ListEntry = { domain: string; url?: never; } | { domain?: never; url: string };
 
 export type Blocklist = {
     info: BlockInfo;
-    list: Array<{ domain: string; url?: never; } | { domain?: never; url: string }>;
+    entrys: ListEntry[];
 };
 
 export type Allowlist = {
     info: AllowInfo;
-    list: Array<{ domain: string; url?: never; } | { domain?: never; url: string }>;
+    entrys: ListEntry[];
 };
-
-
-
 
 
 export type Settings = {
     isActive: boolean;
 };
 
-
-
-
-type StorageItemMap = {
-    "settings" : Settings,
-    "infoList" : InfoList
+export type StorageItemMap = {
+    settings: Settings;
+    infoList: InfoList;
 }
 
-export type StorageName = keyof StorageItemMap;
 
-export type StorageItem = {
-    [key in StorageName]: {
-        name: key,
-        item: StorageItemMap[key]
-    }
-}[StorageName];
+
+export type PromiseError = {
+    error: Error;
+    details?: any;
+};
+
+
+
 
 

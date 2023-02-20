@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
-import type { InfoList, Blocklist, Allowlist, Settings } from '../modules/types';
-import { setStorageItem, getStorageItem, getCurrentLists } from "../modules/storage";
+import type { Blocklist, Allowlist } from '../modules/types';
+import { getStorageItem, registerNewList, updateInfo, initStorageItems, getActiveLists } from "../modules/storage";
 
 
 const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
@@ -18,17 +18,13 @@ function clipURL(url: string) {
 
 browser.runtime.onInstalled.addListener(() => {
 
-    const settings: Settings = {
-        isActive: true
-        
-    };
 
     const blocklist: Blocklist = {
         info: {
-            mode: "blocklist",
+            mode: "block",
             name: "Blocklist"
         },
-        list: [
+        entrys: [
             { domain: "youtube.com" },
             { domain: "netflix.com" },
             { url: "https://commons.wikimedia.org/wiki/Main_Page" }
@@ -38,42 +34,26 @@ browser.runtime.onInstalled.addListener(() => {
 
     const allowlist: Allowlist = {
         info: {
-            mode: "allowlist",
+            mode: "allow",
             name: "Allowlist"
         },
-        list: [
+        entrys: [
             { domain: "freecodecamp.org" },
             { domain: "learncpp.com" },
             { domain: "google.com" }
         ]
     };
 
-    const infoList: InfoList = {
-        current: [blocklist.info],
-        all: {
-            blocklist: [blocklist.info],
-            allowlist: [allowlist.info]
-        }
-    }
-    
-
-
-    // browser.storage.local.set({
-    //         "settings" : settings,
-    //         [blocklist.info.name] : blocklist,
-    //         [allowlist.info.name] : allowlist
-    //     })
-    //     .catch(handelError);
 
     
-    setStorageItem({name: "settings", item: settings})
-        .then(() => setStorageItem({name: "infoList", item: infoList}))
-        .then(() => browser.storage.local.set({[blocklist.info.name]: blocklist}))
-        .then(() => browser.storage.local.set({[allowlist.info.name]: allowlist}))
-        .catch(handelError);
 
 
-    
+    initStorageItems()
+        .then(() => registerNewList(blocklist))
+        .then(() => registerNewList(allowlist))
+        .then(() => updateInfo(blocklist.info, {active: true}))
+        .then(() => updateInfo(allowlist.info, {active: true}))
+        .catch(handelError);    
 });
 
 
@@ -82,7 +62,7 @@ browser.runtime.onInstalled.addListener(() => {
 
 
 
-function checkAgainstLists(lists: (Blocklist | Allowlist)[], url: string): boolean {
+function checkAgainstLists(lists: Blocklist[] | Allowlist[], url: string): boolean {
     const clipedURL = clipURL(url);
 
 
@@ -90,26 +70,23 @@ function checkAgainstLists(lists: (Blocklist | Allowlist)[], url: string): boole
 
         const printInfo: string = `\n\tname: ${blockingList.info.name}\n\tmode: ${blockingList.info.mode}\n`;
 
-        for(const entry of blockingList.list){
+        for(const entry of blockingList.entrys){
             if ((entry.domain ? clipedURL.includes(entry.domain) : url === entry.url)) {
                 console.log(`found match on${printInfo}with ${entry.domain ? entry.domain : entry.url} on ${url}`);
 
-                return blockingList.info.mode === "blocklist"; 
+                return blockingList.info.mode === "block"; 
             }
-            // else if (blockingList.info.mode === "allowlist") {
-            //     return true;
-            // }
         }
         console.log(`didn't find a match on${printInfo}for ${url}`);
     }
 
-    return lists[0].info.mode === "allowlist";
+    return lists[0].info.mode === "allow";
 }
 
 
 
 
-async function blockPage(tabId: number, blockedURL: string): Promise<browser.Tabs.Tab> {
+function blockPage(tabId: number, blockedURL: string) {
     console.log(`--------- BLOCKING a page with a url of ${blockedURL}`);
     return browser.tabs.update(tabId, { url: blockedPageURL + `?url=${blockedURL}` });
 
@@ -120,25 +97,24 @@ async function blockPage(tabId: number, blockedURL: string): Promise<browser.Tab
 
 browser.webNavigation.onBeforeNavigate.addListener(async (navigate) => {
 
-    if (navigate.frameId !== 0)                return Promise.resolve();
-    if (navigate.url.includes("about:"))       return Promise.resolve();
-    if (navigate.url.includes("chrome"))      return Promise.resolve();
-    if (navigate.url.includes(blockedPageURL)) return Promise.resolve();
+    if (navigate.frameId !== 0)                return;
+    if (navigate.url.includes("about:"))       return;
+    if (navigate.url.includes("chrome:"))       return;
+    if (navigate.url.includes(blockedPageURL)) return;
     console.log(`navigating to ${navigate.url}`);
 
     const settings = await getStorageItem("settings");
     if (!settings.isActive) return;
 
     
-    const lists = await getCurrentLists();
-    const doBlocking = checkAgainstLists(lists, navigate.url);
+    const lists = await getActiveLists();
 
+
+    const doBlocking = checkAgainstLists(lists, navigate.url);
     if (!doBlocking) return;
 
     await blockPage(navigate.tabId, navigate.url);
 
-
-    
 });
 
 
