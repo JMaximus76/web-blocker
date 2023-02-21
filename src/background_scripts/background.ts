@@ -18,7 +18,6 @@ function clipURL(url: string) {
 
 browser.runtime.onInstalled.addListener(() => {
 
-
     const blocklist: Blocklist = {
         info: {
             mode: "block",
@@ -53,7 +52,8 @@ browser.runtime.onInstalled.addListener(() => {
         .then(() => registerNewList(allowlist))
         .then(() => updateInfo(blocklist.info, {active: true}))
         .then(() => updateInfo(allowlist.info, {active: true}))
-        .catch(handelError);    
+        .catch(handelError);   
+        
 });
 
 

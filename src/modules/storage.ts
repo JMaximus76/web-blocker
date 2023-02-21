@@ -58,18 +58,10 @@ export async function updateInfo(info: Info, details: Partial<InfoDetails>): Pro
         return Promise.reject(error);
     }
 
-
-   
-
-    for (const key in details) {
-        details[key as keyof InfoDetails] ??= infoList[info.mode][index][key as keyof InfoDetails];    
-    }
-
-
-
     infoList[info.mode][index] = {
         ...info,
-        ...details as InfoDetails
+        active: details.active ??= infoList[info.mode][index].active,
+        locked: details.locked ??= infoList[info.mode][index].locked
     };
 
     await setStorageItem("infoList", infoList);
@@ -149,8 +141,10 @@ export async function updateListEntrys(info: Info, entrys: ListEntry[]): Promise
 
 
 
-export async function registerNewList(list: Blocklist | Allowlist): Promise<void> {
+export async function registerNewList<T extends Blocklist | Allowlist>(list: T): Promise<void> {
     const infoList = await getStorageItem("infoList");
+
+    //check if list already exists
     if (checkAgainstInfo(list.info, infoList)) {
         const error: PromiseError = {
             error: new Error("registerNewList() was given a list that alread exists"),
@@ -158,6 +152,7 @@ export async function registerNewList(list: Blocklist | Allowlist): Promise<void
         }
         return Promise.reject(error);
     }
+
 
     (infoList[list.info.mode] as Info[]).push(list.info);
     await setStorageItem("infoList", infoList);
@@ -194,7 +189,7 @@ export async function getActiveLists(): Promise<Blocklist[] | Allowlist[]> {
         }
     }
 
-    return activeLists as (Blocklist[] | Allowlist[]);
+    return activeLists as Blocklist[] | Allowlist[];
 
 }
 
