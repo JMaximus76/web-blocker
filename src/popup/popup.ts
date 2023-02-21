@@ -3,7 +3,11 @@ import {getStorageItem, getActiveInfos, togleActiveMode} from "../modules/storag
 
 
 
-
+// <div id="popup-content">
+//     <button id="blockingMode" type="button">Togle Blocking Mode</button>
+//     <p>currently in</p>
+//     <p id="indicator"></p>
+// </div>
 
 function handelError(error: string) { console.error(error); }
 
