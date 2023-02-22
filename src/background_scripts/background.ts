@@ -1,12 +1,13 @@
 import browser from 'webextension-polyfill';
-import type { Blocklist, Allowlist } from '../modules/types';
+import type { Blocklist, Allowlist, PromiseError } from '../modules/types';
 import { getStorageItem, registerNewList, updateInfo, initStorageItems, getActiveLists } from "../modules/storage";
 
 
 const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
 
-function handelError(error: string) {
-    console.error(error);
+function handelError(error: PromiseError) {
+    console.error(error.error);
+    if (error.details) console.table(error.details);
 }
 
 function clipURL(url: string) {
@@ -50,8 +51,8 @@ browser.runtime.onInstalled.addListener(() => {
     initStorageItems()
         .then(() => registerNewList(blocklist))
         .then(() => registerNewList(allowlist))
-        .then(() => updateInfo(blocklist.info, {active: true}))
-        .then(() => updateInfo(allowlist.info, {active: true}))
+        .then(() => updateInfo(blocklist.info, {active: true, locked: false}))
+        .then(() => updateInfo(allowlist.info, {active: true, locked: false}))
         .catch(handelError);   
         
 });

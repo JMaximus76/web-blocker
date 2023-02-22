@@ -11,8 +11,8 @@ type AllowInfo = BaseInfoList & BaseAllowInfo;
 
 
 export type InfoDetails = {
-    active: boolean = false;
-    locked: boolean = false;
+    active: boolean;
+    locked: boolean;
 }
 
 // don't work but I spend like 3 hours on this so its saying for now

@@ -28,7 +28,7 @@ export default defineConfig({
       assets: "public",
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: "chrome",
+      browser: "firefox",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]

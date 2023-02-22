@@ -1,28 +1,39 @@
 
-<script>
-    import { getActiveInfos, getStorageItem, togleActiveMode } from "../modules/storage";
-    import browser from "webextension-polyfill";
+<script lang="ts">
+    import { getStorageItem } from "../modules/storage";
+    //import ActiveLists from "./components/ActiveLists.svelte";
+    import ModeButton from "./components/ModeButton.svelte";
+    import browser from 'webextension-polyfill';
 
 
 
     let promise = getStorageItem("infoList");
 
-
-    async function changeMode() {
-        await togleActiveMode();
+    function update() {
         promise = getStorageItem("infoList");
     }
 
+    browser.storage.onChanged.addListener(update);
+    
+
 </script>
 
-{#await promise}
-    <p>...waiting</p>
-{:then infoList}
-    <button on:click={changeMode}>Change Mode</button>
-    
-    <h3>Current Lists</h3>
-    {#each infoList[infoList.activeMode] as info}
-        <p>{info.name}</p>
-    {/each}
-    
-{/await}
+
+<div>
+    {#await promise then infoList}
+        <ModeButton {infoList} />
+        <!-- <ActiveLists {infoList} /> -->
+    {/await}
+</div>
+
+
+
+<style>
+    div {
+        display: flex;
+        flex-direction: column;
+        height: 400px;
+        width: 300px;
+    }
+</style>
+
