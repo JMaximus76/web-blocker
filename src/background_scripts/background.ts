@@ -1,12 +1,12 @@
 import browser from 'webextension-polyfill';
-import type { Blocklist, Allowlist, PromiseError } from '../modules/types';
-import { getStorageItem, registerNewList, updateInfo, initStorageItems, getActiveLists } from "../modules/storage";
+import type { List, PromiseError } from '../modules/types';
+import { getStorageItem, registerNewList, initStorageItems, getActiveLists, generateList } from "../modules/storage";
 
 
 const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
 
 function handelError(error: PromiseError) {
-    console.error(error.error);
+    console.error(error.message);
     if (error.details) console.table(error.details);
 }
 
@@ -19,42 +19,26 @@ function clipURL(url: string) {
 
 browser.runtime.onInstalled.addListener(() => {
 
-    const blocklist: Blocklist = {
-        info: {
-            mode: "block",
-            name: "Blocklist"
-        },
-        entrys: [
-            { domain: "youtube.com" },
-            { domain: "netflix.com" },
-            { url: "https://commons.wikimedia.org/wiki/Main_Page" }
-        ]
-    };
+    const block = generateList({mode: "block", listId: "Blocklist", active: true});
+    block.list = [
+        { domain: "youtube.com" },
+        { domain: "netflix.com" },
+        { url: "https://commons.wikimedia.org/wiki/Main_Page" }
+    ];
 
-
-    const allowlist: Allowlist = {
-        info: {
-            mode: "allow",
-            name: "Allowlist"
-        },
-        entrys: [
-            { domain: "freecodecamp.org" },
-            { domain: "learncpp.com" },
-            { domain: "google.com" }
-        ]
-    };
-
-
-    
+    const allow = generateList({mode: "allow", listId: "Allowlist", active: true});
+    allow.list = [
+        { domain: "freecodecamp.org" },
+        { domain: "learncpp.com" },
+        { domain: "google.com" }
+    ];
 
 
     initStorageItems()
-        .then(() => registerNewList(blocklist))
-        .then(() => registerNewList(allowlist))
-        .then(() => updateInfo(blocklist.info, {active: true, locked: false}))
-        .then(() => updateInfo(allowlist.info, {active: true, locked: false}))
+        .then(() => registerNewList(block))
+        .then(() => registerNewList(allow))
         .catch(handelError);   
-        
+    
 });
 
 
@@ -63,25 +47,19 @@ browser.runtime.onInstalled.addListener(() => {
 
 
 
-function checkAgainstLists(lists: Blocklist[] | Allowlist[], url: string): boolean {
+function checkAgainstLists(lists: List[], url: string): boolean {
     const clipedURL = clipURL(url);
 
 
-    for (const blockingList of lists) {
-
-        const printInfo: string = `\n\tname: ${blockingList.info.name}\n\tmode: ${blockingList.info.mode}\n`;
-
-        for(const entry of blockingList.entrys){
+    for (const list of lists) {
+        for(const entry of list){
             if ((entry.domain ? clipedURL.includes(entry.domain) : url === entry.url)) {
-                console.log(`found match on${printInfo}with ${entry.domain ? entry.domain : entry.url} on ${url}`);
-
-                return blockingList.info.mode === "block"; 
+                return true;
             }
         }
-        console.log(`didn't find a match on${printInfo}for ${url}`);
     }
 
-    return lists[0].info.mode === "allow";
+    return false;
 }
 
 
@@ -100,23 +78,25 @@ browser.webNavigation.onBeforeNavigate.addListener(async (navigate) => {
 
     if (navigate.frameId !== 0)                return;
     if (navigate.url.includes("about:"))       return;
-    if (navigate.url.includes("chrome:"))       return;
+    if (navigate.url.includes("chrome:"))      return;
     if (navigate.url.includes(blockedPageURL)) return;
-    console.log(`navigating to ${navigate.url}`);
 
     const settings = await getStorageItem("settings");
     if (!settings.isActive) return;
-
+    console.log(`navigating to ${navigate.url}`);
     
-    const lists = await getActiveLists();
+    const active = await getActiveLists();
 
 
-    const doBlocking = checkAgainstLists(lists, navigate.url);
+    const foundMatch = checkAgainstLists(active.lists, navigate.url);
+    console.log(foundMatch);
+
+    const doBlocking = (foundMatch && active.mode === "block") || (!foundMatch && active.mode === "allow");
     if (!doBlocking) return;
 
     await blockPage(navigate.tabId, navigate.url);
-
 });
+
 
 
 

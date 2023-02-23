@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import type { Blocklist, Allowlist, Info, StorageItemMap, InfoList, Settings, PromiseError, InfoDetails, ListEntry } from '../modules/types';
+import type {Info, StorageItemMap, InfoList, Settings, PromiseError, List } from '../modules/types';
 
 
 function generateBlankSettings(): Settings {
@@ -16,6 +16,19 @@ function generateBlankInfoList(): InfoList {
     };
 }
 
+export function generateList(details: Partial<Info>): {info: Info, list: List} {
+    const info: Info = {
+        listId: details.listId ?? "",
+        mode: details.mode ?? "block",
+        active: details.active ?? false,
+        locked: details.locked ?? false
+    }
+
+    const list: List = [];
+
+    return {info: info, list};
+}
+
 
 export async function initStorageItems(): Promise<void> {
     await setStorageItem("settings", generateBlankSettings());
@@ -26,43 +39,39 @@ export async function initStorageItems(): Promise<void> {
 export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T): Promise<StorageItemMap[T]> {
     const item = await browser.storage.local.get(itemKey);
 
-    if (Object.values(item)[0] === undefined) {
+    if (item[itemKey] === undefined) {
         const error: PromiseError = {
-            error: new Error(`getStorageItem tried to get an item and got undefined. THIS IS VERY BAD`),
+            message: `getStorageItem tried to get an item and got undefined. THIS IS VERY BAD`,
             details: itemKey
         }
         return Promise.reject(error);
     }
 
-    return Object.values(item)[0];
+    return item[itemKey];
 }
 
 async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
-    return await browser.storage.local.set({ [key]: item });
+    await browser.storage.local.set({ [key]: item });
+    //await browser.runtime.sendMessage({ type: key, item: item});
 }
 
 
 
 
-export async function updateInfo(info: Info, details: Partial<InfoDetails>): Promise<void> {
-    if (Object.keys(details).length === 0) return;
+export async function updateInfo(info: Info): Promise<void> {
     const infoList = await getStorageItem("infoList");
-    const index = infoList[info.mode].findIndex((element) => compairInfo(info, element));
+    const index = getIndex(info, infoList);
    
 
     if (index === -1) {
         const error: PromiseError = {
-            error: new Error("updateInfo() was given an info that does not exists in storage"),
+            message: "updateInfo() was given an info that does not exists in storage",
             details: info
         }
         return Promise.reject(error);
     }
 
-    infoList[info.mode][index] = {
-        ...info,
-        active: details.active ??= infoList[info.mode][index].active,
-        locked: details.locked ??= infoList[info.mode][index].locked
-    };
+    infoList[info.mode][index] = info;
 
     await setStorageItem("infoList", infoList);
 }
@@ -71,19 +80,23 @@ export async function updateInfo(info: Info, details: Partial<InfoDetails>): Pro
 
 
 export function compairInfo(x: Info, y: Info): boolean {
-    return (x.mode === y.mode) && (x.name === y.name);
+    return (x.mode === y.mode) && (x.listId === y.listId);
 };
 
-export function checkAgainstInfo(info: Info, infoList: InfoList): boolean {
+export function isInInfoList(info: Info, infoList: InfoList): boolean {
     return infoList[info.mode].some((entry: Info) => compairInfo(info, entry));
 }
 
 export function getActiveInfos(infoList: InfoList): Info[] {
-    const list: Info[] = [];
-    infoList[infoList.activeMode].forEach((info: Info & InfoDetails) => {
-        if (info.active) list.push(info);
+    const active: Info[] = [];
+    infoList[infoList.activeMode].forEach((info: Info) => {
+        if (info.active) active.push(info);
     });
-    return list;
+    return active;
+}
+
+export function getIndex(info: Info, infoList: InfoList): number {
+    return infoList[info.mode].findIndex((element) => compairInfo(info, element));
 }
 
 
@@ -95,23 +108,12 @@ export async function togleActiveMode(): Promise<void> {
 
 
 
-
-
-// not sure I'll need this
-// async function checkForInfo(info: Info): Promise<boolean> {
-//     const infoList = await getStorageItem("infoList");
-//     return infoList[info.mode].some((entry: Info) => compairInfo(info, entry));
-// }
-
-
-
-
 export async function removeList(info: Info): Promise<void> {
     const infoList = await getStorageItem("infoList");
-    const index = infoList[info.mode].findIndex((element) => compairInfo(info, element));
+    const index = getIndex(info, infoList);
     if (index === -1) {
         const error: PromiseError = {
-            error: new Error("removeList() was given an info that does not exists in storage"),
+            message: "removeList() was given an info that does not exists in storage",
             details: info
         }
         return Promise.reject(error);
@@ -119,44 +121,40 @@ export async function removeList(info: Info): Promise<void> {
 
     infoList[info.mode].splice(index, 1);
     await setStorageItem("infoList", infoList);
-    await browser.storage.local.remove(info.name);
+    await browser.storage.local.remove(info.listId);
 }
 
 
-export async function updateListEntrys(info: Info, entrys: ListEntry[]): Promise<void> {
-    const list = await getList(info);
-    if (list === undefined) {
+export async function updateList(info: Info, updatedList: List): Promise<void> {
+    const infoList = await getStorageItem("infoList");
+    if(!isInInfoList(info, infoList)) {
         const error: PromiseError = {
-            error: new Error("updateListEntrys() was given an Info that does not resolve to a list"),
+            message: "updateList() was given an info that does not exists in storage",
             details: info
         }
         return Promise.reject(error);
     }
 
-    list.entrys = entrys;
-
-    await browser.storage.local.set({[list.info.name]: list});
+    await browser.storage.local.set({[info.listId]: updatedList});
 }
 
 
 
-
-export async function registerNewList<T extends Blocklist | Allowlist>(list: T): Promise<void> {
+export async function registerNewList({info, list}: {info: Info, list: List}): Promise<void> {
     const infoList = await getStorageItem("infoList");
 
-    //check if list already exists
-    if (checkAgainstInfo(list.info, infoList)) {
+    if (isInInfoList(info, infoList)) {
         const error: PromiseError = {
-            error: new Error("registerNewList() was given a list that alread exists"),
-            details: list
+            message: "registerNewList() was given a list that alread exists",
+            details: info
         }
         return Promise.reject(error);
     }
 
 
-    (infoList[list.info.mode] as Info[]).push(list.info);
+    infoList[info.mode].push(info);
     await setStorageItem("infoList", infoList);
-    await browser.storage.local.set({[list.info.name]: list});
+    await browser.storage.local.set({[info.listId]: list});
 }
 
 
@@ -165,31 +163,31 @@ export async function registerNewList<T extends Blocklist | Allowlist>(list: T):
 
 
 async function getList(info: Info) {
-    const list: Record<string, (Blocklist | Allowlist | undefined)> = await browser.storage.local.get(info.name);
-    return Object.values(list)[0];
+    const item: Record<string, (List | undefined)> = await browser.storage.local.get(info.listId);
+    return item[info.listId];
 }
 
 
-export async function getActiveLists(): Promise<Blocklist[] | Allowlist[]> {
+export async function getActiveLists(): Promise<{mode: "block" | "allow", lists: List[]}> {
     const infoList = await getStorageItem("infoList");
 
-    const activeLists = [];
+    const activeInfos = getActiveInfos(infoList);
+    console.table(activeInfos);
 
-    for (const info of infoList[infoList.activeMode]) {
-        if (info.active) {
-            const list = await getList(info);
-            if (list === undefined) {
-                const error: PromiseError = {
-                    error: new Error("getActiveLists() tried to get a list with infoList that did not exist in storage. THIS IS VERY BAD"),
-                    details: info
-                }
-                return Promise.reject(error);
+    const activeLists: List[] = [];
+
+    for(const info of activeInfos) {
+        const list = await getList(info);
+        if (list === undefined) {
+            const error: PromiseError = {
+                message: "getActiveLists() got a list that was undefined",
+                details: info
             }
-            activeLists.push(list);
+            return Promise.reject(error);
         }
+        activeLists.push(list);
     }
 
-    return activeLists as Blocklist[] | Allowlist[];
-
+    return {mode: infoList.activeMode, lists: activeLists};
 }
 
