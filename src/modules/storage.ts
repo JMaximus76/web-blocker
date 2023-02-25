@@ -1,14 +1,21 @@
 import browser from 'webextension-polyfill';
-import type {Info, StorageItemMap, InfoList, Settings, PromiseError, List } from '../modules/types';
+import type {Info, StorageItemMap, InfoList, Settings, PromiseError, List, Mode, ListEntry } from '../modules/types';
 
 
-function generateBlankSettings(): Settings {
+
+export function handelError(error: PromiseError) {
+    console.error(error.message);
+    if (error.details) console.table(error.details);
+}
+
+
+export function generateDefaultSettings(): Settings {
     return {
         isActive: true
     };
 }
 
-function generateBlankInfoList(): InfoList {
+export function generateBlankInfoList(): InfoList {
     return {
         activeMode: "block",
         block: [],
@@ -16,22 +23,20 @@ function generateBlankInfoList(): InfoList {
     };
 }
 
-export function generateList(details: Partial<Info>): {info: Info, list: List} {
+export function generateInfo(details: Partial<Info>): Info {
     const info: Info = {
-        listId: details.listId ?? "",
+        name: details.name ?? "",
         mode: details.mode ?? "block",
         active: details.active ?? false,
         locked: details.locked ?? false
     }
 
-    const list: List = [];
-
-    return {info: info, list};
+    return info;
 }
 
 
 export async function initStorageItems(): Promise<void> {
-    await setStorageItem("settings", generateBlankSettings());
+    await setStorageItem("settings", generateDefaultSettings());
     await setStorageItem("infoList", generateBlankInfoList());
 }
 
@@ -80,7 +85,7 @@ export async function updateInfo(info: Info): Promise<void> {
 
 
 export function compairInfo(x: Info, y: Info): boolean {
-    return (x.mode === y.mode) && (x.listId === y.listId);
+    return (x.mode === y.mode) && (x.name === y.name);
 };
 
 export function isInInfoList(info: Info, infoList: InfoList): boolean {
@@ -99,11 +104,17 @@ export function getIndex(info: Info, infoList: InfoList): number {
     return infoList[info.mode].findIndex((element) => compairInfo(info, element));
 }
 
+function generateStorageKey(info: Info): string {
+    return `${info.mode}-${info.name}`;
+}
 
-export async function togleActiveMode(): Promise<void> {
+
+
+export async function switchActiveMode(): Promise<void> {
     const infoList = await getStorageItem("infoList");
     infoList.activeMode = infoList.activeMode === "block" ? "allow" : "block";
     await setStorageItem("infoList", infoList);
+    console.log("mode has been togled");
 }
 
 
@@ -121,11 +132,47 @@ export async function removeList(info: Info): Promise<void> {
 
     infoList[info.mode].splice(index, 1);
     await setStorageItem("infoList", infoList);
-    await browser.storage.local.remove(info.listId);
+    await browser.storage.local.remove(info.name);
 }
 
 
-export async function updateList(info: Info, updatedList: List): Promise<void> {
+
+function clipURL(type: "domain" | "url", url: string): string {
+    if (type === "domain") {
+        return /(?<=:\/\/)[^?#]*\//gm.exec(url)![0];
+    } else {
+        return /(?<=:\/\/)[^?#]*/gm.exec(url)![0];
+    }
+}
+
+
+
+export async function addListEntry(info: Info, entry: ListEntry): Promise<void> {
+    const list = await getList(info);
+    if (list === undefined) {
+        const error: PromiseError = {
+            message: "addListEntry() was given an info that does not have a list in storage",
+            details: info
+        }
+        return Promise.reject(error);
+    }
+
+    const clipedEntry = clipURL(entry.type, entry.value);
+    if (list.some((element) => element.value === clipedEntry)) {
+        const error: PromiseError = {
+            message: `addListEntry() was given an entry that already exists in ${generateStorageKey(info)}`,
+            details: entry
+        }
+        return Promise.reject(error);
+    }
+
+    list.push({ type: entry.type, value: clipedEntry });
+    await updateList(info, list);
+}
+
+
+
+export async function updateList(info: Info, list: List): Promise<void> {
     const infoList = await getStorageItem("infoList");
     if(!isInInfoList(info, infoList)) {
         const error: PromiseError = {
@@ -135,12 +182,67 @@ export async function updateList(info: Info, updatedList: List): Promise<void> {
         return Promise.reject(error);
     }
 
-    await browser.storage.local.set({[info.listId]: updatedList});
+    await browser.storage.local.set({[generateStorageKey(info)]: list});
+
+    //this makes the svelte store to update
+    await setStorageItem("infoList", infoList);
+}
+
+//this aint tested and I got no clue if it will work so good luck future me
+export async function modifyList(info: Info, listId?: string, mode?: Mode): Promise<void> {
+    const infoList = await getStorageItem("infoList");
+
+    const index = getIndex(info, infoList);
+    if (index === -1) {
+        const error: PromiseError = {
+            message: "modifyList() was given an info that does not exists in storage",
+            details: info
+        }
+        return Promise.reject(error);
+    }
+
+    const list = await getList(info);
+    if (list === undefined) {
+        const error: PromiseError = {
+            message: "modifyList() was given an info that does not existe in storage",
+            details: info
+        }
+        return Promise.reject(error);
+    }
+
+
+    const newInfo: Info = {
+        name: listId ?? info.name,
+        mode: mode ?? info.mode,
+        active: info.active,
+        locked: info.locked
+    }
+
+    infoList[info.mode].splice(index, 1);
+    infoList[newInfo.mode].push(newInfo);
+
+    await browser.storage.local.remove(generateStorageKey(info));
+    await browser.storage.local.set({[generateStorageKey(newInfo)]: list});
+    await setStorageItem("infoList", infoList);
 }
 
 
+export function checkWithListEntry(entry: ListEntry, url: string): boolean {
+    const clipedUrl = clipURL(entry.type, url);
+    return entry.value === clipedUrl;
+}
 
-export async function registerNewList({info, list}: {info: Info, list: List}): Promise<void> {
+
+export async function registerNewList(info: Info): Promise<void> {
+    if (info.name === "") {
+        const error: PromiseError = {
+            message: "registerNewList() was given a list with an empty listId",
+            details: info
+        }
+        return Promise.reject(error);
+    }
+
+
     const infoList = await getStorageItem("infoList");
 
     if (isInInfoList(info, infoList)) {
@@ -153,26 +255,23 @@ export async function registerNewList({info, list}: {info: Info, list: List}): P
 
 
     infoList[info.mode].push(info);
+    await browser.storage.local.set({[generateStorageKey(info)]: []});
     await setStorageItem("infoList", infoList);
-    await browser.storage.local.set({[info.listId]: list});
 }
-
-
-
-
 
 
 async function getList(info: Info) {
-    const item: Record<string, (List | undefined)> = await browser.storage.local.get(info.listId);
-    return item[info.listId];
+    const item: Record<string, (List | undefined)> = await browser.storage.local.get(generateStorageKey(info));
+    return item[generateStorageKey(info)];
 }
 
 
-export async function getActiveLists(): Promise<{mode: "block" | "allow", lists: List[]}> {
+
+
+export async function getActiveLists(): Promise<{ mode: Mode, lists: List[]}> {
     const infoList = await getStorageItem("infoList");
 
     const activeInfos = getActiveInfos(infoList);
-    console.table(activeInfos);
 
     const activeLists: List[] = [];
 

@@ -1,0 +1,9 @@
+:root {
+    --buttonBackground: rgb(243, 243, 243);
+    --buttonHoverBackground: rgb(225, 225, 225);
+    --buttonActiveBackground: rgb(205, 205, 205);
+    --backgroundColor: rgb(255, 255, 255);
+    
+}
+
+

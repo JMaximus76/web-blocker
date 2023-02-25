@@ -1,53 +1,44 @@
 import { readable } from "svelte/store";
 import browser from "webextension-polyfill";
+import { generateBlankInfoList, generateDefaultSettings, getStorageItem } from "./storage";
 
 
-export const infoList =  readable(null, function start(set) {
-    const infoList = browser.storage.local.get("infoList");
-    infoList.then((value) => set(Object.values(value)[0]));
-    infoList.catch((error) => console.error(error));
 
-    const onMessage = (message: {type: string, item: any}) => {
-        if (message.type === "infoList") {
-            set(message.item);
-        }
+
+export const infoListStore = readable(generateBlankInfoList(), function start(set) {
+    console.log("infoListStore just started");
+    getStorageItem("infoList")
+        .then((infoList) => set(infoList))
+        .catch((error) => console.error(error));
+
+    const onUpdate = (changes: Record<string, any>) => {
+        if (changes.infoList) set(changes.infoList.newValue);
     };
 
-    browser.runtime.onMessage.addListener(onMessage);
+    browser.storage.onChanged.addListener(onUpdate);
 
     return function stop() {
-        browser.runtime.onMessage.removeListener(onMessage);
+        browser.runtime.onMessage.removeListener(onUpdate);
     };
 });
 
 
 
-export const settings = readable(null, function start(set) {
-    const settings = browser.storage.local.get("settings");
-    settings.then((value) => set(Object.values(value)[0]));
-    settings.catch((error) => console.error(error));
+export const settingsStore = readable(generateDefaultSettings(), function start(set) {
+    getStorageItem("settings")
+        .then((settings) => set(settings))
+        .catch((error) => console.error(error));
 
-    const onMessage = (message: {type: string, item: any}) => {
-        if (message.type === "settings") {
-            set(message.item);
-        }
+    const onUpdate = (changes: Record<string, any>) => {
+        if (changes.settings) set(changes.settings.newValue);
     };
 
-    browser.runtime.onMessage.addListener(onMessage);
+    browser.storage.onChanged.addListener(onUpdate);
 
     return function stop() {
-        browser.runtime.onMessage.removeListener(onMessage);
+        browser.runtime.onMessage.removeListener(onUpdate);
     }
 });
 
 
-export const lists = readable(null, function start(set) {
-    
 
-
-
-
-    return function stop() {
-
-    }
-});

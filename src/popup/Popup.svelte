@@ -1,39 +1,30 @@
 
-<script lang="ts">
-    import { getStorageItem } from "../modules/storage";
-    //import ActiveLists from "./components/ActiveLists.svelte";
-    import ModeButton from "./components/ModeButton.svelte";
-    import browser from 'webextension-polyfill';
 
 
 
-    let promise = getStorageItem("infoList");
 
-    function update() {
-        promise = getStorageItem("infoList");
-    }
 
-    browser.storage.onChanged.addListener(update);
-    
-
+<script lang='ts'>
+    import MainPage from "./MainPage.svelte";
 </script>
 
 
-<div>
-    {#await promise then infoList}
-        <ModeButton {infoList} />
-        <!-- <ActiveLists {infoList} /> -->
-    {/await}
+<div id="container">
+    <MainPage />
 </div>
 
 
 
+
 <style>
-    div {
-        display: flex;
-        flex-direction: column;
+    #container {
         height: 400px;
         width: 300px;
+        padding: 13px;
+        
+    }
+
+    :global(body) {
+        background: var(--backgroundColor);
     }
 </style>
-

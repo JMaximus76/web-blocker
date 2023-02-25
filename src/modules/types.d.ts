@@ -1,21 +1,27 @@
 
+export type Mode = "block" | "allow";
 
 export type Info = {
-    readonly listId: string;
-    readonly mode: "block" | "allow";
+    readonly name: string;
+    readonly mode: Mode;
     active: boolean;
     locked: boolean;
 };
 
 
 export type InfoList = {
-    activeMode: "block" | "allow";
-    block: (BlockInfo)[];
-    allow: (AllowInfo)[];
+    activeMode: Mode;
+    block: Info[];
+    allow: Info[];
 
 };
 
-export type ListEntry = { domain: string; url?: never; } | { domain?: never; url: string };
+//export type ListEntry = { domain: string; url?: never; } | { domain?: never; url: string };
+export type ListEntry = {
+    type: "domain" | "url";
+    value: string;
+};
+
 export type List = ListEntry[];
 
 
@@ -34,6 +40,9 @@ export type PromiseError = {
     message: string;
     details?: any;
 };
+
+
+
 
 
 
