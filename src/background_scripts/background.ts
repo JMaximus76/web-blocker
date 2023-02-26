@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
-import type { List } from '../modules/types';
-import { getStorageItem, registerNewList, initStorageItems, getActiveLists, generateInfo, handelError, addListEntry, checkWithListEntry } from "../modules/storage";
+
+import { getStorageItem, registerNewList, initStorageItems, getActiveLists, generateInfo, handelError, addListEntry} from "../modules/storage";
+import { checkAgainstLists } from '../modules/util';
 
 
 const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
@@ -32,18 +33,7 @@ browser.runtime.onInstalled.addListener(() => {
 
 
 
-function checkAgainstLists(lists: List[], url: string): boolean {
 
-    for (const list of lists) {
-        for(const entry of list){
-            if (checkWithListEntry(entry, url)) {
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
 
 
 

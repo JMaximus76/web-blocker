@@ -1,11 +1,8 @@
 <script lang="ts">
-    import type { Color } from "../../modules/color";
-    import { convert, darken } from "../../modules/color";
-
 
     export let name: string;
     export let fontSize: Number;
-    export let color: Color;
+
 
 
     
@@ -14,44 +11,65 @@
 
 
 
-<button on:click style="--fontSize:{fontSize + "px"}; --color:{convert(color)}; --colorDark:{convert(darken(color, 22))};">{name}</button>
+<button on:click style="--fontSize:{fontSize + "px"};"><div id=inner>{name}</div></button>
     
 
 
 
 
 <style>
+    
+
+
     button {
-        display: inline-block;
+        box-shadow: 0 0 0 var(--light), 0 0 0 var(--dark);
+        transition: box-shadow 0.05s ease-in;
 
-        box-sizing: content-box;
-        padding: 8px;
+        cursor: pointer;
 
-        font-family: 'Rubik', sans-serif;
-        font-weight: 500;
-        text-align: center;
-        font-size: var(--fontSize);
-
-        background-color: var(--buttonBackground);
-
+        padding: 0;
 
         border: none;
-        border-top: solid var(--color) 3px;
-        
-        transition: all 0.1s;
-        transition-timing-function: ease-out;
-        
+        border-radius: var(--radius);
+
+        background-color: var(--element);
     }
 
-
     button:hover {
-        background-color: var(--buttonHoverBackground);
-        border-color: var(--colorDark);
+        box-shadow: -7px -7px 10px var(--light), 7px 7px 10px var(--dark);
     }
 
     button:active {
-        background-color: var(--buttonActiveBackground);
-        transition: all 0s;
+        transition: box-shadow 0s;
+        box-shadow: 0 0 0 var(--light), 0 0 0 var(--dark);
+    }
+
+
+    #inner {
+        color: var(--textLight);
+        font-family: 'Open Sans', sans-serif;
+        font-size: var(--fontSize);
+        font-weight: 600;
+
+        padding: 13px;
+
+        border: none;
+        border-radius: 10px;
+
+
+        transition: box-shadow 0.05s ease-out, color 0.3s;
+        box-shadow: inset 0 0 0 var(--light), inset 0 0 0 var(--dark);
+    }
+
+
+    #inner:hover {
+        color: var(--text);
+    }
+
+    #inner:active {
+        transition: box-shadow 0s;
+        color: var(--textDark);
+        box-shadow: inset -7px -7px 15px var(--light), inset 7px 7px 15px var(--dark);
     }
 
 </style>

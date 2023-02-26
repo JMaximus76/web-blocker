@@ -1,15 +1,19 @@
 <script lang="ts">
     import ListBlock from "./ListBlock.svelte";
     import { infoListStore } from "../../modules/store";
-    import type { Info } from "../../modules/types";
+
     
-    let infoList = $infoListStore;
-    let currentInfos: Info[] = [];
+
     $: {
-        currentInfos = infoList[infoList.activeMode];
-        console.table(currentInfos);
+        console.table($infoListStore[$infoListStore.activeMode]);
     }
+
+
+
+
+
     
+
 
 </script>
 
@@ -26,11 +30,15 @@
         display: flex;
         flex-direction: column;
 
+        box-sizing: border-box;
+
         width: 100%;
         height: 100%;
-        padding: 5px;
+        padding: 10px;
 
-        border: solid 2px rgb(241, 241, 241);
+        border-radius: var(--radius);
+        
+        box-shadow: -7px -7px 10px var(--light), 7px 7px 10px var(--dark);
 
     }
 

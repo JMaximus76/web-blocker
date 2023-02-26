@@ -1,17 +1,23 @@
-
-
-
-
-
-
 <script lang='ts'>
     import MainPage from "./MainPage.svelte";
+
+
+    
 </script>
+
+
+
+
+
+
 
 
 <div id="container">
     <MainPage />
 </div>
+
+
+
 
 
 
@@ -25,6 +31,6 @@
     }
 
     :global(body) {
-        background: var(--backgroundColor);
+        background: var(--background);
     }
 </style>

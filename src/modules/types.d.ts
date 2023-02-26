@@ -16,7 +16,7 @@ export type InfoList = {
 
 };
 
-//export type ListEntry = { domain: string; url?: never; } | { domain?: never; url: string };
+
 export type ListEntry = {
     type: "domain" | "url";
     value: string;

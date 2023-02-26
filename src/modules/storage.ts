@@ -57,7 +57,6 @@ export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T)
 
 async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
     await browser.storage.local.set({ [key]: item });
-    //await browser.runtime.sendMessage({ type: key, item: item});
 }
 
 
@@ -137,12 +136,18 @@ export async function removeList(info: Info): Promise<void> {
 
 
 
-function clipURL(type: "domain" | "url", url: string): string {
+function clipURL(type: "domain" | "url", url: string): string | null {
+    console.log(`clipURL() was given ${type} and ${url}`);
+
+    let regex: RegExpExecArray | null;
     if (type === "domain") {
-        return /(?<=:\/\/)[^?#]*\//gm.exec(url)![0];
+        regex = /(?<=:\/\/)[^?#]*\//.exec(url);
     } else {
-        return /(?<=:\/\/)[^?#]*/gm.exec(url)![0];
+        regex = /(?<=:\/\/)[^?#]*/.exec(url);
     }
+
+    if (regex === null) return null;
+    return regex[0];
 }
 
 
@@ -158,6 +163,15 @@ export async function addListEntry(info: Info, entry: ListEntry): Promise<void> 
     }
 
     const clipedEntry = clipURL(entry.type, entry.value);
+    if (clipedEntry === null) {
+        const error: PromiseError = {
+            message: "addListEntry() was given an entry that could not be clipped",
+            details: entry
+        }
+        return Promise.reject(error);
+    }
+
+
     if (list.some((element) => element.value === clipedEntry)) {
         const error: PromiseError = {
             message: `addListEntry() was given an entry that already exists in ${generateStorageKey(info)}`,
@@ -228,6 +242,7 @@ export async function modifyList(info: Info, listId?: string, mode?: Mode): Prom
 
 
 export function checkWithListEntry(entry: ListEntry, url: string): boolean {
+    console.log(`checkWithListEntry() was given ${entry.type} and ${entry.value} and ${url}`);
     const clipedUrl = clipURL(entry.type, url);
     return entry.value === clipedUrl;
 }
@@ -260,7 +275,7 @@ export async function registerNewList(info: Info): Promise<void> {
 }
 
 
-async function getList(info: Info) {
+export async function getList(info: Info) {
     const item: Record<string, (List | undefined)> = await browser.storage.local.get(generateStorageKey(info));
     return item[generateStorageKey(info)];
 }
