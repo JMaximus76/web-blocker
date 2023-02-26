@@ -1,4 +1,3 @@
-
 <script lang="ts">
     const blockedURL = new URLSearchParams(window.location.search).get("url");
 </script>

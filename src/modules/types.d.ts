@@ -1,52 +1,28 @@
 
+export type Mode = "block" | "allow";
 
-
-
-type BaseInfoList = { readonly name: string; };
-type BaseBlockInfo = { readonly mode: "block" };
-type BaseAllowInfo = { readonly mode: "allow" };
-
-type BlockInfo = BaseInfoList & BaseBlockInfo;
-type AllowInfo = BaseInfoList & BaseAllowInfo;
-
-
-export type InfoDetails = {
-    active: boolean = false;
-    locked: boolean = false;
-}
-
-// don't work but I spend like 3 hours on this so its saying for now
-// export type Or<T> = {
-//     [K in keyof T]: {
-//         [L in K]: never;
-//     } & {
-//         [P in Exclude<keyof T, K>]: T[P];
-        
-//     };
-// }[keyof T];
-
-
-export type Info = BaseInfoList & (BaseBlockInfo | BaseAllowInfo);
+export type Info = {
+    readonly name: string;
+    readonly mode: Mode;
+    active: boolean;
+    locked: boolean;
+};
 
 
 export type InfoList = {
-    activeMode: "block" | "allow";
-    block: (BlockInfo & InfoDetails)[];
-    allow: (AllowInfo & InfoDetails)[];
+    activeMode: Mode;
+    block: Info[];
+    allow: Info[];
 
 };
 
-export type ListEntry = { domain: string; url?: never; } | { domain?: never; url: string };
 
-export type Blocklist = {
-    info: BlockInfo;
-    entrys: ListEntry[];
+export type ListEntry = {
+    type: "domain" | "url";
+    value: string;
 };
 
-export type Allowlist = {
-    info: AllowInfo;
-    entrys: ListEntry[];
-};
+export type List = ListEntry[];
 
 
 export type Settings = {
@@ -61,9 +37,12 @@ export type StorageItemMap = {
 
 
 export type PromiseError = {
-    error: Error;
+    message: string;
     details?: any;
 };
+
+
+
 
 
 
