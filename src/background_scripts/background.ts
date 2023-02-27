@@ -144,19 +144,20 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 
 
-async function timerUpdate(alarm: browser.Alarms.Alarm): Promise<void> {
-    const timer: Timer | undefined = (await browser.storage.local.get(alarm.name))[alarm.name];
-    if (timer === undefined) {
-        console.error(new Error(`Timer ${alarm.name} not found`));
-    }
 
-    timer!.time += 1;
-
-    await browser.storage.local.set({ [alarm.name]: timer });
-}
 
 
 browser.alarms.onAlarm.addListener((alarm) => {
+    async function timerUpdate(alarm: browser.Alarms.Alarm): Promise<void> {
+        const timer: Timer | undefined = (await browser.storage.local.get(alarm.name))[alarm.name];
+        if (timer === undefined) {
+            console.error(new Error(`Timer ${alarm.name} not found`));
+        }
+
+        timer!.time += 1;
+
+        await browser.storage.local.set({ [alarm.name]: timer });
+    }
     
 
     timerUpdate(alarm).catch(handelError);

@@ -105,11 +105,11 @@ export function isInInfoList(info: Info, infoList: InfoList): boolean {
 }
 
 export function  getActiveInfos(infoList: InfoList): Info[] {
-    const active: Info[] = [];
-    infoList[infoList.activeMode].forEach((info: Info) => {
-        if (info.active) active.push(info);
-    });
-    return active;
+    // const active: Info[] = [];
+    // infoList[infoList.activeMode].forEach((info: Info) => {
+    //     if (info.active) active.push(info);
+    // });
+    return infoList[infoList.activeMode].filter( (info: Info) => info.active);
 }
 
 export function getIndex(info: Info, infoList: InfoList): number {
@@ -349,6 +349,7 @@ async function getTimers(): Promise<{ [key: string]: Timer }> {
 
 
 // takes the current values in timerList and adds them to the current time in infoLise then clears timerList
+// THIS IS BAD I NEED TO CHANGE THIS, DON'T GO BACKWARDS 
 export async function liftTimers(): Promise<void> {
     const infoList = await getStorageItem("infoList");
     const timers = await getTimers();
