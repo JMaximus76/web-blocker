@@ -6,6 +6,10 @@ export type Info = {
     readonly mode: Mode;
     active: boolean;
     locked: boolean;
+    timer?: {
+        current: number;
+        max: number;
+    };
 };
 
 
@@ -17,6 +21,14 @@ export type InfoList = {
 };
 
 
+
+
+export type Timer = {
+    time: number;
+    start: number;
+}
+
+
 export type ListEntry = {
     type: "domain" | "url";
     value: string;
@@ -26,10 +38,10 @@ export type List = ListEntry[];
 
 
 export type Settings = {
-    isActive: boolean;
 };
 
 export type StorageItemMap = {
+    active: boolean;
     settings: Settings;
     infoList: InfoList;
 }
@@ -37,7 +49,7 @@ export type StorageItemMap = {
 
 
 export type PromiseError = {
-    message: string;
+    message: Error;
     details?: any;
 };
 
