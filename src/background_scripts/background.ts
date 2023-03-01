@@ -16,15 +16,7 @@ browser.runtime.onInstalled.addListener(() => {
     const allowInfo = generateInfo({ mode: "allow", name: "Allowlist", active: true });
 
 
-    const testArray: StorageInfo[] = [];
-    testArray[0] = generateInfo({ mode: "block", name: "Test1", active: true, timer: { current: 0, max: 5 } });
-    // testArray[1] = generateInfo({ mode: "block", name: "Test2", active: true });
-    // testArray[2] = generateInfo({ mode: "allow", name: "Test3", active: true });
-    // testArray[3] = generateInfo({ mode: "allow", name: "Test4", active: true });
-    // testArray[4] = generateInfo({ mode: "block", name: "Test5", active: true });
-    // testArray[5] = generateInfo({ mode: "block", name: "Test6", active: true });
-    // testArray[6] = generateInfo({ mode: "block", name: "Test7", active: true });
-    // testArray[7] = generateInfo({ mode: "block", name: "Test8", active: true });
+    
 
     async function test(): Promise<void> {
         for(const info of testArray) {

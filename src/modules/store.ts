@@ -1,27 +1,9 @@
 import { readable, type Readable } from "svelte/store";
 import browser from "webextension-polyfill";
 import { InfoList } from "./infoList";
-import { generateBlankInfoList, generateDefaultSettings, getStorageItem } from "./storage";
-import type { UpdateMessageMap } from "./types";
+import { getStorageItem } from "./storage";
 
 
-
-
-// export const infoListStore = readable(new InfoList, function start(set) {
-//     getStorageItem("infoList")
-//         .then((infoList) => set(infoList))
-//         .catch((error) => console.error(error));
-
-//     const onUpdate = (changes: Record<string, any>) => {
-//         if (changes.infoList) set(changes.infoList.newValue);
-//     };
-
-//     browser.storage.onChanged.addListener(onUpdate);
-
-//     return function stop() {
-//         browser.runtime.onMessage.removeListener(onUpdate);
-//     };
-// });
 
 
 
@@ -42,7 +24,6 @@ function createInfoListStore(): Readable<InfoList> {
             browser.runtime.onMessage.removeListener(onMessage);
         }
     });
-
 }
 
 
