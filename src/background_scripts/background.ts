@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 
 import { getStorageItem, registerNewList, initStorageItems, getActiveLists, generateInfo, handelError, addListEntry} from "../modules/storage";
-import type { Info, Timer } from '../modules/types';
+import type { StorageInfo, Timer } from '../modules/types';
 import { checkAgainstLists, setTimers } from '../modules/util';
 
 
@@ -16,7 +16,7 @@ browser.runtime.onInstalled.addListener(() => {
     const allowInfo = generateInfo({ mode: "allow", name: "Allowlist", active: true });
 
 
-    const testArray: Info[] = [];
+    const testArray: StorageInfo[] = [];
     testArray[0] = generateInfo({ mode: "block", name: "Test1", active: true, timer: { current: 0, max: 5 } });
     // testArray[1] = generateInfo({ mode: "block", name: "Test2", active: true });
     // testArray[2] = generateInfo({ mode: "allow", name: "Test3", active: true });
@@ -154,7 +154,7 @@ browser.alarms.onAlarm.addListener((alarm) => {
             console.error(new Error(`Timer ${alarm.name} not found`));
         }
 
-        timer!.time += 1;
+        timer!.total += 1;
 
         await browser.storage.local.set({ [alarm.name]: timer });
     }
