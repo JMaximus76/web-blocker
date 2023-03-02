@@ -1,18 +1,19 @@
-import { readable, type Readable } from "svelte/store";
 import browser from "webextension-polyfill";
-import { InfoList } from "./infoList";
-import { getStorageItem } from "./storage";
+import { readable, type Readable } from "svelte/store";
+import InfoList from "./infoList";
 
 
 
 
+
+export const infoListStore = createInfoListStore();
 
 function createInfoListStore(): Readable<InfoList> {
     const infoList = new InfoList();
 
     return readable(infoList, function start(set) {
 
-        infoList.syncFromStorage().catch((error) => console.error(error));
+        infoList.syncFromStorage().then(() => set(infoList)).catch((error) => console.error(error));
 
         const onMessage = (message: any) => {
             infoList.receiveUpdate(message);
@@ -29,25 +30,25 @@ function createInfoListStore(): Readable<InfoList> {
 
 
 
-export const infoListStore = createInfoListStore();
 
 
+// NEED TO ADD BUT NOT NOW
 
-export const settingsStore = readable(generateDefaultSettings(), function start(set) {
-    getStorageItem("settings")
-        .then((settings) => set(settings))
-        .catch((error) => console.error(error));
+// export const settingsStore = readable(generateDefaultSettings(), function start(set) {
+//     getStorageItem("settings")
+//         .then((settings) => set(settings))
+//         .catch((error) => console.error(error));
 
-    const onUpdate = (changes: Record<string, any>) => {
-        if (changes.settings) set(changes.settings.newValue);
-    };
+//     const onUpdate = (changes: Record<string, any>) => {
+//         if (changes.settings) set(changes.settings.newValue);
+//     };
 
-    browser.storage.onChanged.addListener(onUpdate);
+//     browser.storage.onChanged.addListener(onUpdate);
 
-    return function stop() {
-        browser.runtime.onMessage.removeListener(onUpdate);
-    }
-});
+//     return function stop() {
+//         browser.runtime.onMessage.removeListener(onUpdate);
+//     }
+// });
 
 
 

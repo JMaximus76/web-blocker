@@ -17,7 +17,7 @@ export type StorageInfo = {
     readonly mode: Mode;
     active: boolean;
     locked: boolean;
-    timer: boolean;
+    useTimer: boolean;
 };
 
 
@@ -29,7 +29,7 @@ export type StorageInfoList = {
 };
 
 
-export type Timer = {
+export type StorageTimer = {
     total: number;
     max: number;
     start: number;
@@ -40,12 +40,12 @@ export type ListEntry = {
     type: "domain" | "url";
     value: string;
 };
-export type List = ListEntry[];
 
 
 
 
-export type Settings = {
+
+export type StorageSettings = {
     isActive: boolean;
 };
 
@@ -54,7 +54,7 @@ export type Settings = {
 
 export type StorageItemMap = {
     schedule: {};
-    settings: Settings;
+    settings: StorageSettings;
     infoList: StorageInfoList;
 }
 

@@ -1,11 +1,11 @@
 import browser from "webextension-polyfill";
-import { Info } from "./info";
+import Info from "./info";
 import { getStorageItem, setStorageItem } from "./storage";
 import type { StorageInfo, Mode, UpdateMessageMap, StorageInfoList } from "./types";
 
 
 
-export class InfoList {
+export default class InfoList {
     #updateSent: boolean = false;
 
     #activeMode: Mode;
@@ -13,7 +13,7 @@ export class InfoList {
 
     #infos: Record<string, Info>;
 
-    readonly #infoRefs = Info.refFunctions(this);
+    readonly #infoRefs = Info.getRefFunctions(this);
 
     
 
@@ -51,12 +51,18 @@ export class InfoList {
     
 
     save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): void {
+        console.log(`Save was called with id: ${id}`);
+        console.table(item);
         this.#updateSent = true;
-        browser.runtime.sendMessage({ id: id, item: item })
-            .then(() => setStorageItem("infoList", this.storage))
+        setStorageItem("infoList", this.storage)
+            .then(() => browser.runtime.sendMessage({ id: id, item: item }))
             .catch((e) => console.error(e));
     }
 
+
+    //this is for the svelte stores. If there are two instances of InfoList (the settings and popup) then when one calls save() the
+    //message will be received by the svelte store and its will then call receiveUpdate() on its copy of InfoList. This *should* keep
+    //both copies in sync. Key word *should*
     receiveUpdate<T extends keyof UpdateMessageMap>({id, item}: {id: T, item: UpdateMessageMap[T]} ): void {
         if (this.#updateSent) {
             console.log("Update received from self");
@@ -72,7 +78,7 @@ export class InfoList {
                 if (info) {
                     info.locked = storageInfo.locked;
                     info.active = storageInfo.active;
-                    info.timer = storageInfo.timer;
+                    info.useTimer = storageInfo.useTimer;
                 } else {
                     console.error(new Error("receiveUpdate() was tyring to update an info but the message it received did not point to a valid info"));
                 }
@@ -98,48 +104,22 @@ export class InfoList {
     
 
 
-    updateInfo(info: Info): void {
-        if (!this.checkInfo(info.id)) {
-            console.log(new Error(`Info with id '${info.id}' does not exist`));
-            return;
-        }
 
-        this.#infos[info.id] = info;
-        this.save("info", info.storage);
-    }
 
     checkInfo(id: string): boolean {
         return this.#infos[id] !== undefined;
     }
 
 
-    addInfo(info: Info): void {
-        if (this.checkInfo(info.id)) {
-            console.log(new Error(`Info with id '${info.id}' already exists`));
-            return;
-        }
-        
-        this.#infos[info.id] = info;
-        this.save("infos", this.storage.infos);
-    }
 
-    removeInfo(id: string): void {
-        delete this.#infos[id];
-        this.save("infos", this.storage.infos);
-    }
+    modifyInfo(oldId: string, {name, mode}: {name: string, mode: Mode}): void {
+        if (!this.checkInfo(oldId)) throw new Error(`Info with id '${oldId}' does not exist`);
+        const newId = `${mode}-${name}`;
+        if (this.checkInfo(newId)) throw new Error(`Info with id '${newId}' already exists`);
 
-    modifyInfo(id: string, info: Info): void {
-        if (!this.checkInfo(id)) {
-            console.log(new Error(`Info with id '${id}' does not exist`));
-            return;
-        }
-        if (this.checkInfo(info.id)) {
-            console.log(new Error(`Info with id '${info.id}' already exists`));
-            return;
-        }
 
-        this.removeInfo(id);
-        this.addInfo(info);
+        this.#infos[newId] = this.#infos[oldId];
+        delete this.#infos[oldId];
     }
 
     getInfo(name: string, mode: Mode): Info | undefined {
@@ -149,15 +129,23 @@ export class InfoList {
 
 
 
-    async registerNewList(name: string, mode: Mode) {
-        if (this.getInfo(name, mode)) {
-            console.log(new Error(`Info with name '${name}' and mode '${mode}' already exists`));
-            return;
-        }
+    async registerNewList(name: string, mode: Mode): Promise<Info> {
+        if (this.getInfo(name, mode)) throw new Error(`Info with name '${name}' and mode '${mode}' already exists`);
 
-        const info = new Info({ name: name, mode: mode, active: false, locked: false, timer: false }, this.#infoRefs);
-        this.addInfo(info);
+        const info = new Info({ name: name, mode: mode, active: false, locked: false, useTimer: false }, this.#infoRefs);
+        await info.init();
+        
+        this.#infos[info.id] = info;
         this.save("infos", this.storage.infos);
+        return info;
+    }
+
+
+    removeList(id: string): void {
+        if (!this.checkInfo(id)) throw new Error(`Info with id '${id}' does not exist`);
+
+        this.#infos[id].deleteObjects();
+        delete this.#infos[id];
     }
 
 
@@ -188,14 +176,17 @@ export class InfoList {
         return Object.values(this.#infos).filter(info => info.mode === "allow");
     }
 
+    get activeInfos(): Info[] {
+        return Object.values(this.#infos).filter(info => info.active);
+    }
 
-    
 
 
 
-
-    
-
+    static init(): Promise<void> {
+        const infoList = new InfoList();
+        return setStorageItem("infoList", infoList.storage);
+    }
 
 
 }

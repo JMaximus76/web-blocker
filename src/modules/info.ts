@@ -1,29 +1,26 @@
 import browser from 'webextension-polyfill';
-import type { InfoList } from "./infoList";
-import type { List, Mode, StorageInfo, Timer } from "./types";
+import type InfoList from "./infoList";
+import List from './list';
+import Timer from './timer';
+import type { ListEntry, Mode, StorageInfo, StorageTimer } from "./types";
 
 
 
 
 
-export class Info {
-    readonly #update: () => void;
-    readonly modify: () => void;
-    readonly check: () => boolean;
+export default class Info {
 
-    
-    
     static async registerNewList(name: string, mode: Mode, ref: InfoList): Promise<Info> {
-        const info = new Info( {name: name, mode: mode, active: false, locked: false, timer: false}, Info.refFunctions(ref) );
+        const info = new Info( {name: name, mode: mode, active: false, locked: false, useTimer: false}, Info.getRefFunctions(ref) );
         await browser.storage.local.set( { [info.listId]: [] } );
         return info;
     }
 
 
-    static refFunctions(infoList: InfoList) {
+    static getRefFunctions(infoList: InfoList) {
 
-        const update = (infoList: InfoList) => (info: Info) => () => infoList.updateInfo(info);
-        const modify = (infoList: InfoList) => (info: Info, id: string) => () => infoList.modifyInfo(id, info);
+        const update = (infoList: InfoList) => (info: Info) => () => infoList.save("info", info.storage);
+        const modify = (infoList: InfoList) => (id: string) => (name: string, mode: Mode) => infoList.modifyInfo(id, {name, mode});
         const check  = (infoList: InfoList) => (info: Info) => () => infoList.checkInfo(info.id);
 
         return {
@@ -32,26 +29,40 @@ export class Info {
             check: check(infoList),
         }
     } 
+
+
+
+
+
+
     
 
+    readonly #update: () => void;
+    readonly modify: (name: string, mode: Mode) => void;
+    readonly check: () => boolean;
 
     #name: string;
     #mode: Mode;
     active: boolean;
     locked: boolean;
-    timer: boolean;
+    useTimer: boolean;
 
-    constructor( { name, mode, active, locked, timer }: StorageInfo, { update, modify, check }: ReturnType<typeof Info.refFunctions> ) {
+
+
+
+
+    constructor( { name, mode, active, locked, useTimer }: StorageInfo, { update, modify, check }: ReturnType<typeof Info.getRefFunctions> ) {
         this.#name = name;
         this.#mode = mode;
         this.active = active;
         this.locked = locked;
-        this.timer = timer;
+        this.useTimer = useTimer;
 
         this.#update = update(this);
-        this.modify = modify(this, this.id);
+        this.modify = modify(this.id);
         this.check = check(this);
 
+ 
     }
 
     get storage(): StorageInfo {
@@ -60,7 +71,7 @@ export class Info {
             mode: this.#mode,
             active: this.active,
             locked: this.locked,
-            timer: this.timer,
+            useTimer: this.useTimer,
         };
     }
 
@@ -76,16 +87,30 @@ export class Info {
     }
 
 
-    async pullList(): Promise<List> {
-        const storageItem = await browser.storage.local.get(this.listId);
-        return storageItem[this.listId] as List;
+
+    async init(): Promise<void> {
+        await browser.storage.local.set( { [this.listId]: [] } );
+        await browser.storage.local.set( { [this.timerId]: { time: 0, active: false } } );
     }
 
-    async pullTimer(): Promise<Timer> {
-        const storageItem = await browser.storage.local.get(this.timerId);
-        return storageItem[this.timerId] as Timer;
+
+    get list(): Promise<List> {
+        return browser.storage.local.get(this.listId)
+            .then( (storageItem: Record<string, ListEntry[]>) => new List(storageItem[this.listId]) );
     }
 
+    get timer(): Promise<Timer> {
+        return browser.storage.local.get(this.timerId)
+            .then( (storageItem: Record<string, StorageTimer>) => new Timer(this.timerId, storageItem[this.timerId]) );
+    }
+
+    
+
+
+    async deleteObjects(): Promise<void> {
+        await browser.storage.local.remove(this.listId);
+        await browser.storage.local.remove(this.timerId);
+    }
     
 
 
@@ -94,6 +119,12 @@ export class Info {
     }
     get mode(): Mode {
         return this.#mode;
+    }
+
+    rename(name: string, mode: Mode): void {
+        this.modify(name, mode);
+        this.#name = name;
+        this.#mode = mode;
     }
     
 
@@ -107,20 +138,12 @@ export class Info {
         this.#update();
     }
     toggleTimer(): void {
-        this.timer = !this.timer;
+        this.useTimer = !this.useTimer;
         this.#update();
-    }
+    } 
 
 
-    set name(name: string) {
-        this.#name = name;
-        this.modify();
-    }
-
-    set mode(mode: Mode) {
-        this.#mode = mode;
-        this.modify();
-    }
+    
 
 
 }

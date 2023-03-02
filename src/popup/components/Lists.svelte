@@ -2,23 +2,11 @@
     import ListBlock from "./ListBlock.svelte";
     import { infoListStore } from "../../modules/store";
 
-    
-
-    $: {
-        console.table($infoListStore[$infoListStore.activeMode]);
-    }
-
-
-
-
-
-    
-
 
 </script>
 
 <div>
-    {#each $infoListStore[$infoListStore.activeMode] as info}
+    {#each $infoListStore.activeInfos as info}
         <ListBlock info={info} />
     {/each}
 </div>

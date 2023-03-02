@@ -2,9 +2,11 @@
     import Header from "./components/Header.svelte";
     import Lists from "./components/Lists.svelte";
     import Button from "./components/Button.svelte";
-    import { switchActiveMode } from "../modules/storage";
+    import { infoListStore } from "../modules/store"
 
 
+
+    
 
 </script>
 
@@ -15,8 +17,8 @@
 <div id="main">
     <Header />
 
-             <!-- should change to take any type of sizing px, %, em, etc. -->
-    <Button on:click={switchActiveMode} name={"Change Mode"} fontSize={17}/>
+                                    <!-- should change to take any type of sizing px, %, em, etc. -->
+    <Button on:click={$infoListStore.toggleActiveMode} name={"Change Mode"} fontSize={17}/>
     <div id="lists">
         <Lists />
     </div>
