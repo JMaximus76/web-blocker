@@ -6,11 +6,13 @@ import type { ListEntry } from "./types";
 
 export default class List {
 
-
+    #id: string;
     #list: ListEntry[];
+    
 
 
-    constructor(list: ListEntry[]) {
+    constructor(id: string, list: ListEntry[]) {
+        this.#id = id;
         this.#list = list;
     }
 
@@ -35,9 +37,13 @@ export default class List {
         return { type, value };
     }
 
+    get list(): ListEntry[] {
+        return this.#list
+    }
+
 
     save(): Promise<void> {
-        return browser.storage.local.set({ list: this.#list });
+        return browser.storage.local.set({ [this.#id]: this.#list });
     }
 
 

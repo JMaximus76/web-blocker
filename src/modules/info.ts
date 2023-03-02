@@ -37,7 +37,7 @@ export default class Info {
 
     
 
-    readonly #update: () => void;
+    readonly    #update: () => void;
     readonly modify: (name: string, mode: Mode) => void;
     readonly check: () => boolean;
 
@@ -96,7 +96,7 @@ export default class Info {
 
     get list(): Promise<List> {
         return browser.storage.local.get(this.listId)
-            .then( (storageItem: Record<string, ListEntry[]>) => new List(storageItem[this.listId]) );
+            .then( (storageItem: Record<string, ListEntry[]>) => new List(this.listId, storageItem[this.listId]) );
     }
 
     get timer(): Promise<Timer> {

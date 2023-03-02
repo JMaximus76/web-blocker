@@ -24,14 +24,16 @@ browser.runtime.onInstalled.addListener(() => {
         
 
         const block = await infoList.registerNewList("Blocklist", "block");
+        block.toggleActive();
+        console.log(infoList.getInfo(block.name, block.mode));
         const blockList = await block.list;
-
         blockList.addEntry(List.createEntry("domain", "https://www.youtube.com/"));
         blockList.addEntry(List.createEntry("domain", "https://www.netflix.com/"));
         blockList.addEntry(List.createEntry("url", "https://commons.wikimedia.org/wiki/Main_Page"));
         await blockList.save();
 
         const allow = await infoList.registerNewList("Allowlist", "allow");
+        allow.toggleActive();
         const allowList = await allow.list;
         allowList.addEntry(List.createEntry("domain", "https://www.freecodecamp.org/"));
         allowList.addEntry(List.createEntry("domain", "https://www.learncpp.com/"));
@@ -60,15 +62,17 @@ browser.runtime.onInstalled.addListener(() => {
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     async function onNavigate(navigate: browser.WebNavigation.OnBeforeNavigateDetailsType): Promise<void> {
+        console.log(`navigating to ${navigate.url}`);
 
         const infoList = new InfoList();
         await infoList.syncFromStorage();
-
-        const activeInfos = infoList.activeInfos;
+        
+        
 
         
-        for (const info of activeInfos) {
+        for (const info of infoList.activeInfos) {
             const list = await info.list;
+            console.table(list.list);
             const match = list.check(navigate.url);
             const doBlocking = (match && info.mode === "block") || (!match && info.mode === "allow");
             if (doBlocking) {
@@ -85,6 +89,8 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     if (navigate.frameId !== 0) return;
     if (navigate.url.includes(blockedPageURL)) return;
     onNavigate(navigate).catch(handelError);
+
+
 }, { url: [{ urlMatches: "https://*/*" }, { urlMatches: "http://*/*" }] });
 
 

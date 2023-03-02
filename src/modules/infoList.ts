@@ -55,8 +55,8 @@ export default class InfoList {
         console.table(item);
         this.#updateSent = true;
         setStorageItem("infoList", this.storage)
-            .then(() => browser.runtime.sendMessage({ id: id, item: item }))
-            .catch((e) => console.error(e));
+            .then(() => browser.runtime.sendMessage({ id: id, item: item }).catch(() => console.log("failed to send update message")))
+            .catch((e) => console.error(new Error(e)));
     }
 
 
@@ -177,7 +177,7 @@ export default class InfoList {
     }
 
     get activeInfos(): Info[] {
-        return Object.values(this.#infos).filter(info => info.active);
+        return Object.values(this.#infos).filter(info => info.active && (info.mode === this.#activeMode));
     }
 
 
