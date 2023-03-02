@@ -12,13 +12,15 @@ function createInfoListStore(): Readable<InfoList> {
     const infoList = new InfoList();
 
     return readable(infoList, function start(set) {
-
+        infoList //set stuff woooo
         infoList.syncFromStorage().then(() => set(infoList)).catch((error) => console.error(error));
 
         const onMessage = (message: any) => {
             infoList.receiveUpdate(message);
             set(infoList);
         };
+
+
         browser.runtime.onMessage.addListener(onMessage);
 
         return function stop() {

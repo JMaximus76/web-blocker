@@ -2,6 +2,7 @@
     import ListBlock from "./ListBlock.svelte";
     import { infoListStore } from "../../modules/store";
 
+    
 
 </script>
 

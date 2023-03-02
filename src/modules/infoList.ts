@@ -1,3 +1,4 @@
+import type { Subscriber } from "svelte/store";
 import browser from "webextension-polyfill";
 import Info from "./info";
 import { getStorageItem, setStorageItem } from "./storage";
@@ -12,6 +13,8 @@ export default class InfoList {
     #useSchedule: boolean;
 
     #infos: Record<string, Info>;
+
+    #set: Subscriber<InfoList> | undefined = undefined;
 
     readonly #infoRefs = Info.getRefFunctions(this);
 
@@ -48,12 +51,18 @@ export default class InfoList {
     }
 
 
+    set svelteSet(set: Subscriber<InfoList> | undefined ) {
+        this.#set = set;
+    }
     
 
     save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): void {
         console.log(`Save was called with id: ${id}`);
         console.table(item);
         this.#updateSent = true;
+
+        if (this.#set !== undefined) this.#set(this);
+
         setStorageItem("infoList", this.storage)
             .then(() => browser.runtime.sendMessage({ id: id, item: item }).catch(() => console.log("failed to send update message")))
             .catch((e) => console.error(new Error(e)));

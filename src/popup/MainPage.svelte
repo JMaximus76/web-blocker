@@ -6,7 +6,9 @@
 
 
 
-    
+    function onClick(): void {
+        $infoListStore.toggleActiveMode();
+    }
 
 </script>
 
@@ -18,7 +20,7 @@
     <Header />
 
                                     <!-- should change to take any type of sizing px, %, em, etc. -->
-    <Button on:click={$infoListStore.toggleActiveMode} name={"Change Mode"} fontSize={17}/>
+    <Button on:click={onClick} name={"Change Mode"} fontSize={17}/>
     <div id="lists">
         <Lists />
     </div>
