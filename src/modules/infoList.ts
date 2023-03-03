@@ -7,15 +7,13 @@ import type { StorageInfo, Mode, UpdateMessageMap, StorageInfoList } from "./typ
 
 
 export default class InfoList {
-    #updateSent: boolean = false;
+
 
     #activeMode: Mode;
     #useSchedule: boolean;
-
     #infos: Record<string, Info>;
 
     #set: Subscriber<InfoList> | undefined = undefined;
-
     readonly #infoRefs = Info.getRefFunctions(this);
 
     
@@ -23,7 +21,6 @@ export default class InfoList {
     constructor() {
         this.#activeMode = "block";
         this.#useSchedule = false;
-
         this.#infos = {};
     }
 
@@ -48,6 +45,7 @@ export default class InfoList {
     async syncFromStorage(): Promise<void> {
         const storage = await getStorageItem("infoList");
         this.storage = storage;
+        if (this.#set !== undefined) this.#set(this);
     }
 
 
@@ -57,30 +55,28 @@ export default class InfoList {
     
 
     save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): void {
-        console.log(`Save was called with id: ${id}`);
-        console.table(item);
-        this.#updateSent = true;
-
         if (this.#set !== undefined) this.#set(this);
 
         setStorageItem("infoList", this.storage)
-            .then(() => browser.runtime.sendMessage({ id: id, item: item }).catch(() => console.log("failed to send update message")))
+            .then(() => browser.runtime.sendMessage({ id: id, item: item }).catch(() => {/*WHEN I ADD A SETTINGS PAGE WILL FIX*/}))
             .catch((e) => console.error(new Error(e)));
+    }
+
+
+    startListening(): void {
+        browser.runtime.onMessage.addListener(this.#receiveUpdate);
+    }
+
+    stopListening(): void {
+        browser.runtime.onMessage.removeListener(this.#receiveUpdate);
     }
 
 
     //this is for the svelte stores. If there are two instances of InfoList (the settings and popup) then when one calls save() the
     //message will be received by the svelte store and its will then call receiveUpdate() on its copy of InfoList. This *should* keep
     //both copies in sync. Key word *should*
-    receiveUpdate<T extends keyof UpdateMessageMap>({id, item}: {id: T, item: UpdateMessageMap[T]} ): void {
-        if (this.#updateSent) {
-            console.log("Update received from self");
-            this.#updateSent = false;
-            return;
-        }
-
+    #receiveUpdate<T extends keyof UpdateMessageMap>({id, item}: {id: T, item: UpdateMessageMap[T]} ): void {
         switch (id) {
-
             case "info":
                 const storageInfo = item as UpdateMessageMap["info"];
                 const info = this.getInfo(storageInfo.name, storageInfo.mode);
@@ -187,6 +183,14 @@ export default class InfoList {
 
     get activeInfos(): Info[] {
         return Object.values(this.#infos).filter(info => info.active && (info.mode === this.#activeMode));
+    }
+
+    get currentInfos(): Info[] {
+        return Object.values(this.#infos).filter(info => info.mode === this.#activeMode);
+    }
+
+    get infos(): Info[] {
+        return Object.values(this.#infos);
     }
 
 

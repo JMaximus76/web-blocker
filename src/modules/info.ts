@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill';
 import type InfoList from "./infoList";
 import List from './list';
 import Timer from './timer';
-import type { ListEntry, Mode, StorageInfo, StorageTimer } from "./types";
+import type { Mode, StorageInfo } from "./types";
 
 
 
@@ -32,12 +32,9 @@ export default class Info {
 
 
 
-
-
-
     
 
-    readonly    #update: () => void;
+    readonly #update: () => void;
     readonly modify: (name: string, mode: Mode) => void;
     readonly check: () => boolean;
 
@@ -94,14 +91,14 @@ export default class Info {
     }
 
 
-    get list(): Promise<List> {
-        return browser.storage.local.get(this.listId)
-            .then( (storageItem: Record<string, ListEntry[]>) => new List(this.listId, storageItem[this.listId]) );
+    async pullList(): Promise<List> {
+        const storageItem = await browser.storage.local.get(this.listId);
+        return new List(this.listId, storageItem[this.listId]);
     }
 
-    get timer(): Promise<Timer> {
-        return browser.storage.local.get(this.timerId)
-            .then( (storageItem: Record<string, StorageTimer>) => new Timer(this.timerId, storageItem[this.timerId]) );
+    async pullTimer(): Promise<Timer> {
+        const storageItem = await browser.storage.local.get(this.timerId);
+        return new Timer(this.timerId, storageItem[this.timerId]);
     }
 
     

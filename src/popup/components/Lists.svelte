@@ -7,7 +7,7 @@
 </script>
 
 <div>
-    {#each $infoListStore.activeInfos as info}
+    {#each $infoListStore.currentInfos as info}
         <ListBlock info={info} />
     {/each}
 </div>

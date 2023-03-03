@@ -22,6 +22,8 @@ export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T)
     return item[itemKey];
 }
 
+
+
 export async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
     await browser.storage.local.set({ [key]: item });
 }

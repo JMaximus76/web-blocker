@@ -13,7 +13,9 @@
     const lockedText = "Locked List: This list has been locked, you will not be able to enable/disable it in the popup.";
 
 
-    
+    function toggleActive(): void {
+        info.toggleActive();
+    }
 
 
 </script>
@@ -23,12 +25,12 @@
 
 <div id="block">
 
-    <button on:click={info.toggleActive} id="infoButton">
+    <button on:click={toggleActive} id="infoButton">
         <div id="active" class={((info.active)? "enabled" : "disabled")}></div>
         {info.name}
         
         <div id="container">
-            {#await info.list then list}
+            {#await info.pullList() then list}
                 <div class:invisible={!list.check($currentUrlStore)} id="match" title={matchText}>M</div>
             {/await}
             <div class:invisible={!info.locked} id="lock" title={lockedText}>L</div>

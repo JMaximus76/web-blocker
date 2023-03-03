@@ -18,7 +18,6 @@ export default class List {
 
 
     static clipURL(type: "domain" | "url", url: string): string | null {
-        console.log(`clipURL() was given ${type} and ${url}`);
 
         let regex: RegExpExecArray | null;
         if (type === "domain") {
@@ -48,8 +47,6 @@ export default class List {
 
 
     addEntry(entry: ListEntry): void {
-        console.log("in addEntry()");
-        console.table(this.#list);
         this.#list.push(entry);
     }
 

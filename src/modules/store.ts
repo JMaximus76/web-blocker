@@ -9,22 +9,17 @@ import InfoList from "./infoList";
 export const infoListStore = createInfoListStore();
 
 function createInfoListStore(): Readable<InfoList> {
+    
     const infoList = new InfoList();
 
     return readable(infoList, function start(set) {
-        infoList //set stuff woooo
-        infoList.syncFromStorage().then(() => set(infoList)).catch((error) => console.error(error));
 
-        const onMessage = (message: any) => {
-            infoList.receiveUpdate(message);
-            set(infoList);
-        };
+        infoList.svelteSet = set;
+        infoList.syncFromStorage().catch((e) => console.error(new Error(e)));
 
-
-        browser.runtime.onMessage.addListener(onMessage);
-
+        infoList.startListening();
         return function stop() {
-            browser.runtime.onMessage.removeListener(onMessage);
+            infoList.stopListening();
         }
     });
 }
@@ -58,7 +53,7 @@ function createInfoListStore(): Readable<InfoList> {
 export const currentUrlStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].url) set(tabs[0].url) })
-        .catch((error) => console.error(error));
+        .catch((e) => console.error(new Error(e)));
 
     const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
         if (changeInfo.url) set(changeInfo.url);
@@ -69,7 +64,7 @@ export const currentUrlStore = readable("", function start(set) {
             .then((tab: browser.Tabs.Tab) => {
                 if (tab.url) set(tab.url);
             })
-            .catch((error) => console.error(error));
+            .catch((e) => console.error(new Error(e)));
     };
 
     browser.tabs.onUpdated.addListener(onUpdate);
