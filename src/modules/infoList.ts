@@ -14,7 +14,7 @@ export default class InfoList {
     #infos: Record<string, Info>;
 
     #set: Subscriber<InfoList> | undefined = undefined;
-    readonly #infoRefs = Info.getRefFunctions(this);
+    
 
     
 
@@ -24,6 +24,11 @@ export default class InfoList {
         this.#infos = {};
     }
 
+
+    static async init(): Promise<void> {
+        const infoList = new InfoList();
+        await setStorageItem("infoList", infoList.storage);
+    }
 
     get storage(): StorageInfoList {
         return {
@@ -38,7 +43,9 @@ export default class InfoList {
         this.#useSchedule = storage.useSchedule;
 
         const infos: Record<string, Info> = {};
-        storage.infos.map( info => new Info(info, this.#infoRefs) ).forEach( info => infos[info.id] = info );
+
+        const infoSave = Info.makeSaveFunc(this);
+        storage.infos.map( info => new Info(info, infoSave) ).forEach( info => infos[info.id] = info );
         this.#infos = infos;
     }
 
@@ -54,12 +61,11 @@ export default class InfoList {
     }
     
 
-    save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): void {
+    async save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): Promise<void> {
         if (this.#set !== undefined) this.#set(this);
 
-        setStorageItem("infoList", this.storage)
-            .then(() => browser.runtime.sendMessage({ id: id, item: item }).catch(() => {/*WHEN I ADD A SETTINGS PAGE WILL FIX*/}))
-            .catch((e) => console.error(new Error(e)));
+        await setStorageItem("infoList", this.storage);
+        await browser.runtime.sendMessage({ id: id, item: item }).catch(() => {/*WHEN I ADD A SETTINGS PAGE WILL FIX*/});
     }
 
 
@@ -72,8 +78,8 @@ export default class InfoList {
     }
 
 
-    //this is for the svelte stores. If there are two instances of InfoList (the settings and popup) then when one calls save() the
-    //message will be received by the svelte store and its will then call receiveUpdate() on its copy of InfoList. This *should* keep
+    //If there are two instances of InfoList (the settings and popup) then when one calls save() the
+    //message will be received and call receiveUpdate() . This *should* keep
     //both copies in sync. Key word *should*
     #receiveUpdate<T extends keyof UpdateMessageMap>({id, item}: {id: T, item: UpdateMessageMap[T]} ): void {
         switch (id) {
@@ -92,7 +98,8 @@ export default class InfoList {
             case "infos":
                 const storageInfos = item as UpdateMessageMap["infos"];
                 const infos: Record<string, Info> = {};
-                storageInfos.map( info => new Info(info, this.#infoRefs) ).forEach( info => infos[info.id] = info );
+                const infoSave = Info.makeSaveFunc(this);
+                storageInfos.map( info => new Info(info, infoSave) ).forEach( info => infos[info.id] = info );
                 this.#infos = infos;
                 break;
 
@@ -117,14 +124,18 @@ export default class InfoList {
 
 
 
-    modifyInfo(oldId: string, {name, mode}: {name: string, mode: Mode}): void {
-        if (!this.checkInfo(oldId)) throw new Error(`Info with id '${oldId}' does not exist`);
+    async modifyInfo(info: Info, name: string, mode: Mode): Promise<void> {
+        if (info !== this.#infos[info.id]) throw new Error(`Info with id '${info.id}' is not a valid info reference`);
+
         const newId = `${mode}-${name}`;
         if (this.checkInfo(newId)) throw new Error(`Info with id '${newId}' already exists`);
 
 
-        this.#infos[newId] = this.#infos[oldId];
-        delete this.#infos[oldId];
+        delete this.#infos[info.id];
+        await info.modify(name, mode);
+        this.#infos[info.id] = info;
+        await this.save("infos", this.storage.infos);
+     
     }
 
     getInfo(name: string, mode: Mode): Info | undefined {
@@ -137,11 +148,12 @@ export default class InfoList {
     async registerNewList(name: string, mode: Mode): Promise<Info> {
         if (this.getInfo(name, mode)) throw new Error(`Info with name '${name}' and mode '${mode}' already exists`);
 
-        const info = new Info({ name: name, mode: mode, active: false, locked: false, useTimer: false }, this.#infoRefs);
+        const infoSave = Info.makeSaveFunc(this);
+        const info = new Info({ name: name, mode: mode, active: false, locked: false, useTimer: false }, infoSave);
         await info.init();
         
         this.#infos[info.id] = info;
-        this.save("infos", this.storage.infos);
+        await this.save("infos", this.storage.infos);
         return info;
     }
 
@@ -161,18 +173,24 @@ export default class InfoList {
     get activeMode(): Mode {
         return this.#activeMode;
     }
-    toggleActiveMode(): void {
+    async toggleActiveMode(): Promise<void> {
         this.#activeMode = (this.#activeMode === "block") ? "allow" : "block";
-        this.save("activeMode", this.#activeMode);
+        await this.save("activeMode", this.#activeMode);
     }
 
     get useSchedule(): boolean {
         return this.#useSchedule;
     }
-    toggleUseSchedule(): void {
+    async toggleUseSchedule(): Promise<void> {
         this.#useSchedule = !this.#useSchedule;
-        this.save("useSchedule", this.#useSchedule);
+        await this.save("useSchedule", this.#useSchedule);
     }
+
+
+
+
+
+
 
     get block(): Info[] {
         return Object.values(this.#infos).filter( info => info.mode === "block" );
@@ -196,10 +214,7 @@ export default class InfoList {
 
 
 
-    static init(): Promise<void> {
-        const infoList = new InfoList();
-        return setStorageItem("infoList", infoList.storage);
-    }
+    
 
 
 }

@@ -11,33 +11,23 @@ import type { Mode, StorageInfo } from "./types";
 export default class Info {
 
     static async registerNewList(name: string, mode: Mode, ref: InfoList): Promise<Info> {
-        const info = new Info( {name: name, mode: mode, active: false, locked: false, useTimer: false}, Info.getRefFunctions(ref) );
+        const info = new Info( {name: name, mode: mode, active: false, locked: false, useTimer: false}, Info.makeSaveFunc(ref) );
         await browser.storage.local.set( { [info.listId]: [] } );
         return info;
     }
 
 
-    static getRefFunctions(infoList: InfoList) {
+    static makeSaveFunc(infoList: InfoList) {
 
-        const update = (infoList: InfoList) => (info: Info) => () => infoList.save("info", info.storage);
-        const modify = (infoList: InfoList) => (id: string) => (name: string, mode: Mode) => infoList.modifyInfo(id, {name, mode});
-        const check  = (infoList: InfoList) => (info: Info) => () => infoList.checkInfo(info.id);
+        return (info: Info) => () => infoList.save("info", info.storage);
 
-        return {
-            update: update(infoList),
-            modify: modify(infoList),
-            check: check(infoList),
-        }
     } 
 
 
 
     
 
-    readonly #update: () => void;
-    readonly modify: (name: string, mode: Mode) => void;
-    readonly check: () => boolean;
-
+    readonly save: () => ReturnType<typeof InfoList.prototype.save>;
     #name: string;
     #mode: Mode;
     active: boolean;
@@ -48,18 +38,14 @@ export default class Info {
 
 
 
-    constructor( { name, mode, active, locked, useTimer }: StorageInfo, { update, modify, check }: ReturnType<typeof Info.getRefFunctions> ) {
+    constructor( { name, mode, active, locked, useTimer }: StorageInfo, save: ReturnType<typeof Info.makeSaveFunc> ) {
         this.#name = name;
         this.#mode = mode;
         this.active = active;
         this.locked = locked;
         this.useTimer = useTimer;
 
-        this.#update = update(this);
-        this.modify = modify(this.id);
-        this.check = check(this);
-
- 
+        this.save = save(this);
     }
 
     get storage(): StorageInfo {
@@ -86,8 +72,10 @@ export default class Info {
 
 
     async init(): Promise<void> {
-        await browser.storage.local.set( { [this.listId]: [] } );
-        await browser.storage.local.set( { [this.timerId]: { time: 0, active: false } } );
+        const list = new List(this.listId, []);
+        await list.save();
+        const timer = new Timer(this.timerId, { total: 0, max: 0, start: 0 });
+        await timer.save();
     }
 
 
@@ -118,25 +106,32 @@ export default class Info {
         return this.#mode;
     }
 
-    rename(name: string, mode: Mode): void {
-        this.modify(name, mode);
+    async modify(name: string, mode: Mode): Promise<void> {
+
+        const list = await this.pullList();
+        const timer = await this.pullTimer();
+
         this.#name = name;
         this.#mode = mode;
+
+        await list.resetId(this);
+        await timer.resetId(this);
+
     }
     
 
 
-    toggleActive(): void {
+    async toggleActive(): Promise<void> {
         this.active = !this.active;
-        this.#update();
+        await this.save();
     }
-    toggleLocked(): void {
+    async toggleLocked(): Promise<void> {
         this.locked = !this.locked;
-        this.#update();
+        await this.save();
     }
-    toggleTimer(): void {
+    async toggleTimer(): Promise<void> {
         this.useTimer = !this.useTimer;
-        this.#update();
+        await this.save();
     } 
 
 

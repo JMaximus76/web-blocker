@@ -18,6 +18,12 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 browser.runtime.onInstalled.addListener(() => {
 
     async function init(): Promise<void> {
+
+        // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
+        await browser.storage.local.clear();
+
+
+
         await InfoList.init();
         const infoList = new InfoList();
         await infoList.syncFromStorage();
@@ -41,8 +47,18 @@ browser.runtime.onInstalled.addListener(() => {
 
     }
 
+    async function test(): Promise<void> {
+        // const infoList = new InfoList();
+        // await infoList.syncFromStorage();
 
-    init().catch(handelError);
+        // const test = infoList.infos[0];
+        // await infoList.modifyInfo(test, "TestList", "allow");
+        
+        
+    }
+
+
+    init().then(test).catch(handelError);
     
    
     
@@ -60,18 +76,25 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
         const infoList = new InfoList();
         await infoList.syncFromStorage();
         
+        if (infoList.activeInfos.length === 0) return;
         
 
-        
+        let isAllow = infoList.activeMode === "allow";
+        let match = false;
+
         for (const info of infoList.activeInfos) {
             const list = await info.pullList();
-            const match = list.check(navigate.url);
-            const doBlocking = (match && info.mode === "block") || (!match && info.mode === "allow");
-            if (doBlocking) {
-                console.log(`BLOCKING a page with a url of ${navigate.url}`);
-                await browser.tabs.update(navigate.tabId, { url: blockedPageURL + `?url=${navigate.url}` });
-                return;
-            }
+            match = list.check(navigate.url);
+
+            if (match) break;
+        }
+
+        
+    
+        // simpulating an xor
+        if (match != isAllow) {
+            console.log(`BLOCKING a page with a url of ${navigate.url}`);
+            await browser.tabs.update(navigate.tabId, { url: blockedPageURL + `?url=${navigate.url}` });
         }
     }
 

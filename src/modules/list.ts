@@ -1,4 +1,5 @@
 import browser from "webextension-polyfill";
+import type Info from "./info";
 import type { ListEntry } from "./types";
 
 
@@ -36,13 +37,19 @@ export default class List {
         return { type, value };
     }
 
-    get list(): ListEntry[] {
+    get storage(): ListEntry[] {
         return this.#list
     }
 
+    async resetId(info: Info) {
+        await browser.storage.local.remove(this.#id);
+        this.#id = info.listId;
+        await this.save();
+    }
 
-    save(): Promise<void> {
-        return browser.storage.local.set({ [this.#id]: this.#list });
+
+    async save(): Promise<void> {
+        await browser.storage.local.set({ [this.#id]: this.#list });
     }
 
 
@@ -70,4 +77,6 @@ export default class List {
         }
         return false;
     }
+
+    
 }

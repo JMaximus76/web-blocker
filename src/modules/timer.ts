@@ -1,4 +1,6 @@
 import browser from 'webextension-polyfill';
+import type Info from './info';
+import type { StorageTimer } from './types';
 
 
 export default class Timer {
@@ -11,7 +13,7 @@ export default class Timer {
     #startTime: number;
 
 
-    constructor(id: string, { total, max, start}: {total: number, max: number, start: number} ) {
+    constructor(id: string, { total, max, start }: StorageTimer ) {
         this.#id = id;
         this.#total = total;
         this.max = max;
@@ -22,6 +24,25 @@ export default class Timer {
     start() {
         this.#startTime = Date.now();
         browser.alarms.create(this.#id, {  });
+    }
+
+    async resetId(info: Info) {
+        await browser.storage.local.remove(this.#id);
+        this.#id = info.timerId;
+        await this.save();
+    }
+
+
+    async save(): Promise<void> {
+        await browser.storage.local.set({ [this.#id]: this.storage });
+    }
+    
+    get storage(): StorageTimer {
+        return {
+            total: this.#total,
+            max: this.max,
+            start: this.#startTime,
+        }
     }
 
     get startTime(): number {
