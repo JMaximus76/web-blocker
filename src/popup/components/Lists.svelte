@@ -4,23 +4,20 @@
 
     
 
-    $: {
-        console.table($infoListStore[$infoListStore.activeMode]);
-    }
-
-
-
-
-
-    
-
-
 </script>
 
 <div>
-    {#each $infoListStore[$infoListStore.activeMode] as info}
-        <ListBlock info={info} />
-    {/each}
+    {#if $infoListStore.currentInfos.length === 0}
+
+        <p>No {$infoListStore.activeMode} lists</p>
+        
+    {:else}
+
+        {#each $infoListStore.currentInfos as infos}
+            <ListBlock info={infos} />
+        {/each}
+
+    {/if}
 </div>
 
 

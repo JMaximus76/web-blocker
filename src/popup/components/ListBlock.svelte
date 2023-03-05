@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { handelError, updateInfo } from "../../modules/storage";
-    import type { Info } from "../../modules/types";
-    import { checkMatch } from "../../modules/util";
+    import type Info from "../../modules/info";
     import { currentUrlStore } from "../../modules/store";
 
 
@@ -12,11 +10,11 @@
     let matchText: string;
     $: matchText = `Match Found: This list matched with ${$currentUrlStore}`;
 
-    let lockedText = "Locked List: This list has been locked, you will not be able to enable/disable it in the popup.";
+    const lockedText = "Locked List: This list has been locked, you will not be able to enable/disable it in the popup.";
 
 
-    function toggle() {
-        if (!info.locked) updateInfo({...info, active: !info.active}).catch(handelError);
+    function toggleActive(): void {
+        info.toggleActive();
     }
 
 
@@ -27,13 +25,13 @@
 
 <div id="block">
 
-    <button on:click={toggle} id="infoButton">
+    <button on:click={toggleActive} id="infoButton">
         <div id="active" class={((info.active)? "enabled" : "disabled")}></div>
         {info.name}
         
         <div id="container">
-            {#await checkMatch(info, $currentUrlStore ) then matched}
-                <div class:invisible={!matched} id="match" title={matchText}>M</div>
+            {#await info.pullList() then list}
+                <div class:invisible={!list.check($currentUrlStore)} id="match" title={matchText}>M</div>
             {/await}
             <div class:invisible={!info.locked} id="lock" title={lockedText}>L</div>
         </div>

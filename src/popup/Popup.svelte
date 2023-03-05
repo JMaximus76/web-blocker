@@ -1,6 +1,11 @@
 <script lang='ts'>
+    //import { infoListStore } from "../modules/store";
     import MainPage from "./MainPage.svelte";
-
+    
+    // $: {
+    //     console.log("----------infoList update in popup----------");
+    //     console.table($infoListStore.storage);
+    // }
 
     
 </script>

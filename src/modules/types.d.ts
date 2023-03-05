@@ -1,31 +1,38 @@
 
 export type Mode = "block" | "allow";
 
-export type Info = {
+
+
+export type UpdateMessageMap = {
+    "info": StorageInfo;
+    "infos": StorageInfo[];
+    "activeMode": Mode;
+    "useSchedule": boolean;
+};
+
+
+
+export type StorageInfo = {
     readonly name: string;
     readonly mode: Mode;
     active: boolean;
     locked: boolean;
-    timer?: {
-        current: number;
-        max: number;
-    };
+    useTimer: boolean;
 };
 
 
-export type InfoList = {
+export type StorageInfoList = {
     activeMode: Mode;
-    block: Info[];
-    allow: Info[];
+    useSchedule: boolean;
+    infos: StorageInfo[];
 
 };
 
 
-
-
-export type Timer = {
-    time: number;
-    start: number;
+export type StorageTimer = {
+    total: number;
+    max: number;
+    start: number | null;
 }
 
 
@@ -34,16 +41,25 @@ export type ListEntry = {
     value: string;
 };
 
-export type List = ListEntry[];
 
 
-export type Settings = {
+export type TimerList = string[];
+
+
+
+
+export type StorageSettings = {
+    isActive: boolean;
 };
 
+
+
+
 export type StorageItemMap = {
-    active: boolean;
-    settings: Settings;
-    infoList: InfoList;
+    schedule: {};
+    settings: StorageSettings;
+    infoList: StorageInfoList;
+    timerList: TimerList;
 }
 
 

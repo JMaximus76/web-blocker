@@ -1,43 +1,51 @@
-import { readable } from "svelte/store";
 import browser from "webextension-polyfill";
-import { generateBlankInfoList, generateDefaultSettings, getStorageItem } from "./storage";
+import { readable, type Readable } from "svelte/store";
+import InfoList from "./infoList";
 
 
 
 
-export const infoListStore = readable(generateBlankInfoList(), function start(set) {
-    getStorageItem("infoList")
-        .then((infoList) => set(infoList))
-        .catch((error) => console.error(error));
 
-    const onUpdate = (changes: Record<string, any>) => {
-        if (changes.infoList) set(changes.infoList.newValue);
-    };
+export const infoListStore = createInfoListStore();
 
-    browser.storage.onChanged.addListener(onUpdate);
+function createInfoListStore(): Readable<InfoList> {
+    
+    const infoList = new InfoList();
 
-    return function stop() {
-        browser.runtime.onMessage.removeListener(onUpdate);
-    };
-});
+    return readable(infoList, function start(set) {
+
+        infoList.svelteSet = set;
+        infoList.syncFromStorage().catch((e) => console.error(new Error(e)));
+
+        infoList.startListening();
+        return function stop() {
+            infoList.stopListening();
+        }
+    });
+}
 
 
 
-export const settingsStore = readable(generateDefaultSettings(), function start(set) {
-    getStorageItem("settings")
-        .then((settings) => set(settings))
-        .catch((error) => console.error(error));
 
-    const onUpdate = (changes: Record<string, any>) => {
-        if (changes.settings) set(changes.settings.newValue);
-    };
 
-    browser.storage.onChanged.addListener(onUpdate);
 
-    return function stop() {
-        browser.runtime.onMessage.removeListener(onUpdate);
-    }
-});
+// NEED TO ADD BUT NOT NOW
+
+// export const settingsStore = readable(generateDefaultSettings(), function start(set) {
+//     getStorageItem("settings")
+//         .then((settings) => set(settings))
+//         .catch((error) => console.error(error));
+
+//     const onUpdate = (changes: Record<string, any>) => {
+//         if (changes.settings) set(changes.settings.newValue);
+//     };
+
+//     browser.storage.onChanged.addListener(onUpdate);
+
+//     return function stop() {
+//         browser.runtime.onMessage.removeListener(onUpdate);
+//     }
+// });
 
 
 
@@ -45,7 +53,7 @@ export const settingsStore = readable(generateDefaultSettings(), function start(
 export const currentUrlStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].url) set(tabs[0].url) })
-        .catch((error) => console.error(error));
+        .catch((e) => console.error(new Error(e)));
 
     const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
         if (changeInfo.url) set(changeInfo.url);
@@ -56,7 +64,7 @@ export const currentUrlStore = readable("", function start(set) {
             .then((tab: browser.Tabs.Tab) => {
                 if (tab.url) set(tab.url);
             })
-            .catch((error) => console.error(error));
+            .catch((e) => console.error(new Error(e)));
     };
 
     browser.tabs.onUpdated.addListener(onUpdate);
