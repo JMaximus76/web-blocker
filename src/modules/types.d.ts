@@ -32,7 +32,7 @@ export type StorageInfoList = {
 export type StorageTimer = {
     total: number;
     max: number;
-    start: number;
+    start: number | null;
 }
 
 
@@ -41,6 +41,9 @@ export type ListEntry = {
     value: string;
 };
 
+
+
+export type TimerList = string[];
 
 
 
@@ -56,6 +59,7 @@ export type StorageItemMap = {
     schedule: {};
     settings: StorageSettings;
     infoList: StorageInfoList;
+    timerList: TimerList;
 }
 
 

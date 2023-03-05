@@ -189,6 +189,18 @@ export default class InfoList {
 
 
 
+    async getActiveMatch(url: string): Promise<Info[]> {
+        const infos: Info[] = [];
+
+        for (const info of this.activeInfos) {
+            if (info.active && (await info.pullList()).check(url)) {
+                infos.push(info)
+            }
+        }
+        
+        return infos;
+    }   
+
 
 
 
@@ -210,6 +222,8 @@ export default class InfoList {
     get infos(): Info[] {
         return Object.values(this.#infos);
     }
+
+
 
 
 

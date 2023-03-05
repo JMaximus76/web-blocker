@@ -1,8 +1,9 @@
 import browser from 'webextension-polyfill';
 import type InfoList from "./infoList";
 import List from './list';
+import { pullItem } from './storage';
 import Timer from './timer';
-import type { Mode, StorageInfo } from "./types";
+import type { ListEntry, Mode, StorageInfo, StorageTimer } from "./types";
 
 
 
@@ -74,19 +75,18 @@ export default class Info {
     async init(): Promise<void> {
         const list = new List(this.listId, []);
         await list.save();
-        const timer = new Timer(this.timerId, { total: 0, max: 0, start: 0 });
-        await timer.save();
     }
 
 
     async pullList(): Promise<List> {
-        const storageItem = await browser.storage.local.get(this.listId);
-        return new List(this.listId, storageItem[this.listId]);
+        const list: ListEntry[] = await pullItem(this.listId);
+        return new List(this.listId, list);
     }
 
     async pullTimer(): Promise<Timer> {
-        const storageItem = await browser.storage.local.get(this.timerId);
-        return new Timer(this.timerId, storageItem[this.timerId]);
+        if (this.useTimer === false) throw new Error("can't use pullTimer if useTimer is not true");
+        const timer: StorageTimer = await pullItem(this.timerId);
+        return new Timer(this.timerId, timer);
     }
 
     
@@ -130,6 +130,12 @@ export default class Info {
         await this.save();
     }
     async toggleTimer(): Promise<void> {
+        if (this.useTimer) {
+            await browser.storage.local.remove(this.timerId);
+        } else {
+            await Timer.initNewTimer(this.timerId);
+        }
+
         this.useTimer = !this.useTimer;
         await this.save();
     } 
