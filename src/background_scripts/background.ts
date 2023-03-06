@@ -82,17 +82,16 @@ browser.runtime.onInstalled.addListener(() => {
 
 
 // gets all timers off timerList (the timers that are were active) and totals them
-async function resetTimers(): Promise<Timer[]> {
+async function resetTimers() {
     const timerList = await getStorageItem("timerList");
-    const timers: Timer[] = [];
 
     for (const id of timerList) {
-        const index = timers.push(new Timer(id, await pullItem(id)));
-        await timers[index - 1].totalUp();
+        const timer = new Timer(id, await pullItem(id))
+        await timer.totalUp();
     }
 
     if (timerList.length !== 0) await setStorageItem("timerList", []);
-    return timers;
+
 }
 
 
@@ -116,7 +115,10 @@ async function check(url: string, tabId: number): Promise<void> {
     
     // const timers is used later so that you dont have to pull the timers again (only if they are needeed)
     // resets timerList to empty at the end
-    const timers: Timer[] = await resetTimers();
+
+    await resetTimers();
+
+
 
     
     const infoList = new InfoList();
@@ -143,13 +145,7 @@ async function check(url: string, tabId: number): Promise<void> {
 
     for (const info of infos) {
         if (info.useTimer) {
-
-            const index = timers.map((timer) => timer.id).indexOf(info.timerId);
-            if (index === -1) {
-                newTimers.push(info.pullTimer());
-            } else {
-                newTimers.push(Promise.resolve(timers[index]));
-            }
+            newTimers.push(info.pullTimer());
 
         } else if (infoList.activeMode === "block") {
             block();
@@ -186,7 +182,7 @@ async function check(url: string, tabId: number): Promise<void> {
 
    
 
-    browser.alarms.create("blockTimer", { when: Date.now() + lowestTimer });
+    if (timerList.length != 0) browser.alarms.create("blockTimer", { when: Date.now() + lowestTimer });
 
 }
 
@@ -212,8 +208,9 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
     browser.tabs.get(activeInfo.tabId).then((tab) => {
         if (tab.id !== undefined && tab.url !== undefined) {
-            check(tab.url, tab.id);
+            return check(tab.url, tab.id);
         }
+        return Promise.resolve();
     }).catch(handelError);
 });
 
@@ -226,7 +223,7 @@ browser.alarms.onAlarm.addListener((alarm) => {
         browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
             if (tabs.length === 0) return;
             if (tabs[0].url === undefined || tabs[0].id === undefined) return;
-            check(tabs[0].url, tabs[0].id);
+            return check(tabs[0].url, tabs[0].id);
         }).catch(handelError);
     }
 });
