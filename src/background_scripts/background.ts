@@ -3,6 +3,7 @@ import InfoList from '../modules/infoList';
 import List from '../modules/list';
 import { getStorageItem, pullItem, setStorageItem } from '../modules/storage';
 import Timer from '../modules/timer';
+import type { TimerList } from '../modules/types';
 
 
 import { handelError } from '../modules/util';
@@ -57,7 +58,7 @@ browser.runtime.onInstalled.addListener(() => {
         const infoList = new InfoList();
         await infoList.syncFromStorage();
 
-        const test = await infoList.registerNewList("test", "block");
+        const test = await infoList.registerNewList("test", "allow");
         test.toggleActive();
 
         const testList = await test.pullList();
@@ -95,39 +96,68 @@ async function resetTimers() {
 }
 
 
+async function setTimers(ids: TimerList): Promise<void> {
 
-// i regret making this
+    if (ids.length === 0) throw new Error("setTimers was given an empty TimerList");
+
+    
+    let lowestTime = Number.POSITIVE_INFINITY;
+
+    for (const id of ids) {
+        const timer= new Timer(id, await pullItem(id));
+        if (timer.isDone()) continue;
+        timer.start();
+        lowestTime =  Math.min(lowestTime, timer.timeLeft);
+    }
+
+    await setStorageItem("timerList", ids);
+
+    if (lowestTime === Number.POSITIVE_INFINITY) return;
+    browser.alarms.create("blockTimer", { when: Date.now() + lowestTime });
+}
+
+
+async function manageTimers(url: string): Promise<void> {
+    console.log(`managing timers for url: ${url}`);
+    await resetTimers();
+    browser.alarms.clear("blockTimer");
+    const infoList = new InfoList();
+    await infoList.syncFromStorage();
+
+    const infos = await infoList.getActiveMatch(url);
+
+    const timerList: TimerList = [];
+
+    for (const info of infos) {
+        if (info.useTimer) {
+            timerList.push(info.timerId);
+        }
+    }
+    if (timerList.length === 0) return;
+    await setTimers(timerList);
+}
+
+
+
 
 async function check(url: string, tabId: number): Promise<void> {
 
     function block() {
-        if (url.includes(blockedPageURL)) return;
-        if (url.includes("about:")) return;
-        if (url.includes("chrome://")) return;
         console.log(`BLOCKING a page with a url of ${url}`);
         browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
     }
 
+    if (url.includes(blockedPageURL)) return;
+    if (url.includes("about:")) return;
+    if (url.includes("chrome://")) return;
+
     console.log(`checking ${url} on tab ${tabId}`);
 
-    browser.alarms.clear("blockTimer");
-
-    
-    // const timers is used later so that you dont have to pull the timers again (only if they are needeed)
-    // resets timerList to empty at the end
-
-    await resetTimers();
-
-
-
-    
     const infoList = new InfoList();
     await infoList.syncFromStorage();
 
 
-    // infoList.activeInfos will get all the infos that are active and in the activeMode (block or allow)
-    // if its empty then there are no lists for the current mode so do nothing (or block if in allow mode)
-    if (infoList.activeInfos.length === 0 ) {
+    if (infoList.activeInfos.length === 0) {
         if (infoList.activeMode === "allow") block();
         return;
     }
@@ -139,62 +169,44 @@ async function check(url: string, tabId: number): Promise<void> {
         return;
     }
 
-    // use promise because it should make the loop faster, 
-    // some of the paths in loop will return and this funciton needs to be fast because its called a lot
-    const newTimers: Promise<Timer>[] = [];
 
     for (const info of infos) {
         if (info.useTimer) {
-            newTimers.push(info.pullTimer());
+            const timer = await info.pullTimer();
 
-        } else if (infoList.activeMode === "block") {
-            block();
+            if (infoList.activeMode === "block") {
+                if (timer.isDone()) {
+                    block();
+                    return;
+                } else {
+                    continue;
+                }
+            } else {
+                if (timer.isDone()) {
+                    continue;
+                } else {
+                    return;
+                }
+            }
+
+        } else {
+            if (infoList.activeMode === "block") block();
             return;
-        }
+        } 
     }
 
-
-    const timerList = [];
-    let lowestTimer: number = 0;
-
-    for (const p of newTimers) {
-        const  timer = await p;
-
-        if (timer.isDone() && infoList.activeMode === "block") {
-            block();
-            return;
-        }
-
-        const timeLeft = timer.start();
-        
-        if (lowestTimer === 0 || timeLeft < lowestTimer) {
-
-            lowestTimer = timeLeft;
-        }
-
-        timerList.push(timer.id);
-
-        
-    }
-
-    await setStorageItem("timerList", timerList);
-
-
-   
-
-    if (timerList.length != 0) browser.alarms.create("blockTimer", { when: Date.now() + lowestTimer });
-
+    if (infoList.activeMode === "allow") block();
+    return;
 }
 
 
 
 
-browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
-    
-    
-    if (navigate.frameId !== 0) return;
 
-    console.log("on navigate");
+
+browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
+    if (navigate.frameId !== 0) return;
+    console.log("doing on navigate");
     check(navigate.url, navigate.tabId).catch(handelError);
 
 }, { url: [{ urlMatches: "https://*/*" }, { urlMatches: "http://*/*" }] });
@@ -203,15 +215,37 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
 
 browser.tabs.onActivated.addListener((activeInfo) => {
-    console.log("on activated")
+    console.log("on activated");
 
-
-    browser.tabs.get(activeInfo.tabId).then((tab) => {
+    async function activated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
-            return check(tab.url, tab.id);
+            console.log("doing on activated");
+            await manageTimers(tab.url);
+            await check(tab.url, tab.id);
         }
-        return Promise.resolve();
-    }).catch(handelError);
+    }
+
+
+    browser.tabs.get(activeInfo.tabId).then(activated).catch(handelError);
+});
+
+
+browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+    console.log("on updated");
+    
+    async function updated(tab: browser.Tabs.Tab) {
+        if (tab.id !== undefined && tab.url !== undefined) {
+            const active = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+            if (active.id === tab.id && active.url === tab.url) {
+                console.log("doing on updated");
+                await manageTimers(tab.url);
+                await check(tab.url, tab.id);
+            }
+        }
+    }
+
+    if (changeInfo.url === undefined) return;
+    updated(tab).catch(handelError);
 });
 
 
@@ -219,12 +253,20 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 browser.alarms.onAlarm.addListener((alarm) => {
     console.log("timer went off");
 
+    async function alarmed() {
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+         
+        if (tabs.length === 0) throw new Error("onAlarm blockTimer: got a query array of length 0");
+        const tab = tabs[0];
+
+        if (tab.url === undefined || tab.id === undefined) throw new Error("onAlarm blockTimer: url or id was undefined");
+
+        await manageTimers(tab.url);
+        await check(tab.url, tab.id);
+    }
+
     if (alarm.name === "blockTimer") {
-        browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-            if (tabs.length === 0) return;
-            if (tabs[0].url === undefined || tabs[0].id === undefined) return;
-            return check(tabs[0].url, tabs[0].id);
-        }).catch(handelError);
+       alarmed().catch(handelError); 
     }
 });
 

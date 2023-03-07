@@ -115,7 +115,7 @@ export default class Info {
         this.#mode = mode;
 
         await list.resetId(this);
-        await timer.resetId(this);
+        await timer.changeId(this);
 
     }
     

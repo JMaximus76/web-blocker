@@ -29,7 +29,7 @@ export default class Timer {
         await timer.save();
     }
 
-    async resetId(info: Info) {
+    async changeId(info: Info) {
         await browser.storage.local.remove(this.#id);
         this.#id = info.timerId;
         await this.save();
@@ -49,14 +49,15 @@ export default class Timer {
     }
 
 
-
-
-
-
-    start(): number {
-        this.#startTime = Date.now();
-        this.save();
+    get timeLeft() {
         return this.#max - this.#total;
+    }
+
+
+
+    async start(): Promise<void> {
+        this.#startTime = Date.now();
+        await this.save();
     }
 
 
