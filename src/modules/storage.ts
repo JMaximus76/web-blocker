@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
-import type { StorageItemMap, PromiseError } from '../modules/types';
+import type { StorageItemMap } from '../modules/types';
+import type { PromiseError } from './util';
 
 
 

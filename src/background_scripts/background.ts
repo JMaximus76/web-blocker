@@ -6,7 +6,7 @@ import Timer from '../modules/timer';
 import type { TimerList } from '../modules/types';
 
 
-import { handelError } from '../modules/util';
+import { handelError, isHttp, type Message } from '../modules/util';
 
 
 
@@ -118,9 +118,14 @@ async function setTimers(ids: TimerList): Promise<void> {
 
 
 async function manageTimers(url: string): Promise<void> {
-    console.log(`managing timers for url: ${url}`);
+    console.log(`------managing timers for url: ${url}`);
     await resetTimers();
     browser.alarms.clear("blockTimer");
+
+    // we do this down here instead of at the start because we want this to remove and total all current timers even if its not http
+    // we only want to set new timers if its http so we return 
+    if (!isHttp(url)) return;
+
     const infoList = new InfoList();
     await infoList.syncFromStorage();
 
@@ -143,31 +148,46 @@ async function manageTimers(url: string): Promise<void> {
 async function check(url: string, tabId: number): Promise<void> {
 
     function block() {
+        if (isBlockedPage) return;
         console.log(`BLOCKING a page with a url of ${url}`);
-        browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
+        browser.tabs.update(tabId, {  url: blockedPageURL + `?url=${url}` });
     }
 
-    if (url.includes(blockedPageURL)) return;
-    if (url.includes("about:")) return;
-    if (url.includes("chrome://")) return;
-    if (!url.includes("http")) return;
-    if (!url.includes("https")) return;
+    let isBlockedPage = false;
 
-    console.log(`checking ${url} on tab ${tabId}`);
+    if (url.includes(blockedPageURL)) {
+        console.log("checking BLOCK PAGE");
+        const regexArray = /(?<=\?url=).*/.exec(url);
+        if (regexArray === null) throw new Error(`Getting url from "Blocked Page" resulted in null`);
+        url = regexArray[0];
+        isBlockedPage = true;
+    }
+
+    if (!isHttp(url)) return;
+
+    console.log(`------checking ${url} on tab ${tabId}`);
 
     const infoList = new InfoList();
     await infoList.syncFromStorage();
 
 
     if (infoList.activeInfos.length === 0) {
-        if (infoList.activeMode === "allow") block();
+        if (infoList.activeMode === "allow") {
+            block();
+        } else if (isBlockedPage) {
+            browser.tabs.update(tabId, { url: url }).catch(handelError);
+        }
         return;
     }
 
     const infos = await infoList.getActiveMatch(url);
 
     if (infos.length === 0) {
-        if (infoList.activeMode === "allow") block();
+        if (infoList.activeMode === "allow") {
+            block();
+        } else if (isBlockedPage) {
+            browser.tabs.update(tabId, { url: url }).catch(handelError);
+        }
         return;
     }
 
@@ -187,6 +207,9 @@ async function check(url: string, tabId: number): Promise<void> {
                 if (timer.isDone()) {
                     continue;
                 } else {
+                    if (isBlockedPage) {
+                        browser.tabs.update(tabId, { url: url }).catch(handelError);
+                    }
                     return;
                 }
             }
@@ -197,7 +220,11 @@ async function check(url: string, tabId: number): Promise<void> {
         } 
     }
 
-    if (infoList.activeMode === "allow") block();
+    if (infoList.activeMode === "allow") {
+        block();
+    } else if (isBlockedPage) {
+        browser.tabs.update(tabId, { url: url }).catch(handelError);
+    }
     return;
 }
 
@@ -272,7 +299,24 @@ browser.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
+browser.runtime.onMessage.addListener((message) => {
+    
 
+    async function messaged(message: Message): Promise<void> {
+        if (message.for !== "backgroundScript") return;
+
+        const allTabs = await browser.tabs.query({});
+
+        for (const tab of allTabs) {
+            if (tab.url !== undefined && tab.id !== undefined) {
+                await check(tab.url, tab.id);
+            }
+        }
+    }
+
+    messaged(message).catch(handelError);
+
+});
 
 browser.storage.onChanged.addListener((changes) => {
     console.table(changes);

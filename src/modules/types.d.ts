@@ -66,10 +66,6 @@ export type StorageItemMap = {
 
 
 
-export type PromiseError = {
-    message: Error;
-    details?: any;
-};
 
 
 

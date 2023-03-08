@@ -3,6 +3,7 @@ import browser from "webextension-polyfill";
 import Info from "./info";
 import { getStorageItem, setStorageItem } from "./storage";
 import type { StorageInfo, Mode, UpdateMessageMap, StorageInfoList } from "./types";
+import { sendMessage, type Message } from "./util";
 
 
 
@@ -65,26 +66,32 @@ export default class InfoList {
         if (this.#set !== undefined) this.#set(this);
 
         await setStorageItem("infoList", this.storage);
-        await browser.runtime.sendMessage({ id: id, item: item }).catch(() => {/*WHEN I ADD A SETTINGS PAGE WILL FIX*/});
+        await sendMessage({for: "infoList", id: id, item: item}).catch(() => {/* FIX WHEN I ADD SETTINGS PAGE */});
+        await sendMessage({for: "backgroundScript", id: "refresh"}).catch(() => {/* ERRORS WHEN INFOLIST IS IN BACKGROUND */});
+        
     }
 
 
     startListening(): void {
-        browser.runtime.onMessage.addListener(this.#receiveUpdate);
+        browser.runtime.onMessage.addListener(this.#receiveMessage);
     }
 
     stopListening(): void {
-        browser.runtime.onMessage.removeListener(this.#receiveUpdate);
+        browser.runtime.onMessage.removeListener(this.#receiveMessage);
     }
 
 
     //If there are two instances of InfoList (the settings and popup) then when one calls save() the
     //message will be received and call receiveUpdate() . This *should* keep
     //both copies in sync. Key word *should*
-    #receiveUpdate<T extends keyof UpdateMessageMap>({id, item}: {id: T, item: UpdateMessageMap[T]} ): void {
-        switch (id) {
+    #receiveMessage(message: Message): void {
+        console.log("oh GOD");
+        if (message.for !== "infoList") return;
+        if (message.item === undefined) throw new Error("An infoList get a message with no item");
+
+        switch (message.id) {
             case "info":
-                const storageInfo = item as UpdateMessageMap["info"];
+                const storageInfo = message.item as UpdateMessageMap["info"];
                 const info = this.getInfo(storageInfo.name, storageInfo.mode);
                 if (info) {
                     info.locked = storageInfo.locked;
@@ -96,7 +103,7 @@ export default class InfoList {
                 break;
 
             case "infos":
-                const storageInfos = item as UpdateMessageMap["infos"];
+                const storageInfos = message.item as UpdateMessageMap["infos"];
                 const infos: Record<string, Info> = {};
                 const infoSave = Info.makeSaveFunc(this);
                 storageInfos.map( info => new Info(info, infoSave) ).forEach( info => infos[info.id] = info );
@@ -104,11 +111,11 @@ export default class InfoList {
                 break;
 
             case "activeMode":
-                this.#activeMode = item as UpdateMessageMap["activeMode"];
+                this.#activeMode = message.item as UpdateMessageMap["activeMode"];
                 break;
 
             case "useSchedule":
-                this.#useSchedule = item as UpdateMessageMap["useSchedule"];
+                this.#useSchedule = message.item as UpdateMessageMap["useSchedule"];
                 break;
         }
     }
