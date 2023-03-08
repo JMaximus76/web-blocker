@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import type Info from "./info";
-import type { ListEntry } from "./types";
+import type { EntryMode, ListEntry } from "./types";
 
 
 
@@ -18,23 +18,25 @@ export default class List {
     }
 
 
-    static clipURL(type: "domain" | "url", url: string): string | null {
+    static clipURL(mode: EntryMode, url: string): string | null {
 
         let regex: RegExpExecArray | null;
-        if (type === "domain") {
-           regex = /(?<=:\/\/)[^?#]*\//.exec(url);
+        if (mode === "domain") {
+            regex = /(?<=:\/\/)[^?#\/]*(?=\/)/.exec(url);
+        } else if (mode === "fullDomain") {
+            regex = /(?<=:\/\/)(?:[^.\/]+\.)?([^?#\/]*(?=\/))/.exec(url);
         } else {
             regex = /(?<=:\/\/)[^?#]*/.exec(url);
         }
 
         if (regex === null) return null;
-        return regex[0];
+        return regex[regex.length - 1];
     }
 
-    static createEntry(type: "domain" | "url", url: string): ListEntry {
-        const value = List.clipURL(type, url);
+    static createEntry(mode: EntryMode, url: string): ListEntry {
+        const value = List.clipURL(mode, url);
         if (value === null) throw new Error(`createListEntry() was given an invalid url`);
-        return { type, value };
+        return { mode, value };
     }
 
     get storage(): ListEntry[] {
@@ -73,7 +75,11 @@ export default class List {
 
     check(url: string): boolean {
         for (const entry of this.#list) {
-            if (List.clipURL(entry.type, url) === entry.value) return true;
+            const clipedURL = List.clipURL(entry.mode, url);
+            // don't think we care if its null becuase it will just return falls (null for things like about:blank)
+            // extension will not support blocking urls for any but http and https (because I'm lazy)
+            // if (clipedURL === null) throw new Error(`when checking list with url: ${url} got null after cliping`);
+            if (clipedURL === entry.value) return true;
         }
         return false;
     }

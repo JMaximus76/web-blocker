@@ -36,8 +36,10 @@ export type StorageTimer = {
 }
 
 
+export type EntryMode = "domain" | "fullDomain" | "url";
+
 export type ListEntry = {
-    type: "domain" | "url";
+    mode: EntryMode;
     value: string;
 };
 

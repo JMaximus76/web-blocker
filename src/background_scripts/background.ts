@@ -58,11 +58,11 @@ browser.runtime.onInstalled.addListener(() => {
         const infoList = new InfoList();
         await infoList.syncFromStorage();
 
-        const test = await infoList.registerNewList("test", "allow");
+        const test = await infoList.registerNewList("test", "block");
         test.toggleActive();
 
         const testList = await test.pullList();
-        testList.addEntry(List.createEntry("domain", "https://www.wikipedia.org/"));
+        testList.addEntry(List.createEntry("fullDomain", "https://www.wikipedia.org/"));
         await testList.save();
 
         await test.toggleTimer();
@@ -150,6 +150,8 @@ async function check(url: string, tabId: number): Promise<void> {
     if (url.includes(blockedPageURL)) return;
     if (url.includes("about:")) return;
     if (url.includes("chrome://")) return;
+    if (!url.includes("http")) return;
+    if (!url.includes("https")) return;
 
     console.log(`checking ${url} on tab ${tabId}`);
 
