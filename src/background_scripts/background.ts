@@ -38,6 +38,7 @@ browser.runtime.onInstalled.addListener(() => {
 
         const block = await infoList.registerNewList("Blocklist", "block");
         block.toggleActive();
+        block.toggleLocked();
         const blockList = await block.pullList();
         blockList.addEntry(List.createEntry("domain", "https://www.youtube.com/"));
         blockList.addEntry(List.createEntry("domain", "https://www.netflix.com/"));

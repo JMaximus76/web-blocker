@@ -14,6 +14,7 @@
 
 
     function toggleActive(): void {
+        if (info.locked) return;
         info.toggleActive();
     }
 
