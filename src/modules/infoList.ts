@@ -66,8 +66,8 @@ export default class InfoList {
         if (this.#set !== undefined) this.#set(this);
 
         await setStorageItem("infoList", this.storage);
-        await sendMessage({for: "infoList", id: id, item: item}).catch(() => {/* FIX WHEN I ADD SETTINGS PAGE */});
-        await sendMessage({for: "backgroundScript", id: "refresh"}).catch(() => {/* ERRORS WHEN INFOLIST IS IN BACKGROUND */});
+        await sendMessage({ for: "infoList", id: id, item: item }).catch(() => {/* FIX WHEN I ADD SETTINGS PAGE */});
+        await sendMessage({ for: "backgroundScript", id: "update" }).catch(() => {/* ERRORS WHEN INFOLIST IS IN BACKGROUND SHOULD ONLY REALLY MATTER FOR TESTING*/});
         
     }
 
@@ -85,7 +85,6 @@ export default class InfoList {
     //message will be received and call receiveUpdate() . This *should* keep
     //both copies in sync. Key word *should*
     #receiveMessage(message: Message): void {
-        console.log("oh GOD");
         if (message.for !== "infoList") return;
         if (message.item === undefined) throw new Error("An infoList get a message with no item");
 

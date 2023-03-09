@@ -2,9 +2,9 @@
     const blockedURL = new URLSearchParams(window.location.search).get("url");
 </script>
 
-<div id="background">
+<div id="body">
 
-    <h1>YOU'VE BEEN BLOCKED BY JAMES</h1>
+    <h2>YOU'VE BEEN BLOCKED BY JAMES</h2>
     <a href="{blockedURL}">{blockedURL}</a>
 
 </div>
@@ -18,7 +18,12 @@
     }
 
     a {
+        font: sans-serif;
         display: block;
-        font-size: 30px;
+        font-size: 20px;
+    }
+
+    #body {
+        font: sans-serif;
     }
 </style>

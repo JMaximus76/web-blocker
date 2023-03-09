@@ -38,7 +38,6 @@ browser.runtime.onInstalled.addListener(() => {
 
         const block = await infoList.registerNewList("Blocklist", "block");
         block.toggleActive();
-        block.toggleLocked();
         const blockList = await block.pullList();
         blockList.addEntry(List.createEntry("domain", "https://www.youtube.com/"));
         blockList.addEntry(List.createEntry("domain", "https://www.netflix.com/"));
@@ -104,11 +103,18 @@ async function setTimers(ids: TimerList): Promise<void> {
     
     let lowestTime = Number.POSITIVE_INFINITY;
 
-    for (const id of ids) {
-        const timer= new Timer(id, await pullItem(id));
-        if (timer.isDone()) continue;
-        timer.start();
-        lowestTime =  Math.min(lowestTime, timer.timeLeft);
+
+
+
+    for (let i = 0; i < ids.length; i++) {
+        const timer = new Timer(ids[i], await pullItem(ids[i]));
+        if (timer.isDone()) {
+            // remove timer from list since its done
+            ids.splice(i, 1);
+        } else {
+            timer.start();
+            lowestTime = Math.min(lowestTime, timer.timeLeft);
+        }
     }
 
     await setStorageItem("timerList", ids);
@@ -117,28 +123,37 @@ async function setTimers(ids: TimerList): Promise<void> {
     browser.alarms.create("blockTimer", { when: Date.now() + lowestTime });
 }
 
-
-async function manageTimers(url: string): Promise<void> {
-    console.log(`------managing timers for url: ${url}`);
+// THIS FUNCITON ASSUMES THAT YOU ARE USING IF FOR THE CURRENT TAB AND ONLY THE CURRENT TAB
+async function manageTimers(): Promise<void> {
+    
     await resetTimers();
     browser.alarms.clear("blockTimer");
 
-    // we do this down here instead of at the start because we want this to remove and total all current timers even if its not http
-    // we only want to set new timers if its http so we return 
-    if (!isHttp(url)) return;
+
+    const tabs = await browser.tabs.query({ active: true });
+    if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
+
+    console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
+
 
     const infoList = new InfoList();
     await infoList.syncFromStorage();
-
-    const infos = await infoList.getActiveMatch(url);
-
     const timerList: TimerList = [];
 
-    for (const info of infos) {
-        if (info.useTimer) {
-            timerList.push(info.timerId);
+    for (const tab of tabs) {
+        if (tab.url === undefined) continue;
+        if (!isHttp(tab.url)) continue;
+
+        const infos = await infoList.getActiveMatch(tab.url);
+
+        for (const info of infos) {
+            if (info.useTimer) {
+                timerList.push(info.timerId);
+            }
         }
+
     }
+    
     if (timerList.length === 0) return;
     await setTimers(timerList);
 }
@@ -146,89 +161,82 @@ async function manageTimers(url: string): Promise<void> {
 
 
 
-async function check(url: string, tabId: number): Promise<void> {
 
-    function block() {
-        if (isBlockedPage) return;
-        console.log(`BLOCKING a page with a url of ${url}`);
-        browser.tabs.update(tabId, {  url: blockedPageURL + `?url=${url}` });
+async function isMatch(url: string, infoList: InfoList): Promise<boolean> {
+
+    const matchedInfos = await infoList.getActiveMatch(url);
+    
+    // this is not very pretty. If its in block mode then when there is a not done timer we DON'T match but in allow mode we DO match
+    // vise versa for done timers so we do this "thing"
+    const listStatus = infoList.activeMode === "block";
+
+    for (const info of matchedInfos) {
+        if (info.useTimer) {
+            const timer = await info.pullTimer();
+            if (timer.isDone()) {
+                return listStatus;
+            } else {
+                return !listStatus;
+            }
+        } else {
+            return true;
+        }
     }
 
-    let isBlockedPage = false;
+    return false;
+}
+
+
+function block(url: string, tabId: number) {
+    console.log(`BLOCKING a page with a url of ${url}`);
+    browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
+}
+
+
+async function check(url: string, tabId: number): Promise<void> {
+    let urlIsBlockedPage = false;
 
     if (url.includes(blockedPageURL)) {
-        console.log("checking BLOCK PAGE");
         const regexArray = /(?<=\?url=).*/.exec(url);
         if (regexArray === null) throw new Error(`Getting url from "Blocked Page" resulted in null`);
         url = regexArray[0];
-        isBlockedPage = true;
+        urlIsBlockedPage = true;
     }
 
     if (!isHttp(url)) return;
 
-    console.log(`------checking ${url} on tab ${tabId}`);
+
+    console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
+
 
     const infoList = new InfoList();
     await infoList.syncFromStorage();
 
+    const matched = await isMatch(url, infoList);
 
-    if (infoList.activeInfos.length === 0) {
-        if (infoList.activeMode === "allow") {
-            block();
-        } else if (isBlockedPage) {
-            browser.tabs.update(tabId, { url: url }).catch(handelError);
-        }
+    // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
+    if (matched === (infoList.activeMode === "block") && !urlIsBlockedPage) {
+        block(url, tabId);
         return;
     }
-
-    const infos = await infoList.getActiveMatch(url);
-
-    if (infos.length === 0) {
-        if (infoList.activeMode === "allow") {
-            block();
-        } else if (isBlockedPage) {
-            browser.tabs.update(tabId, { url: url }).catch(handelError);
-        }
-        return;
-    }
-
-
-    for (const info of infos) {
-        if (info.useTimer) {
-            const timer = await info.pullTimer();
-
-            if (infoList.activeMode === "block") {
-                if (timer.isDone()) {
-                    block();
-                    return;
-                } else {
-                    continue;
-                }
-            } else {
-                if (timer.isDone()) {
-                    continue;
-                } else {
-                    if (isBlockedPage) {
-                        browser.tabs.update(tabId, { url: url }).catch(handelError);
-                    }
-                    return;
-                }
-            }
-
-        } else {
-            if (infoList.activeMode === "block") block();
-            return;
-        } 
-    }
-
-    if (infoList.activeMode === "allow") {
-        block();
-    } else if (isBlockedPage) {
+   
+    if (urlIsBlockedPage && !matched) {
         browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
-    return;
+
 }
 
+
+
+async function checkAll() {
+    // gets all tabs
+    const allTabs = await browser.tabs.query({});
+    for (const tab of allTabs) {
+        if (tab.url !== undefined && tab.id !== undefined) {
+            await check(tab.url, tab.id);
+        }
+    }
+}
 
 
 
@@ -237,7 +245,13 @@ async function check(url: string, tabId: number): Promise<void> {
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     if (navigate.frameId !== 0) return;
     console.log("doing on navigate");
-    check(navigate.url, navigate.tabId).catch(handelError);
+
+    async function navigated() {
+        await check(navigate.url, navigate.tabId).catch(handelError);
+    }
+
+    navigated().catch(handelError);
+    
 
 }, { url: [{ urlMatches: "https://*/*" }, { urlMatches: "http://*/*" }] });
 
@@ -250,7 +264,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     async function activated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
             console.log("doing on activated");
-            await manageTimers(tab.url);
+            await manageTimers();
             await check(tab.url, tab.id);
         }
     }
@@ -260,21 +274,29 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 });
 
 
+
+// would filter this but chrome does not have support for that :/
 browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
     console.log("on updated");
+    //console.table(changeInfo);
     
     async function updated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
             const active = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
             if (active.id === tab.id && active.url === tab.url) {
                 console.log("doing on updated");
-                await manageTimers(tab.url);
-                await check(tab.url, tab.id);
+                await manageTimers();
+
+                if (changeInfo.status !== "loading") check(tab.url, tab.id);
             }
         }
     }
 
+    // if an onUpdate event is fired and it has no url we don't care about it
     if (changeInfo.url === undefined) return;
+
+
+
     updated(tab).catch(handelError);
 });
 
@@ -284,15 +306,8 @@ browser.alarms.onAlarm.addListener((alarm) => {
     console.log("timer went off");
 
     async function alarmed() {
-        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-         
-        if (tabs.length === 0) throw new Error("onAlarm blockTimer: got a query array of length 0");
-        const tab = tabs[0];
-
-        if (tab.url === undefined || tab.id === undefined) throw new Error("onAlarm blockTimer: url or id was undefined");
-
-        await manageTimers(tab.url);
-        await check(tab.url, tab.id);
+        await manageTimers();
+        await checkAll();
     }
 
     if (alarm.name === "blockTimer") {
@@ -300,21 +315,17 @@ browser.alarms.onAlarm.addListener((alarm) => {
     }
 });
 
+
+
 browser.runtime.onMessage.addListener((message) => {
-    
-
     async function messaged(message: Message): Promise<void> {
-        if (message.for !== "backgroundScript") return;
 
-        const allTabs = await browser.tabs.query({});
-
-        for (const tab of allTabs) {
-            if (tab.url !== undefined && tab.id !== undefined) {
-                await check(tab.url, tab.id);
-            }
+        // switch message.id if more are added
+        if (message.for === "backgroundScript" && message.id === "update") {
+            await manageTimers();
+            await checkAll();
         }
     }
-
     messaged(message).catch(handelError);
 
 });
