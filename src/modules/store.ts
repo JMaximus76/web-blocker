@@ -1,6 +1,7 @@
 import browser from "webextension-polyfill";
 import { readable, type Readable } from "svelte/store";
 import InfoList from "./infoList";
+import Settings from "./settings";
 
 
 
@@ -13,11 +14,10 @@ function createInfoListStore(): Readable<InfoList> {
     const infoList = new InfoList();
 
     return readable(infoList, function start(set) {
+        infoList.startListening(set);
 
-        infoList.svelteSet = set;
         infoList.syncFromStorage().catch((e) => console.error(new Error(e)));
 
-        infoList.startListening();
         return function stop() {
             infoList.stopListening();
         }
@@ -27,26 +27,21 @@ function createInfoListStore(): Readable<InfoList> {
 
 
 
+export const settingsStore = createSettingsStore();
 
+function createSettingsStore(): Readable<Settings> {
+    const settings = new Settings();
 
-// NEED TO ADD BUT NOT NOW
+    return readable(settings, function start(set) {
+        settings.startListening(set);
 
-// export const settingsStore = readable(generateDefaultSettings(), function start(set) {
-//     getStorageItem("settings")
-//         .then((settings) => set(settings))
-//         .catch((error) => console.error(error));
+        settings.syncFromStorage().catch((e) => console.error(new Error(e)));
 
-//     const onUpdate = (changes: Record<string, any>) => {
-//         if (changes.settings) set(changes.settings.newValue);
-//     };
-
-//     browser.storage.onChanged.addListener(onUpdate);
-
-//     return function stop() {
-//         browser.runtime.onMessage.removeListener(onUpdate);
-//     }
-// });
-
+        return function stop() {
+            settings.stopListening();
+        }
+    });
+}
 
 
 

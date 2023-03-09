@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import InfoList from '../modules/infoList';
 import List from '../modules/list';
+import Settings from '../modules/settings';
 import { getStorageItem, pullItem, setStorageItem } from '../modules/storage';
 import Timer from '../modules/timer';
 import type { TimerList } from '../modules/types';
@@ -26,7 +27,7 @@ browser.runtime.onInstalled.addListener(() => {
         // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
         await browser.storage.local.clear();
 
-
+        await Settings.init();
 
         await InfoList.init();
         await setStorageItem("timerList", []);
@@ -123,8 +124,9 @@ async function setTimers(ids: TimerList): Promise<void> {
     browser.alarms.create("blockTimer", { when: Date.now() + lowestTime });
 }
 
-// THIS FUNCITON ASSUMES THAT YOU ARE USING IF FOR THE CURRENT TAB AND ONLY THE CURRENT TAB
+
 async function manageTimers(): Promise<void> {
+    if (!await Settings.getSetting("isActive")) return;
     
     await resetTimers();
     browser.alarms.clear("blockTimer");
@@ -194,6 +196,10 @@ function block(url: string, tabId: number) {
 
 
 async function check(url: string, tabId: number): Promise<void> {
+    
+
+
+
     let urlIsBlockedPage = false;
 
     if (url.includes(blockedPageURL)) {
@@ -205,6 +211,11 @@ async function check(url: string, tabId: number): Promise<void> {
 
     if (!isHttp(url)) return;
 
+    if (!await Settings.getSetting("isActive")) {
+        if (urlIsBlockedPage) browser.tabs.update(tabId, { url: url }).catch(handelError);
+        return;
+    }
+
 
     console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
@@ -213,14 +224,16 @@ async function check(url: string, tabId: number): Promise<void> {
     await infoList.syncFromStorage();
 
     const matched = await isMatch(url, infoList);
+    console.log(matched);
 
     // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
-    if (matched === (infoList.activeMode === "block") && !urlIsBlockedPage) {
+    if ((matched === (infoList.activeMode === "block")) && !urlIsBlockedPage) {
         block(url, tabId);
         return;
     }
-   
-    if (urlIsBlockedPage && !matched) {
+    
+    // I didn't check super well if this works and I don't know how it works but it does so I'm leaving it how it is.
+    if ((!matched === (infoList.activeMode === "block")) && urlIsBlockedPage) {
         browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
 
@@ -319,7 +332,6 @@ browser.alarms.onAlarm.addListener((alarm) => {
 
 browser.runtime.onMessage.addListener((message) => {
     async function messaged(message: Message): Promise<void> {
-
         // switch message.id if more are added
         if (message.for === "backgroundScript" && message.id === "update") {
             await manageTimers();

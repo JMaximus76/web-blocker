@@ -57,36 +57,37 @@ export default class InfoList {
     }
 
 
-    set svelteSet(set: Subscriber<InfoList> | undefined ) {
-        this.#set = set;
-    }
+    
     
 
     async save<T extends keyof UpdateMessageMap>(id: T, item: UpdateMessageMap[T]): Promise<void> {
         if (this.#set !== undefined) this.#set(this);
 
         await setStorageItem("infoList", this.storage);
-        await sendMessage({ for: "infoList", id: id, item: item }).catch(() => {/* FIX WHEN I ADD SETTINGS PAGE */});
-        await sendMessage({ for: "backgroundScript", id: "update" }).catch(() => {/* ERRORS WHEN INFOLIST IS IN BACKGROUND SHOULD ONLY REALLY MATTER FOR TESTING*/});
+        await sendMessage({ for: "infoList", id: id, item: item });
+        await sendMessage({ for: "backgroundScript", id: "update" });
         
     }
 
 
-    startListening(): void {
-        browser.runtime.onMessage.addListener(this.#receiveMessage);
+    startListening(set: Subscriber<InfoList>): void {
+        this.#set = set;
+        browser.runtime.onMessage.addListener(this.#onMessage);
     }
 
     stopListening(): void {
-        browser.runtime.onMessage.removeListener(this.#receiveMessage);
+        this.#set = undefined;
+        browser.runtime.onMessage.removeListener(this.#onMessage);
     }
 
 
     //If there are two instances of InfoList (the settings and popup) then when one calls save() the
     //message will be received and call receiveUpdate() . This *should* keep
     //both copies in sync. Key word *should*
-    #receiveMessage(message: Message): void {
+    #onMessage(message: Message): void {
         if (message.for !== "infoList") return;
         if (message.item === undefined) throw new Error("An infoList get a message with no item");
+        if (this.#set === undefined) throw new Error("InfoList.#onMessage: set shoudl be set but is not");
 
         switch (message.id) {
             case "info":
@@ -117,6 +118,8 @@ export default class InfoList {
                 this.#useSchedule = message.item as UpdateMessageMap["useSchedule"];
                 break;
         }
+
+
     }
 
     

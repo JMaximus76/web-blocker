@@ -2,12 +2,16 @@
     import Header from "./components/Header.svelte";
     import Lists from "./components/Lists.svelte";
     import Button from "./components/Button.svelte";
-    import { infoListStore } from "../modules/store"
+    import { infoListStore, settingsStore } from "../modules/store"
 
 
 
-    function onClick(): void {
+    function toggleActiveMode(): void {
         $infoListStore.toggleActiveMode();
+    }
+
+    function toggleIsActive(): void {
+        $settingsStore.toggleIsActive();
     }
 
 </script>
@@ -15,16 +19,22 @@
 
 
 
+{#if $settingsStore.isActive}
+    <div id="main">
+        <Header />
 
-<div id="main">
-    <Header />
+        <Button on:click={toggleActiveMode} name={"Change Mode"} fontSize={17} />
+        <Button on:click={toggleIsActive} name={"Toggle Active"} fontSize={10} />
 
-                                    <!-- should change to take any type of sizing px, %, em, etc. -->
-    <Button on:click={onClick} name={"Change Mode"} fontSize={17}/>
-    <div id="lists">
-        <Lists />
+        <div id="lists">
+            <Lists />
+        </div>
     </div>
-</div>
+{:else}
+    <h1>Extension is not currently active</h1>
+    <Button on:click={toggleIsActive} name={"Toggle Active"} fontSize={10} />
+{/if}
+
 
     
 

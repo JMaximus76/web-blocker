@@ -33,7 +33,7 @@ export function isHttp(url: string): boolean {
 
 
 export async function sendMessage(message: Message) {
-    await browser.runtime.sendMessage(message);
+    await browser.runtime.sendMessage(message).catch(() => {/* do nothing */});
 }
 
 

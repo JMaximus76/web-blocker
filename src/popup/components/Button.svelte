@@ -1,6 +1,8 @@
 <script lang="ts">
 
     export let name: string;
+
+    //should change to take any type of sizing px, %, em, etc.
     export let fontSize: Number;
 
 
