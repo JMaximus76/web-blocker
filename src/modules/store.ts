@@ -2,6 +2,7 @@ import browser from "webextension-polyfill";
 import { readable, type Readable } from "svelte/store";
 import InfoList from "./infoList";
 import Settings from "./settings";
+import type Timer from "./timer";
 
 
 
@@ -41,6 +42,61 @@ function createSettingsStore(): Readable<Settings> {
             settings.stopListening();
         }
     });
+}
+
+
+
+
+type TimerQueue = {
+    [key: string]: {
+        active: boolean;
+        timeLeft: number;
+    };
+};
+
+function createTimerQueue() {
+    const queue: TimerQueue = {};
+    return queue;
+}
+
+export const timerQueue = createTimerQueueStore();
+
+function createTimerQueueStore() {
+    const timerQueue = createTimerQueue();
+
+    const store = readable(timerQueue, function start(set) {
+
+
+        browser.runtime.onMessage.addListener();
+
+
+        const interval = setInterval(() => {
+            console.log("Timer Queue Interval when off");
+            for (const entry of Object.values(timerQueue)) {
+                if (entry.active) {
+                    entry.timeLeft -= 1000;
+                }
+            }
+
+            set(timerQueue);
+        }, 1000);
+
+
+        return function stop() {
+            clearInterval(interval);
+        }
+    });
+
+
+    return {
+        subscribe: store.subscribe,
+        addTimer: (timer: Timer) => {
+
+        },
+        toggleTimer: () => {
+
+        },
+    };
 }
 
 

@@ -4,7 +4,7 @@ import { onDestroy } from 'svelte';
 
 
 export type Message = {
-    for: "infoList" | "settings" | "backgroundScript" | "timer";
+    for: "infoList" | "settings" | "backgroundScript" | "timerStore";
     id: string;
     item?: any;
 }
