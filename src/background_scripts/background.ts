@@ -33,9 +33,13 @@ browser.runtime.onInstalled.addListener(() => {
         await setStorageItem("timerList", []);
 
 
+        
+        
+
+        await test();
+
         const infoList = new InfoList();
         await infoList.syncFromStorage();
-        
 
         const block = await infoList.registerNewList("Blocklist", "block");
         block.toggleActive();
@@ -71,10 +75,40 @@ browser.runtime.onInstalled.addListener(() => {
         
         await timer.setMax(1);
 
+
+
+
+        // for (let i = 0; i < 20; i++) {
+        //     const t = await infoList.registerNewList(`test${i}`, "block");
+        //     t.toggleActive();
+        //     const l = await t.pullList();
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     await l.save();
+        // }
+
     }
 
 
-    init().then(test).catch(handelError);
+    init().catch(handelError);
     
    
     
@@ -177,8 +211,8 @@ async function isMatch(url: string, infoList: InfoList): Promise<boolean> {
             const timer = await info.pullTimer();
             if (timer.isDone()) {
                 return listStatus;
-            } else {
-                return !listStatus;
+            } else if(infoList.activeMode === "allow") {
+                return true;
             }
         } else {
             return true;
@@ -196,7 +230,7 @@ function block(url: string, tabId: number) {
 
 
 async function check(url: string, tabId: number): Promise<void> {
-    
+    const startTime = Date.now();
 
 
 
@@ -209,10 +243,14 @@ async function check(url: string, tabId: number): Promise<void> {
         urlIsBlockedPage = true;
     }
 
-    if (!isHttp(url)) return;
+    if (!isHttp(url)) {
+        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+        return
+    };
 
     if (!await Settings.getSetting("isActive")) {
         if (urlIsBlockedPage) browser.tabs.update(tabId, { url: url }).catch(handelError);
+        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
         return;
     }
 
@@ -229,6 +267,7 @@ async function check(url: string, tabId: number): Promise<void> {
     // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
     if ((matched === (infoList.activeMode === "block")) && !urlIsBlockedPage) {
         block(url, tabId);
+        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
         return;
     }
     
@@ -236,6 +275,7 @@ async function check(url: string, tabId: number): Promise<void> {
     if ((!matched === (infoList.activeMode === "block")) && urlIsBlockedPage) {
         browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
+    console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
 
 }
 

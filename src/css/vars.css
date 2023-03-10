@@ -1,16 +1,36 @@
 :root {
-    --background: #eeeeee;
-    --panel: #ececec;
-    --element: #dadada;
-    --elementDark: #c9c9c9;
-    --light: #ffffff;
-    --dark: #bebebe;
-    --textLight: #bebebe;
-    --text: #a7a7a7;
-    --textDark: #969696;
 
-    --radius: 7px;
+
+    /* Main Colors */
+    --background: #24283B;
+    --panel: #24283B;
+    --element: #5F4BE2;
+    --outline: #EBF1FF;
+
+    --buttonColor: #4B0AFF;
+    --buttonHover: rgba(0, 0, 0, 15%);
+    --buttonActive: rgba(0, 0, 0, 30%);
     
+    --text: #EBF1FF;  
+    --icon: #EBF1FF;  
+
+
+
+    /* Saved Colors for Testing */
+    --offWhite: #EBF1FF;
+    --purple: #7C6EFF;
+    --darkPurple: #4B0AFF;
+    --purple2: #5F4BE2;
+    --orange: #F2A32C;
+    --blue: #008bf5;
+    --darkBlue: #0074CC;
+    --red: #7A0006;
+
+
+
+    /* Other */
+    --radius: 3px;
+    --transitionSpeed: 0.2s;
 }
 
 

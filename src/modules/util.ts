@@ -1,8 +1,10 @@
 import browser from "webextension-polyfill";
 
+import { onDestroy } from 'svelte';
+
 
 export type Message = {
-    for: "infoList" | "settings" | "backgroundScript";
+    for: "infoList" | "settings" | "backgroundScript" | "timer";
     id: string;
     item?: any;
 }
@@ -34,6 +36,12 @@ export function isHttp(url: string): boolean {
 
 export async function sendMessage(message: Message) {
     await browser.runtime.sendMessage(message).catch(() => {/* do nothing */});
+}
+
+
+export function onInterval(callback: () => void, milliseconds: number) { 
+    const interval = setInterval(callback, milliseconds);
+    onDestroy( () => clearInterval(interval) );
 }
 
 

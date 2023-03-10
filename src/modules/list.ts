@@ -76,9 +76,8 @@ export default class List {
     check(url: string): boolean {
         for (const entry of this.#list) {
             const clipedURL = List.clipURL(entry.mode, url);
-            // don't think we care if its null becuase it will just return falls (null for things like about:blank)
-            // extension will not support blocking urls for any but http and https (because I'm lazy)
-            // if (clipedURL === null) throw new Error(`when checking list with url: ${url} got null after cliping`);
+            // I don't think we care if its null becuase it will just return false (null for things like about:blank)
+            // extension will not support blocking any url except for http and https (because I'm lazy)
             if (clipedURL === entry.value) return true;
         }
         return false;

@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import type Info from './info';
 import type { StorageTimer } from './types';
+import { sendMessage, type Message } from './util';
 
 
 export default class Timer {
@@ -12,6 +13,8 @@ export default class Timer {
     #max: number;
     #startTime: number | null;
 
+    
+    #bindedOnMessage: ((message: Message) => void) | undefined;
 
 
     constructor(id: string, { total, max, start }: StorageTimer ) {
@@ -43,14 +46,44 @@ export default class Timer {
         }
     }
 
+    set storage(storage: StorageTimer) {
+        this.#total = storage.total;
+        this.#max = storage.max;
+        this.#startTime = storage.start;
+    }
+
+
+    onMessage(message: Message): void {
+        if (message.for === "timer" && message.id === this.#id) {
+            this.storage = message.item;
+        }
+    }
+
+    startListening() {
+        this.#bindedOnMessage = this.onMessage.bind(this);
+        browser.runtime.onMessage.addListener(this.#bindedOnMessage);
+    }
+
+    stopListening() {
+        if (this.#bindedOnMessage === undefined) return;
+        browser.runtime.onMessage.removeListener(this.#bindedOnMessage);
+        this.#bindedOnMessage = undefined;
+    }
+
+
+
+
 
     async save(): Promise<void> {
         await browser.storage.local.set({ [this.#id]: this.storage });
+        const message: Message = { for: "timer", id: this.#id, item: this.storage };
+        await sendMessage(message);
     }
 
 
     get timeLeft() {
-        return this.#max - this.#total;
+        if (this.#startTime === null) return this.#max - this.#total;
+        return this.#max - this.#total - (Date.now() - this.#startTime);
     }
 
 

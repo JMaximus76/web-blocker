@@ -1,14 +1,17 @@
 <script lang="ts">
     import type Info from "../../modules/info";
     import { currentUrlStore } from "../../modules/store";
+    import { onDestroy } from 'svelte';
+
 
 
 
     export let info: Info;
 
 
-    let matchText: string;
+
     $: matchText = `Match Found: This list matched with ${$currentUrlStore}`;
+    $: activeTitle = `${info.name} is ${info.active? "enabled" : "disabled"}`;
 
     const lockedText = "Locked List: This list has been locked, you will not be able to enable/disable it in the popup.";
 
@@ -18,27 +21,110 @@
         info.toggleActive();
     }
 
+    if (info.useTimer) {
+
+        info.pullTimer()
+        .then((timer) => {
+
+            timeLeft = timer.timeLeft;
+
+            timer.startListening();
+
+            if (!timer.isDone() && timer.startTime !== null) {
+                const interval = startTimer();
+                onDestroy(() => {
+                    clearInterval(interval);
+                });
+            } 
+            // do some store shit i don't want to deal with this
+            // if that dont' work use beforeUpdate
+
+        });
+    } 
+
+
+    
+
+    function startTimer(): NodeJS.Timer {
+
+        const decreaseTimer = () => {
+            timeLeft -= 1000;
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+            }
+        }
+
+        const interval = setInterval(decreaseTimer, 1000);
+        return interval;
+    }
+
+    let timeLeft = 0;
+
+    function formatTime(time: number): string {
+        const second = 1000;
+        const minute = second * 60;
+        const hour = minute * 60;
+        
+        const h = Math.trunc(time/hour);
+        const m = Math.trunc((time - h*hour)/minute);
+        const s = Math.trunc((time - h*hour - m*minute)/second);
+
+        return `${(h < 10? "0" : "") + h}:${(m < 10? "0" : "") + m}:${(s < 10? "0" : "") + s}`
+    }
+
+    $: displayTime = formatTime(timeLeft);
+
+    
+
 
 </script>
 
 
 
 
-<div id="block">
-
+<div id="main">
     <button on:click={toggleActive} id="infoButton">
-        <div id="active" class={((info.active)? "enabled" : "disabled")}></div>
+
+        <div title={activeTitle}>
+            <svg id="active" width="20" height="20" >
+                <rect class={ info.active? "enabled" : "disabled" } width="20" height="20" rx="3" ry="3" />
+            </svg>
+        </div>
+
         {info.name}
-        
-        <div id="container">
+    
+
+        {#if info.useTimer}
+            <div id="timer">
+                {displayTime}
+            </div>
+        {/if}
+
+
+        <div id="indicators">
             {#await info.pullList() then list}
                 <div class:invisible={!list.check($currentUrlStore)} id="match" title={matchText}>M</div>
             {/await}
             <div class:invisible={!info.locked} id="lock" title={lockedText}>L</div>
         </div>
+
+
+
     </button>
 
-    <button id="listButton"><div id="arrow"></div></button>
+
+
+    <button id="listButton">
+        <svg id="arrow" height="20" width="20">
+            <defs>
+                <mask id="arrow-mask">
+                    <rect x="0" y="0" height="20" width="20" style="fill: white;" />
+                    <polygon points="0,4 0,16 8,10" style="fill: black;" />
+                </mask>
+            </defs>
+            <polygon points="0,0 0,20 14,10" mask="url(#arrow-mask)" style="fill: var(--icon);" />
+        </svg>
+    </button>
 </div>
 
 
@@ -50,17 +136,18 @@
 
 
 
-    #block {
+    #main {
         display: flex;
         flex-direction: row;
+        box-sizing: content-box;
         width: 100%;
-        height: 35px;
+        height: 30px;
+
+        margin-bottom: 7px;
 
         border-radius: var(--radius);
         background-color: var(--element);
     }
-
-
 
 
 
@@ -69,77 +156,78 @@
         flex-direction: row;
         align-items: center;
 
-        padding: 0 10px;
+        padding: 0;
         border: none;
-        border-radius: var(--radius) 0 0 var(--radius);
+        border-top-left-radius: var(--radius);
+        border-top-right-radius: var(--raidus);
 
         width: calc(100% - 30px);
         height: 100%;
 
         cursor: pointer;
         
-        font-family: 'Tilt Neon', cursive;
+        font-family: 'Roboto', sans-serif;
         font-size: 19px;
-        font-weight: 500;
+        color: var(--text);
         text-align: left;
     }
 
-    #infoButton:active {
-        background-color: var(--elementDark);
-    }
+  
 
-    #arrow {
-        background-image: url("../../svg/arrow.svg");
-        background-repeat: no-repeat;
-        background-size: contain;
-        height: 18px;
-        width: 18px; 
-    }
-
-
+    
     #active {
-        background-repeat: no-repeat;
-        background-size: contain;
-        height: 18px;
-        width: 18px;
-        margin: 0 4px;
+        display: flex;
+        flex-direction: row;
+        margin: 0px 5px;
     }
 
     .enabled {
-        background-image: url("../../svg/circle.svg");
+        fill: transparent;
     }
 
     .disabled {
-        background-image: url("../../svg/line.svg");
+        fill: var(--panel);
     }
+
+
+
+    #timer {
+        margin-left: 10px;
+    }
+
+
+
+
 
     .invisible {
         display: none;
     }
 
-    #container {
+    #indicators {
         margin-left: auto;
         display: flex;
         flex-direction: row-reverse;
         cursor: help;
     }
 
-
     #match, #lock {
-        font-family: 'Comfortaa', cursive;
+        font-family: 'Tilt Neon', cursive;
         font-size: 13px;
-
+        color: var(--text);
         margin: 0 5px;
         padding: 1px;
     }
-    #match { color: #276ba3; }
-    #lock { color: #6e5308; }
+
+
+    
+
+
+
 
     
 
 
     #listButton {
-
         height: 100%;
         width: 30px;
 
@@ -150,19 +238,28 @@
     }
 
 
+    #arrow {
+        display: flex;
+        flex-direction: row;
+        margin-left: 8px;
+
+    }
+
+    
+
+
     button {
         background-color: var(--buttonBackground);
-        transition: all 0.1s;
-        transition-timing-function: ease-out;
+        transition: background-color var(--transitionSpeed);
+        
     }
 
     button:hover {
-        background-color: var(--buttonHoverBackground);
+        background-color: var(--buttonHover);
     }
 
     button:active {
-        background-color: var(--buttonActiveBackground);
-        transition: all 0s;
+        background-color: var(--buttonActive);
     }
 
     

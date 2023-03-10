@@ -1,8 +1,8 @@
 <script lang="ts">
-    import Header from "./components/Header.svelte";
-    import Lists from "./components/Lists.svelte";
-    import Button from "./components/Button.svelte";
-    import { infoListStore, settingsStore } from "../modules/store"
+    import Header from "../components/Header.svelte";
+    import Lists from "../components/Lists.svelte";
+    import TextButton from "../components/TextButton.svelte";
+    import { infoListStore, settingsStore } from "../../modules/store"
 
 
 
@@ -23,16 +23,18 @@
     <div id="main">
         <Header />
 
-        <Button on:click={toggleActiveMode} name={"Change Mode"} fontSize={17} />
-        <Button on:click={toggleIsActive} name={"Toggle Active"} fontSize={10} />
+        <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+        <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
+
 
         <div id="lists">
             <Lists />
         </div>
+
     </div>
 {:else}
     <h1>Extension is not currently active</h1>
-    <Button on:click={toggleIsActive} name={"Toggle Active"} fontSize={10} />
+    <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
 {/if}
 
 
@@ -48,8 +50,8 @@
     }
 
     #lists {
-        box-sizing: border-box;
-        height: 200px;
+        display: inline-block;
+        height: 230px;
         width: 100%;
         margin: 10px 0px;
     }

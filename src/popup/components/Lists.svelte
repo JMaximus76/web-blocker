@@ -13,7 +13,7 @@
         
     {:else}
 
-        {#each $infoListStore.currentInfos as infos}
+        {#each $infoListStore.currentInfos as infos (infos.id)}
             <ListBlock info={infos} />
         {/each}
 
@@ -24,19 +24,17 @@
 
 <style>
     div {
-        display: flex;
-        flex-direction: column;
-
-        box-sizing: border-box;
 
         width: 100%;
         height: 100%;
-        padding: 10px;
+
+
 
         border-radius: var(--radius);
-        
-        box-shadow: -7px -7px 10px var(--light), 7px 7px 10px var(--dark);
+        background-color: var(--panel);
 
+        overflow-y: scroll;
+        scrollbar-width: none;
     }
 
 
