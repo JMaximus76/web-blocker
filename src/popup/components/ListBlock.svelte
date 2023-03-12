@@ -1,7 +1,7 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import type Info from "../../modules/info";
     import { currentUrlStore, timerDisplayStore } from "../../modules/store";
-    import { formatTime } from "../../modules/util";
   
 
 
@@ -22,21 +22,13 @@
         info.toggleActive();
     }
 
-
-
-    if (info.useTimer) {
-        info.pullTimer().then((timer) => {
-            timerDisplayStore.addTimer(timer);
-        });
-    } 
-
-    let displayTime: string = "00:00";
-    $: {
-        const data = $timerDisplayStore[info.timerId];
-        if (data !== undefined) {
-            displayTime = formatTime(data.timeLeft);
-        }
-    };
+    onMount(() => {
+        if (info.useTimer) {
+            info.pullTimer().then((timer) => {
+                timerDisplayStore.addTimer(timer);
+            });
+        } 
+    });
 
     
 
@@ -56,15 +48,14 @@
 
         {info.name}
     
+        <div id="spacer"></div>
 
 
-            {#if info.useTimer}
-                <div id="timer">
-                    {displayTime}
-                </div>
-            {/if}
-
-
+        {#if info.useTimer}
+            <div id="timer">
+                {$timerDisplayStore.get(info.timerId)}
+            </div>
+        {/if}
 
 
         <div id="indicators">
@@ -158,7 +149,7 @@
 
 
     #timer {
-        margin-left: auto;
+        
         font-size: 0.8em;
     }
 
@@ -171,10 +162,11 @@
     }
 
     #indicators {
-        margin-left: auto;
+        margin-left: 4px;
         display: flex;
         flex-direction: row-reverse;
         cursor: help;
+        width: 45px;
     }
 
     #match, #lock {
@@ -189,7 +181,9 @@
     
 
 
-
+    #spacer {
+        margin-left: auto;
+    }
 
     
 

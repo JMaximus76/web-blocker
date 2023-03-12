@@ -103,6 +103,11 @@ browser.runtime.onInstalled.addListener(() => {
         //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
         //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
         //     await l.save();
+
+        //     await t.toggleTimer();
+        //     const te = await t.pullTimer();
+
+        //     await te.setMax(1);
         // }
 
     }

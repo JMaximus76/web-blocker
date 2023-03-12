@@ -45,20 +45,6 @@ export async function sendMessage(message: Message) {
 
 
 
-export function formatTime(time: number): string {
-    const second = 1000;
-    const minute = second * 60;
-    const hour = minute * 60;
-
-    const h = Math.trunc(time / hour);
-    const m = Math.trunc((time - h * hour) / minute);
-    const s = Math.trunc((time - h * hour - m * minute) / second);
-
-
-
-    if (h === 0) return `${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
-    return `${(h < 10 ? "0" : "") + h}:${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
-}
 
 
 
