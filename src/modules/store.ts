@@ -1,8 +1,9 @@
 import browser from "webextension-polyfill";
-import { readable, type Readable } from "svelte/store";
+import { readable, writable, type Readable } from "svelte/store";
 import InfoList from "./infoList";
 import Settings from "./settings";
 import type Timer from "./timer";
+import type { Message } from "./util";
 
 
 
@@ -47,43 +48,69 @@ function createSettingsStore(): Readable<Settings> {
 
 
 
-type TimerQueue = {
+type TimerDisplay = {
     [key: string]: {
         active: boolean;
         timeLeft: number;
     };
 };
 
-function createTimerQueue() {
-    const queue: TimerQueue = {};
-    return queue;
+
+export function createTimerDisplayMessage(timer: Timer): Message {
+    return {
+        for: "timerStore",
+        id: timer.id,
+        item: {
+            active: timer.isActive,
+            timeLeft: timer.timeLeft,
+        },
+    };
 }
 
-export const timerQueue = createTimerQueueStore();
 
-function createTimerQueueStore() {
-    const timerQueue = createTimerQueue();
+function createTimerDisplay() {
+    const display: TimerDisplay = {};
+    return display;
+}
 
-    const store = readable(timerQueue, function start(set) {
 
 
-        browser.runtime.onMessage.addListener();
+export const timerDisplayStore = createTimerDisplayStore();
+
+function createTimerDisplayStore() {
+
+    const timerDisplay = createTimerDisplay();
+
+    const store = writable(timerDisplay, function start(set) {
+        
+
+        function onMessage(message: Message) {
+            console.log("Message received in timerDisplayStore");
+            console.table(message);
+            if (message.for === "timerStore") {
+                timerDisplay[message.id] = message.item;
+                set(timerDisplay);
+            }
+        }
+
+        browser.runtime.onMessage.addListener(onMessage);
 
 
         const interval = setInterval(() => {
             console.log("Timer Queue Interval when off");
-            for (const entry of Object.values(timerQueue)) {
+            for (const entry of Object.values(timerDisplay)) {
                 if (entry.active) {
                     entry.timeLeft -= 1000;
                 }
             }
 
-            set(timerQueue);
+            set(timerDisplay);
         }, 1000);
 
 
         return function stop() {
             clearInterval(interval);
+            browser.runtime.onMessage.removeListener(onMessage);
         }
     });
 
@@ -91,11 +118,12 @@ function createTimerQueueStore() {
     return {
         subscribe: store.subscribe,
         addTimer: (timer: Timer) => {
-
-        },
-        toggleTimer: () => {
-
-        },
+            timerDisplay[timer.id] = {
+                active: timer.isActive,
+                timeLeft: timer.timeLeft,
+            };
+            store.set(timerDisplay);
+        }
     };
 }
 

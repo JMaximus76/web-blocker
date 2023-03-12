@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import type Info from './info';
+import { createTimerDisplayMessage } from './store';
 import type { StorageTimer } from './types';
 import { sendMessage } from './util';
 
@@ -46,17 +47,15 @@ export default class Timer {
         }
     }
 
-    // set storage(storage: StorageTimer) {
-    //     this.#total = storage.total;
-    //     this.#max = storage.max;
-    //     this.#startTime = storage.start;
-    // }
+    get isActive(): boolean {
+        return this.#startTime !== null;
+    }
 
 
     async save(): Promise<void> {
         await browser.storage.local.set({ [this.#id]: this.storage });
-        // const message: Message = { for: "timer", id: this.#id, item: this.storage };
-        // await sendMessage(message);
+
+        await sendMessage(createTimerDisplayMessage(this));
     }
 
 
@@ -70,7 +69,6 @@ export default class Timer {
     async start(): Promise<void> {
         this.#startTime = Date.now();
         await this.save();
-        await sendMessage({ for: "timerStore", id: this.#id, item: "start" });
     }
 
 
@@ -84,7 +82,6 @@ export default class Timer {
 
         this.#startTime = null;
         await this.save();
-        await sendMessage({ for: "timerStore", id: this.#id, item: "stop" });
     }
 
 

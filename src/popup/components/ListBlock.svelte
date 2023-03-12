@@ -1,7 +1,8 @@
 <script lang="ts">
     import type Info from "../../modules/info";
-    import { currentUrlStore } from "../../modules/store";
-    import { onDestroy } from 'svelte';
+    import { currentUrlStore, timerDisplayStore } from "../../modules/store";
+    import { formatTime } from "../../modules/util";
+  
 
 
 
@@ -21,61 +22,23 @@
         info.toggleActive();
     }
 
+
+
     if (info.useTimer) {
-
-        info.pullTimer()
-        .then((timer) => {
-
-            timeLeft = timer.timeLeft;
-
-            timer.startListening();
-
-            if (!timer.isDone() && timer.startTime !== null) {
-                const interval = startTimer();
-                onDestroy(() => {
-                    clearInterval(interval);
-                });
-            } 
-            // do some store shit i don't want to deal with this
-            // if that dont' work use beforeUpdate
-
+        info.pullTimer().then((timer) => {
+            timerDisplayStore.addTimer(timer);
         });
     } 
 
-
-    
-
-    function startTimer(): NodeJS.Timer {
-
-        const decreaseTimer = () => {
-            timeLeft -= 1000;
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-            }
+    let displayTime: string = "00:00";
+    $: {
+        const data = $timerDisplayStore[info.timerId];
+        if (data !== undefined) {
+            displayTime = formatTime(data.timeLeft);
         }
-
-        const interval = setInterval(decreaseTimer, 1000);
-        return interval;
-    }
-
-    let timeLeft = 0;
-
-    function formatTime(time: number): string {
-        const second = 1000;
-        const minute = second * 60;
-        const hour = minute * 60;
-        
-        const h = Math.trunc(time/hour);
-        const m = Math.trunc((time - h*hour)/minute);
-        const s = Math.trunc((time - h*hour - m*minute)/second);
-
-        return `${(h < 10? "0" : "") + h}:${(m < 10? "0" : "") + m}:${(s < 10? "0" : "") + s}`
-    }
-
-    $: displayTime = formatTime(timeLeft);
+    };
 
     
-
 
 </script>
 
@@ -94,11 +57,14 @@
         {info.name}
     
 
-        {#if info.useTimer}
-            <div id="timer">
-                {displayTime}
-            </div>
-        {/if}
+
+            {#if info.useTimer}
+                <div id="timer">
+                    {displayTime}
+                </div>
+            {/if}
+
+
 
 
         <div id="indicators">
@@ -192,7 +158,8 @@
 
 
     #timer {
-        margin-left: 10px;
+        margin-left: auto;
+        font-size: 0.8em;
     }
 
 
