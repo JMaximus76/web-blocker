@@ -39,6 +39,22 @@ export async function sendMessage(message: Message) {
 
 
 
+export function capitalizeFirstLetter(string: string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+
+
+export function filterBlockPage(url: string) {
+    if (url.includes(browser.runtime.getURL("/src/blocked_page/blocked-page.html"))) {
+        const regexArray = /(?<=\?url=).*/.exec(url);
+        if (regexArray === null) throw new Error(`Getting url from "Blocked Page" resulted in null`);
+        url = regexArray[0];
+    }
+    return url;
+}
+
+
 
 
 

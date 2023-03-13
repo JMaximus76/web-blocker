@@ -63,7 +63,7 @@ browser.runtime.onInstalled.addListener(() => {
         const infoList = new InfoList();
         await infoList.syncFromStorage();
 
-        const test = await infoList.registerNewList("test", "block");
+        const test = await infoList.registerNewList("this is a space", "block");
         test.toggleActive();
 
         const testList = await test.pullList();
@@ -165,11 +165,11 @@ async function setTimers(ids: TimerList): Promise<void> {
 
 
 async function manageTimers(): Promise<void> {
-    if (!await Settings.getSetting("isActive")) return;
+    
     
     await resetTimers();
     browser.alarms.clear("blockTimer");
-
+    if (!await Settings.getSetting("isActive")) return;
 
     const tabs = await browser.tabs.query({ active: true });
     if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
@@ -267,7 +267,6 @@ async function check(url: string, tabId: number): Promise<void> {
     await infoList.syncFromStorage();
 
     const matched = await isMatch(url, infoList);
-    console.log(matched);
 
     // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
     if ((matched === (infoList.activeMode === "block")) && !urlIsBlockedPage) {
@@ -336,7 +335,6 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 // would filter this but chrome does not have support for that :/
 browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
     console.log("on updated");
-    //console.table(changeInfo);
     
     async function updated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {

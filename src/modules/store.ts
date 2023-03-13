@@ -3,7 +3,7 @@ import { readable, writable, type Readable } from "svelte/store";
 import InfoList from "./infoList";
 import Settings from "./settings";
 import type Timer from "./timer";
-import type { Message } from "./util";
+import { filterBlockPage, type Message } from "./util";
 
 
 
@@ -95,8 +95,6 @@ export const timerDisplayStore = createTimerDisplayStore();
 
 function createTimerDisplayStore() {
 
-    console.log("making new timerDisplayStore");
-
     const timerDisplay = createTimerDisplay();
 
 
@@ -116,7 +114,6 @@ function createTimerDisplayStore() {
 
         function onMessage(message: Message) {
             if (message.for === "timerStore") {
-                console.log("tiemrstore message", message);
                 timerDisplay[message.id].active = message.item.active;
                 set(timerView);
             }
@@ -160,25 +157,48 @@ function createTimerDisplayStore() {
 
 
 
+export const currentFaviconStore = readable("", function start(set) {
+    browser.tabs.query({ active: true, currentWindow: true })
+        .then((tabs) => { if (tabs[0].favIconUrl) set(tabs[0].favIconUrl) })
+        .catch((e) => console.error(new Error(e)));
+
+    const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
+        if (changeInfo.favIconUrl) {
+            set(changeInfo.favIconUrl);
+        }
+    };
+
+    const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
+        browser.tabs.get(activeInfo.tabId)
+            .then((tab: browser.Tabs.Tab) => {
+                if (tab.favIconUrl) {
+                    set(tab.favIconUrl);
+                }
+            }).catch((e) => console.error(new Error(e)));
+    };
+
+    browser.tabs.onUpdated.addListener(onUpdate);
+    browser.tabs.onActivated.addListener(onActivated);
+
+    return function stop() {
+        browser.tabs.onUpdated.removeListener(onUpdate);
+        browser.tabs.onActivated.removeListener(onActivated);
+    }
+});
+
+
+
 export const currentUrlStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].url) set(filterBlockPage(tabs[0].url)) })
         .catch((e) => console.error(new Error(e)));
 
 
-    const filterBlockPage = (url: string) => {
-        if (url.includes(browser.runtime.getURL("/src/blocked_page/blocked-page.html"))) {
-            const regexArray = /(?<=\?url=).*/.exec(url);
-            if (regexArray === null) throw new Error(`Getting url from "Blocked Page" resulted in null`);
-            url = regexArray[0];
-        }
-        return url;
-    }
+    
 
     const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
         
         if (changeInfo.url) {
-            console.log("filter ", filterBlockPage(changeInfo.url));
             set(filterBlockPage(changeInfo.url));
         }
     };
@@ -187,7 +207,6 @@ export const currentUrlStore = readable("", function start(set) {
         browser.tabs.get(activeInfo.tabId)
             .then((tab: browser.Tabs.Tab) => {
                 if (tab.url) {
-                    console.log("filter ", filterBlockPage(tab.url));
                     set(filterBlockPage(tab.url));
                 }
             })
@@ -203,5 +222,57 @@ export const currentUrlStore = readable("", function start(set) {
     };
 });
 
+
+
+
+type Page = "main" | "deactivated" | "list";
+
+type PopupPage = {
+    page: Page | "blank";
+    in: number;
+    out: number;
+}
+
+export const popupPageStore = createPopupPageStore();
+
+function createPopupPageStore() {
+
+    const popupPage: PopupPage = {
+        page: "blank",
+        in: 0,
+        out: 0,
+    };
+
+    const store = writable(popupPage);
+
+    const index = {
+        deactivated: -1,
+        main: 0,
+        list: 1,
+    }
+
+    return {
+        subscribe: store.subscribe,
+
+        
+        change(to: Page): void {
+
+            if (popupPage.page === "blank") {
+                popupPage.in = 0;
+                popupPage.out = 0;
+            } else if (index[to] < index[popupPage.page]) {
+                popupPage.out = 300;
+                popupPage.in = -300;
+            } else {
+                popupPage.out = -300;
+                popupPage.in = 300;
+            }
+
+            popupPage.page = to;
+            store.set(popupPage);
+        }
+    }
+
+}
 
 
