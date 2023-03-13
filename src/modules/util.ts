@@ -26,8 +26,12 @@ export function handelError(error: PromiseError) {
 
 
 export function isHttp(url: string): boolean {
-    // only doing http becaus this also matches on https
-    const regexArray = /^http/.exec(url);
+    const regexArray = /^https?:\/\//.exec(url);
+    return regexArray !== null;
+}
+
+export function isURL(url: string): boolean {
+    const regexArray = /^https?:\/\/.*\..*\//.exec(url);
     return regexArray !== null;
 }
 

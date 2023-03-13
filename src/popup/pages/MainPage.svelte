@@ -2,9 +2,10 @@
 
     import Lists from "../components/Lists.svelte";
     import TextButton from "../components/TextButton.svelte";
-    import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
+    import { AddEntryPopupStore, infoListStore, popupPageStore, settingsStore } from "../../modules/store";
     import InformationBlock from "../components/InformationBlock.svelte";
     //import { capitalizeFirstLetter } from "../../modules/util";
+
 
 
 
@@ -18,6 +19,10 @@
     }
 
 
+    function openAddEntryPopup(): void {
+        AddEntryPopupStore.open("you")
+    }
+
 
 </script>
 
@@ -26,10 +31,12 @@
 
 
 <div id="main">
+    
 
     
     <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
     <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+    <TextButton on:click={openAddEntryPopup} text={"Add Entry"} />
 
     <!-- <div id="list-header">
         <h1>{capitalizeFirstLetter($infoListStore.activeMode)} Mode</h1>
@@ -47,6 +54,9 @@
         <p>Total Lists: {$infoListStore.currentInfos.length}</p>
         <p>Active Lists: {$infoListStore.activeInfos.length}</p>
     </div>
+
+
+    
 
 </div>
 

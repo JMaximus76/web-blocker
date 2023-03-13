@@ -276,3 +276,40 @@ function createPopupPageStore() {
 }
 
 
+
+
+
+type AddEntryPopupState = {
+    active: boolean;
+    infoId: string | null;
+}
+
+export const AddEntryPopupStore = createAddEntryPopupStore();
+
+function createAddEntryPopupStore() {
+
+    const state: AddEntryPopupState = {
+        active: false,
+        infoId: null,
+    }
+
+    const store = writable(state);
+
+    return {
+        subscribe: store.subscribe,
+        open: (infoId: string) => {
+            state.active = true;
+            state.infoId = infoId;
+            store.set(state);
+        },
+
+        close: () => {
+            state.active = false;
+            state.infoId = null;
+            store.set(state);
+        },
+
+    }
+}
+
+

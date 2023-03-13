@@ -19,6 +19,7 @@ export default class List {
 
 
     static clipURL(mode: EntryMode, url: string): string | null {
+        if (mode === "exact") return url;
 
         let regex: RegExpExecArray | null;
         if (mode === "domain") {
