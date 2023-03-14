@@ -1,15 +1,16 @@
 
 <script lang="ts">
-    import { isURL } from "../../modules/util";
+    import { isBadURL, isHttp } from "../../modules/util";
 
 
     export let value = "";
     export let isValid = false;
     
-    $: isValid = isURL(value);
+    $: isValid = isBadURL(value);
 
-
-    
+    function fixValue() {
+        if (!isHttp(value) && value !== "") value = "https://" + value;
+    }
 
 </script>
 
@@ -20,9 +21,12 @@
     placeholder="https://example.com"
     bind:value={value}
 
+    on:blur={fixValue}
 
     class:invalid={!isValid}
     class:valid={isValid}
+
+    
 />
 
 

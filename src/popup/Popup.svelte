@@ -2,7 +2,7 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./components/Header.svelte";
-    import { popupPageStore } from "../modules/store";
+    import { addEntryPopupStore, popupPageStore } from "../modules/store";
     import { fly } from "svelte/transition";
     import Settings from "../modules/settings";
     import { onMount } from "svelte";
@@ -13,9 +13,9 @@
     onMount(() => {
         loading = Settings.getSetting("isActive").then((isActive) => {
             if (isActive) {
-                popupPageStore.change("main");
+                popupPageStore.goto("main");
             } else  {
-                popupPageStore.change("deactivated");
+                popupPageStore.goto("deactivated");
             }
         });
     })
@@ -31,7 +31,7 @@
 
 
 
-<div id="container">
+<div class:blur={$addEntryPopupStore.active} id="popup">
     <Header />
 
     {#await loading then}
@@ -52,11 +52,11 @@
         {/if}
     {/await}
 
-    <AddEntryPopup />
+    
     
 </div>
 
-
+<AddEntryPopup />
 
 
 
@@ -72,8 +72,20 @@
         width: 300px;
     }
 
+    #popup {
+        transition: filter 0.2s;
+    }
+
+    .blur {
+        
+        filter: blur(20px);
+    }
+
+    
+
     :global(body) {
         background: var(--background);
         overflow: hidden;
+
     }
 </style>

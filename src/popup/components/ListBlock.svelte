@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type Info from "../../modules/info";
-    import { currentUrlStore, timerDisplayStore } from "../../modules/store";
+    import { addEntryPopupStore, currentUrlStore, timerDisplayStore } from "../../modules/store";
   
 
 
@@ -69,6 +69,13 @@
 
     </button>
 
+
+    <button on:click={() => addEntryPopupStore.open(info.id)} id="addButton">
+        <svg id="add" height="20" width="20">
+            <rect x="8" y="0" height="20" width="4"/>
+            <rect x="0" y="8" height="4" width="20"/>
+        </svg>
+    </button>
 
 
     <button id="listButton">
@@ -204,6 +211,20 @@
         flex-direction: row;
         margin-left: 8px;
 
+    }
+
+
+    #addButton {
+        border: none;
+        margin: none;
+        padding: none;
+    }
+
+    #add {
+        display: flex;
+        flex-direction: row;
+
+        fill: var(--icon);
     }
 
     

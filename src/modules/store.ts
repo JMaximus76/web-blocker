@@ -255,7 +255,7 @@ function createPopupPageStore() {
         subscribe: store.subscribe,
 
         
-        change(to: Page): void {
+        goto(to: Page): void {
 
             if (popupPage.page === "blank") {
                 popupPage.in = 0;
@@ -284,7 +284,7 @@ type AddEntryPopupState = {
     infoId: string | null;
 }
 
-export const AddEntryPopupStore = createAddEntryPopupStore();
+export const addEntryPopupStore = createAddEntryPopupStore();
 
 function createAddEntryPopupStore() {
 

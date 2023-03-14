@@ -30,8 +30,8 @@ export function isHttp(url: string): boolean {
     return regexArray !== null;
 }
 
-export function isURL(url: string): boolean {
-    const regexArray = /^https?:\/\/.*\..*\//.exec(url);
+export function isBadURL(url: string): boolean {
+    const regexArray = /.*\..+/.exec(url);
     return regexArray !== null;
 }
 

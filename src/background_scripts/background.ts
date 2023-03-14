@@ -82,26 +82,10 @@ browser.runtime.onInstalled.addListener(() => {
         //     const t = await infoList.registerNewList(`test${i}`, "block");
         //     t.toggleActive();
         //     const l = await t.pullList();
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
-        //     l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+
+        //     for (let j = 0; j < 20; j++) {
+        //         l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //     }
         //     await l.save();
 
         //     await t.toggleTimer();

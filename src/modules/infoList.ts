@@ -147,8 +147,13 @@ export default class InfoList {
      
     }
 
+
     getInfo(name: string, mode: Mode): Info | undefined {
         return this.#infos[`${mode}-${name}`];
+    }
+
+    getInfoWithId(id: string): Info | undefined {
+        return this.#infos[id];
     }
 
 
