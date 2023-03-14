@@ -74,6 +74,7 @@
 
     #popup {
         transition: filter 0.2s;
+        overflow: hidden;
     }
 
     .blur {

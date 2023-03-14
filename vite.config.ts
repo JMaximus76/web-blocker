@@ -28,7 +28,7 @@ export default defineConfig({
       assets: "public",
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: "firefox",
+      browser: "chrome",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]
@@ -36,8 +36,8 @@ export default defineConfig({
   ],
 
   build: {
-    minify: false,
-    sourcemap: false,
+    minify: true,
+    sourcemap: true,
     
   }
 });

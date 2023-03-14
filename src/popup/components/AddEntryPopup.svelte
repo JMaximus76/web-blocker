@@ -37,8 +37,8 @@
 
         <div transition:fly={{y: -200, duration: 200}} id="main">
 
-            <h1>Adding To:</h1>
-            <p>{info.name}</p>
+            <h1>Adding Block Entry</h1>
+            <p>List:  {info.name}</p>
 
             
             <InputUrl />
@@ -68,6 +68,7 @@
         font-family: 'Roboto', sans-serif;
         color: var(--text);
     }
+
 
 
 

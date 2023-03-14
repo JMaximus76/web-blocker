@@ -31,7 +31,7 @@ export function isHttp(url: string): boolean {
 }
 
 export function isBadURL(url: string): boolean {
-    const regexArray = /.*\..+/.exec(url);
+    const regexArray = /^https?:\/\/[\w-]+\.[\w-]+/.exec(url);
     return regexArray !== null;
 }
 

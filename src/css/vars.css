@@ -15,6 +15,9 @@
     --text: #EBF1FF;  
     --icon: #EBF1FF;  
 
+    --invalid: #ff1b0a;
+    --valid: #008bf5;
+
 
 
     /* Saved Colors for Testing */
@@ -26,6 +29,7 @@
     --blue: #008bf5;
     --darkBlue: #0074CC;
     --red: #7A0006;
+    --lightRed: #ff1b0a;
 
 
 
