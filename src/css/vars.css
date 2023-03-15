@@ -12,11 +12,14 @@
     --buttonHover: rgba(0, 0, 0, 15%);
     --buttonActive: rgba(0, 0, 0, 30%);
     
-    --text: #EBF1FF;  
+    --text: #EBF1FF;
+    --textFade:#99A6C2;
     --icon: #EBF1FF;  
 
     --invalid: #ff1b0a;
     --valid: #008bf5;
+    --neutral: #EBF1FF;
+    --focus: rgba(0, 0, 0, 10%);
 
 
 

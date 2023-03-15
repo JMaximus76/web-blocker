@@ -4,6 +4,7 @@
     import type Info from "../../modules/info";
     import { addEntryPopupStore, infoListStore } from "../../modules/store";
     import InputUrl from "./InputURL.svelte";
+    
 
     
 
@@ -38,12 +39,11 @@
         <div transition:fly={{y: -200, duration: 200}} id="main">
 
             <h1>Adding Block Entry</h1>
-            <p>List:  {info.name}</p>
+            <p>List: &nbsp;{info.name}</p>
 
-            
-            <InputUrl />
-
-
+            <div id="input">
+                <InputUrl />
+            </div>
 
         </div>
 
@@ -69,6 +69,12 @@
         color: var(--text);
     }
 
+
+    #input {
+        display: flex;
+        flex-direction: row;
+
+    }
 
 
 
