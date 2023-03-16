@@ -9,9 +9,9 @@
     export let text: string | undefined = undefined;
     export let fontSize: string = "16px";
     export let textColor: string = "var(--text)"
-    export let paddingMultiplier: number = 5;
-    const padding1 = paddingMultiplier * 2;
-    const padding2 = paddingMultiplier * 3;
+    export let verticalPadding: string = "10px";
+    export let horizontalPadding: string = "15px";
+
 
 
     
@@ -20,7 +20,7 @@
 
 
 <div id="backgroundColor" style="--color:{color};">
-    <button on:click style="--hover:{hover}; --active:{active}; --padding1:{`${padding1}px`}; --padding2:{`${padding2}px`};">
+    <button on:click style="--hover:{hover}; --active:{active}; --verticalPadding:{verticalPadding}; --horizontalPadding:{horizontalPadding};">
 
     <div id="text" style="--fontSize:{fontSize}; --textColor:{textColor};">{text}</div>
 
@@ -51,7 +51,7 @@
         cursor: pointer;
 
         background-color: transparent;
-        padding: var(--padding1) var(--padding2);
+        padding: var(--verticalPadding) var(--horizontalPadding);
         border: none;
         border-radius: var(--radius);
         transition: background-color var(--transitionSpeed);

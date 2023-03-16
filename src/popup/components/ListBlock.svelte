@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type Info from "../../modules/info";
+    import List from "../../modules/list";
     import { addEntryPopupStore, currentUrlStore, timerDisplayStore } from "../../modules/store";
   
 
@@ -11,10 +12,12 @@
 
 
 
-    $: matchText = `Match Found: This list matched with ${$currentUrlStore}`;
+    $: matchTitle = `Match Found: This list matched with ${List.clipURL("domain", $currentUrlStore)}`;
     $: activeTitle = `${info.name} is ${info.active? "enabled" : "disabled"}`;
 
-    const lockedText = "Locked List: This list has been locked, you will not be able to enable/disable it in the popup.";
+    const lockedTitle = "Locked List: This list has been locked, you will not be able to edit it in the popup";
+    const addTitle = "Add a list entry";
+    const editTitle = "Edit List";
 
 
     function toggleActive(): void {
@@ -60,9 +63,9 @@
 
         <div id="indicators">
             {#await info.pullList() then list}
-                <div class:invisible={!list.check($currentUrlStore)} id="match" title={matchText}>M</div>
+                <div class:invisible={!list.check($currentUrlStore)} id="match" title={matchTitle}>M</div>
             {/await}
-            <div class:invisible={!info.locked} id="lock" title={lockedText}>L</div>
+            <div class:invisible={!info.locked} id="lock" title={lockedTitle}>L</div>
         </div>
 
 
@@ -70,7 +73,7 @@
     </button>
 
 
-    <button on:click={() => addEntryPopupStore.open(info.id)} id="addButton">
+    <button title={addTitle} on:click={() => addEntryPopupStore.open(info.id)} id="addButton">
         <svg id="add" height="20" width="20">
             <rect x="8" y="0" height="20" width="4"/>
             <rect x="0" y="8" height="4" width="20"/>
@@ -78,7 +81,7 @@
     </button>
 
 
-    <button id="listButton">
+    <button title={editTitle} id="listButton">
         <svg id="arrow" height="20" width="20">
             <defs>
                 <mask id="arrow-mask">

@@ -6,7 +6,7 @@
     import { fly } from "svelte/transition";
     import Settings from "../modules/settings";
     import { onMount } from "svelte";
-    import AddEntryPopup from "./components/AddEntryPopup.svelte";
+    import AddEntryPopup from "./pages/AddEntryPopup.svelte";
 
 
     let loading: Promise<void>;
@@ -56,8 +56,9 @@
     
 </div>
 
-<AddEntryPopup />
-
+{#if $addEntryPopupStore.active}
+    <AddEntryPopup />
+{/if}
 
 
 

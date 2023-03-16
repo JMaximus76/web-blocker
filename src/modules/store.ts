@@ -162,28 +162,28 @@ export const currentFaviconStore = readable("", function start(set) {
         .then((tabs) => { if (tabs[0].favIconUrl) set(tabs[0].favIconUrl) })
         .catch((e) => console.error(new Error(e)));
 
-    const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
-        if (changeInfo.favIconUrl) {
-            set(changeInfo.favIconUrl);
-        }
-    };
+    // const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
+    //     if (changeInfo.favIconUrl) {
+    //         set(changeInfo.favIconUrl);
+    //     }
+    // };
 
-    const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
-        browser.tabs.get(activeInfo.tabId)
-            .then((tab: browser.Tabs.Tab) => {
-                if (tab.favIconUrl) {
-                    set(tab.favIconUrl);
-                }
-            }).catch((e) => console.error(new Error(e)));
-    };
+    // const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
+    //     browser.tabs.get(activeInfo.tabId)
+    //         .then((tab: browser.Tabs.Tab) => {
+    //             if (tab.favIconUrl) {
+    //                 set(tab.favIconUrl);
+    //             }
+    //         }).catch((e) => console.error(new Error(e)));
+    // };
 
-    browser.tabs.onUpdated.addListener(onUpdate);
-    browser.tabs.onActivated.addListener(onActivated);
+    // browser.tabs.onUpdated.addListener(onUpdate);
+    // browser.tabs.onActivated.addListener(onActivated);
 
-    return function stop() {
-        browser.tabs.onUpdated.removeListener(onUpdate);
-        browser.tabs.onActivated.removeListener(onActivated);
-    }
+    // return function stop() {
+    //     browser.tabs.onUpdated.removeListener(onUpdate);
+    //     browser.tabs.onActivated.removeListener(onActivated);
+    // }
 });
 
 
@@ -196,30 +196,30 @@ export const currentUrlStore = readable("", function start(set) {
 
     
 
-    const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
+    // const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
         
-        if (changeInfo.url) {
-            set(filterBlockPage(changeInfo.url));
-        }
-    };
+    //     if (changeInfo.url) {
+    //         set(filterBlockPage(changeInfo.url));
+    //     }
+    // };
 
-    const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
-        browser.tabs.get(activeInfo.tabId)
-            .then((tab: browser.Tabs.Tab) => {
-                if (tab.url) {
-                    set(filterBlockPage(tab.url));
-                }
-            })
-            .catch((e) => console.error(new Error(e)));
-    };
+    // const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
+    //     browser.tabs.get(activeInfo.tabId)
+    //         .then((tab: browser.Tabs.Tab) => {
+    //             if (tab.url) {
+    //                 set(filterBlockPage(tab.url));
+    //             }
+    //         })
+    //         .catch((e) => console.error(new Error(e)));
+    // };
 
-    browser.tabs.onUpdated.addListener(onUpdate);
-    browser.tabs.onActivated.addListener(onActivated);
+    // browser.tabs.onUpdated.addListener(onUpdate);
+    // browser.tabs.onActivated.addListener(onActivated);
 
-    return function stop() {
-        browser.tabs.onUpdated.removeListener(onUpdate);
-        browser.tabs.onActivated.removeListener(onActivated);
-    };
+    // return function stop() {
+    //     browser.tabs.onUpdated.removeListener(onUpdate);
+    //     browser.tabs.onActivated.removeListener(onActivated);
+    // };
 });
 
 
@@ -305,7 +305,6 @@ function createAddEntryPopupStore() {
 
         close: () => {
             state.active = false;
-            state.infoId = null;
             store.set(state);
         },
 

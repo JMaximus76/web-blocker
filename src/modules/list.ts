@@ -1,6 +1,7 @@
 import browser from "webextension-polyfill";
 import type Info from "./info";
 import type { EntryMode, ListEntry } from "./types";
+import { sendMessage } from "./util";
 
 
 
@@ -22,10 +23,12 @@ export default class List {
         if (mode === "exact") return url;
 
         let regex: RegExpExecArray | null;
+
+        // yes, I know these regexes are terrible, sorry
         if (mode === "domain") {
-            regex = /(?<=:\/\/)[^?#\/]*(?=\/)/.exec(url);
+            regex = /(?<=:\/\/)[^?#\/]*(?=\/)?/.exec(url);
         } else if (mode === "fullDomain") {
-            regex = /(?<=:\/\/)(?:[^.\/]+\.)?([^?#\/]*(?=\/))/.exec(url);
+            regex = /(?<=:\/\/)(?:.*\.)?([\w-]*\.[\w-]*)/.exec(url);
         } else {
             regex = /(?<=:\/\/)[^?#]*/.exec(url);
         }
@@ -53,6 +56,7 @@ export default class List {
 
     async save(): Promise<void> {
         await browser.storage.local.set({ [this.#id]: this.#list });
+        await sendMessage({for: "backgroundScript", id: "update"});
     }
 
 
