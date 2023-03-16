@@ -6,7 +6,7 @@
 
     export const width: string = "203px";
 
-    export let value = "https://";
+    export let value = "";
     export let isValid = false;
 
     let self: HTMLElement;
@@ -25,7 +25,7 @@
         value = $currentUrlStore;
     }
 
-    const buttonTitle = "Changes the input to the URL of the current page";
+    const buttonTitle = "Inserts the URL of the current page";
 
 </script>
 
@@ -65,6 +65,10 @@
         width: var(--width);
         font-size: 13px;
         color: var(--text);           
+    }
+
+    input::placeholder {
+        color: var(--textFade); 
     }
 
     button {

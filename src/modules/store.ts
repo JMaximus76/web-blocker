@@ -157,7 +157,7 @@ function createTimerDisplayStore() {
 
 
 
-export const currentFaviconStore = readable("", function start(set) {
+export const currentTabFaviconStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].favIconUrl) set(tabs[0].favIconUrl) })
         .catch((e) => console.error(new Error(e)));

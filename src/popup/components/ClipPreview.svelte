@@ -2,6 +2,7 @@
 <script lang="ts">
     import List from "../../modules/list";
     import type { EntryMode } from "../../modules/types";
+    import { isBadURL } from "../../modules/util";
     import EntryModeRadio from "./EntryModeRadio.svelte";
 
 
@@ -11,7 +12,16 @@
 
 
     function generatePreviewText(mode: EntryMode, url: string): string {
-        console.log(`cliping with mode ${mode}`)
+        
+        if (mode === "exact") {
+            if (isBadURL(url)) {
+                return url;
+            } else {
+                return "Invalid URL";
+            }
+        }
+
+
         const clip = List.clipURL(mode, url);
         if (clip === null || clip === "") {
             return "Invalid URL";

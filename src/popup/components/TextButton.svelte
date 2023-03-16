@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    
+    export let isActive: boolean = true;
     
     export let color: string = "var(--buttonColor)";
     export let hover: string = "var(--buttonHover)";
@@ -8,7 +8,8 @@
 
     export let text: string | undefined = undefined;
     export let fontSize: string = "16px";
-    export let textColor: string = "var(--text)"
+    export let textColor: string = "var(--text)";
+    export let textFadeColor: string = "var(--textFade)";
     export let verticalPadding: string = "10px";
     export let horizontalPadding: string = "15px";
 
@@ -20,9 +21,19 @@
 
 
 <div id="backgroundColor" style="--color:{color};">
-    <button on:click style="--hover:{hover}; --active:{active}; --verticalPadding:{verticalPadding}; --horizontalPadding:{horizontalPadding};">
+    <button
+        on:click
+        style="
+            --hover:{hover};
+            --active:{active};
+            --verticalPadding:{verticalPadding};
+            --horizontalPadding:{horizontalPadding};
+        "
+        class:isActive
+        class:inactive={!isActive}
+    >
 
-    <div id="text" style="--fontSize:{fontSize}; --textColor:{textColor};">{text}</div>
+    <div id="text" style="--fontSize:{fontSize}; --textColor:{textColor}; --textFadeColor:{textFadeColor}">{text}</div>
 
     </button>
 </div>
@@ -40,15 +51,19 @@
 
 
     #text {
-        color: var(--textColor);
+        color: var(--textFadeColor);
         font-family: 'Roboto', sans-serif;
         font-size: var(--fontSize);
+    }
+
+    button.isActive > #text {
+        color: var(--textColor);
     }
     
 
 
     button {
-        cursor: pointer;
+        cursor: not-allowed;
 
         background-color: transparent;
         padding: var(--verticalPadding) var(--horizontalPadding);
@@ -57,11 +72,17 @@
         transition: background-color var(--transitionSpeed);
     }
 
-    button:hover {
+    
+
+    .isActive {
+        cursor: pointer;
+    }
+
+    .isActive:hover {
         background-color: var(--hover);
     }
 
-    button:active {
+    .isActive:active {
         background-color: var(--active);
     }
 

@@ -77,7 +77,7 @@
         </div>
 
         <div id="button" title={addButtonTitle  }>
-            <TextButton on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"}/>
+            <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"}/>
         </div>
     </div>
 

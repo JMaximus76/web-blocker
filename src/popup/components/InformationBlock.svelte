@@ -1,11 +1,11 @@
 
 <script lang="ts">
-    import { currentFaviconStore } from "../../modules/store";
+    import { currentTabFaviconStore } from "../../modules/store";
 </script>
 
 
 
 
 <div id="main">
-    <img src={$currentFaviconStore} alt="favicon">
+    <img src={$currentTabFaviconStore} alt="favicon">
 </div>

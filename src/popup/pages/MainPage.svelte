@@ -3,7 +3,7 @@
     import Lists from "../components/Lists.svelte";
     import TextButton from "../components/TextButton.svelte";
     import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
-    import InformationBlock from "../components/InformationBlock.svelte";
+    //import InformationBlock from "../components/InformationBlock.svelte";
     //import { capitalizeFirstLetter } from "../../modules/util";
 
 
@@ -39,7 +39,7 @@
         
     </div> -->
 
-    <InformationBlock />
+    <!-- <InformationBlock /> -->
     
 
     <div id="lists">
