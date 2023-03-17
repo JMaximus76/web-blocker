@@ -50,7 +50,7 @@
     <div class:active={info.active} id="infoButton">
 
 
-        <button on:click={toggleActive}>{info.name}</button>
+        <button class:locked={info.locked} on:click={toggleActive}>{info.name}</button>
 
         <div id="spacer"></div>
 
@@ -74,7 +74,7 @@
 
     <div id="buttons">
         <button on:click={() => addEntryPopupStore.open(info.id)} title={addTitle}>Add Entry</button>
-        <button title={editTitle}>Edit List</button>
+        <button class:locked={info.locked} title={editTitle}>Edit List</button>
     </div>
 
 
@@ -118,6 +118,10 @@
         transition: color 0.3s;
     }
 
+    #infoButton button.locked {
+        cursor: default;
+    }
+
     #infoButton.active {
         color: var(--text);
         box-shadow: 0 2px var(--text);
@@ -133,13 +137,21 @@
         color: var(--textFade);
         font-family: 'Roboto', sans-serif;
         cursor: pointer;
-
+        transition: color 0.2s;
         padding: 0;
         margin-right: 8px;
     }
 
     #buttons button:hover {
         color: var(--text);
+    }
+
+    #buttons button.locked {
+        cursor: default;
+    }
+
+    #buttons button.locked:hover {
+        color: var(--textFade);
     }
 
 

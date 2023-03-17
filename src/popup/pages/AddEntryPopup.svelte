@@ -76,8 +76,11 @@
             <ClipPreview bind:mode url={url}/>
         </div>
 
-        <div id="button" title={addButtonTitle  }>
+        <div id="exit">
             <TextButton on:click={addEntryPopupStore.close} text={"Exit"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
+        </div>
+
+        <div id="add" title={addButtonTitle  }>
             <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
         </div>
     </div>
@@ -146,9 +149,14 @@
     }
 
 
-    #button {
+    #add {
         margin-top: 14px;
         float: right;
+    }
+
+    #exit {
+        margin-top: 14px;
+        float: left;
     }
    
 

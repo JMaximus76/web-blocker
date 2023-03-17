@@ -28,8 +28,8 @@
 
 <div id="main">
     
-    <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
-    <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+    
+    
     
 
     <div id="lists">
@@ -42,10 +42,16 @@
         
     </div>
 
-    <div id="info-footer">
+    <div id="list-info">
         <p>Total Lists: {$infoListStore.currentInfos.length}</p>
         <p>Active Lists: {$infoListStore.activeInfos.length}</p>
     </div>
+
+
+    <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
+    <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+
+    
 
 
     
@@ -63,19 +69,19 @@
     }
 
 
-    #info-footer {
+    #list-info {
         display: flex;
         flex-direction: row;
         
     }
 
-    #info-footer p {
+    #list-info p {
         font-size: 12px;
         font-family: 'Roboto', sans-serif;
         color: var(--text);
         margin: 0;
         display: inline-block;
-        margin-left: 7px;
+        margin-right: 15px;
 
     }
 
@@ -84,6 +90,7 @@
         height: 100%;
         width: 100%;
         display: inline-block;
+        padding-left: 10px;
     }
 
     #lists {

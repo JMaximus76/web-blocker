@@ -97,7 +97,7 @@ Current URL
         border: none;
         background-color: transparent;
         padding: 0;
-        
+        transition: color 0.2s;
     }
 
     button:hover {

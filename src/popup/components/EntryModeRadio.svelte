@@ -53,7 +53,7 @@
     div {
         cursor: pointer;
         display: inline;
-        transition: color 0.1s;
+        transition: color 0.2s;
     }
 
 

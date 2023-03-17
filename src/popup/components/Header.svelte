@@ -1,6 +1,6 @@
 <script lang='ts'>
     
-    import ImgButton from "./ImgButton.svelte";
+
 
 </script>
 
@@ -11,18 +11,11 @@
 <header>
     <div id="logo"></div>
     <h1>WebBlock _</h1>
-    <div id="button">
-        <ImgButton svgURL={"url(/hamburger.svg)"} color={"transparent"} hover={"rgba(0,0,0,30%)"} active={"rgba(0,0,0,50%)"}/>
-    </div>
 </header>
 
 
 
 <style>
-
-    #button {
-        margin-left: auto;
-    }
 
     #logo {
         width: 27px;
