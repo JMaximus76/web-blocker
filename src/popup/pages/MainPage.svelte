@@ -1,10 +1,10 @@
 <script lang="ts">
 
-    import Lists from "../components/Lists.svelte";
+
     import TextButton from "../components/TextButton.svelte";
     import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
-    //import InformationBlock from "../components/InformationBlock.svelte";
-    //import { capitalizeFirstLetter } from "../../modules/util";
+    import Lists from "../components/Lists.svelte";
+    import { fly } from "svelte/transition";
 
 
 
@@ -28,22 +28,18 @@
 
 <div id="main">
     
-
-    
     <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
     <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
-
-
-    <!-- <div id="list-header">
-        <h1>{capitalizeFirstLetter($infoListStore.activeMode)} Mode</h1>
-        
-    </div> -->
-
-    <!-- <InformationBlock /> -->
     
 
     <div id="lists">
-        <Lists />
+        {#if $infoListStore.activeMode === "block"}
+            <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
+        {:else}
+            <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
+        {/if}
+        
+        
     </div>
 
     <div id="info-footer">
@@ -61,6 +57,10 @@
     
 
 <style>
+
+    #lists div {
+        position: fixed;
+    }
 
 
     #info-footer {
@@ -91,25 +91,16 @@
         height: 215px;
         width: 100%;
         margin: 10px 0px;
+
+        background-color: var(--panel);
+
+        overflow-y: scroll;
+        scrollbar-width: none;
     }
 
-
-    /* #list-header {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        margin-top: 13px;
-        margin-left: 10px;
+    #lists::-webkit-scrollbar {
+        display: none;
     }
-
-    #list-header h1 {
-        font-size: 27px;
-        font-family: 'Roboto', sans-serif;
-        color: var(--text);
-        margin: 0;
-    } */
-
-    
 
 
 </style>

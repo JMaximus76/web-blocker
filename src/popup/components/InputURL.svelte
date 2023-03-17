@@ -4,7 +4,7 @@
     //import { onMount } from "svelte";
     import { currentUrlStore } from "../../modules/store";
 
-    export const width: string = "203px";
+
 
     export let value = "";
     export let isValid = false;
@@ -30,60 +30,54 @@
 </script>
 
 <label>
-    Enter URL
+    <h2>Enter URL</h2>
     <div>
         <input
-            style="--width:{width}"
-
             type="text" 
             placeholder="https://example.com"
             bind:value={value}
             bind:this={self}
-            class="common"
             class:invalid={!isValid && dirty}
             class:valid={isValid && dirty}
             on:keypress={onKey}
             on:click|once={() => dirty = true}
         />
 
-        <button 
-            on:click={setToCurrentURL}
-            on:click|once={() => dirty = true} 
-            class="common" 
-            class:invalid={!isValid && dirty}
-            class:valid={isValid && dirty} 
-            title={buttonTitle}
-            >
-            Current URL
-        </button>
+        
     </div>
 </label>
+
+<button 
+    on:click={setToCurrentURL}
+    on:click|once={() => dirty = true} 
+    title={buttonTitle}
+>
+Current URL
+</button>
 
 <style>
 
     input {
-        width: var(--width);
+        width: 100%;
         font-size: 13px;
-        color: var(--text);           
+        font-family: 'Roboto', sans-serif;
+        color: var(--text);   
+        box-shadow: 0 2px var(--neutral);
+        
+        border: none;
+        
+        border-radius: 0;
+        outline: none;
+        padding: 2px 5px 2px 2px;
+        background-color: transparent;
+        transition: box-shadow 0.3s;
     }
 
     input::placeholder {
         color: var(--textFade); 
     }
 
-    button {
-        font-size: 10px;
-        padding-right: 0;
-        cursor: pointer;
-        color: var(--textFade);
-    }
-
-    button:hover {
-        color: var(--text);
-    }
-    
-
-    input:focus + button, input:focus {
+    input:focus {
         border: none;
         background-color: var(--focus);
         
@@ -93,18 +87,30 @@
         font-size: 10px;
         color: var(--text); 
         font-family: 'Roboto', sans-serif;
+        
+    }
+
+    button {
+        font-size: 10px;
+        cursor: pointer;
+        color: var(--textFade);
+        border: none;
+        background-color: transparent;
+        padding: 0;
+        
+    }
+
+    button:hover {
+        color: var(--text);
     }
 
 
-    .common {
-        border: none;
-        box-shadow: 0 2px var(--neutral);
-        border-radius: 0;
-        outline: none;
-        padding: 5px;
-        padding-left: 0;
-        background-color: transparent;
-        transition: box-shadow 0.3s;
+    h2 {
+        font-size: 13px;
+        color: var(--text); 
+        font-family: 'Roboto', sans-serif;
+        margin: 3px 0 0 0;
+        font-weight: normal;
     }
 
 

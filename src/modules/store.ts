@@ -74,7 +74,7 @@ function createTimerDisplay() {
 }
 
 function formatTime(time: number): string {
-    if (time < 1000) return "00:00";
+    if (time < 1000) return "0:00";
     const second = 1000;
     const minute = second * 60;
     const hour = minute * 60;
@@ -85,8 +85,8 @@ function formatTime(time: number): string {
 
 
 
-    if (h === 0) return `${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
-    return `${(h < 10 ? "0" : "") + h}:${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
+    if (h === 0 || m === 0) return `${m}:${(s < 10 ? "0" : "") + s}`;
+    return `${h}:${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
 }
 
 
@@ -161,29 +161,6 @@ export const currentTabFaviconStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].favIconUrl) set(tabs[0].favIconUrl) })
         .catch((e) => console.error(new Error(e)));
-
-    // const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
-    //     if (changeInfo.favIconUrl) {
-    //         set(changeInfo.favIconUrl);
-    //     }
-    // };
-
-    // const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
-    //     browser.tabs.get(activeInfo.tabId)
-    //         .then((tab: browser.Tabs.Tab) => {
-    //             if (tab.favIconUrl) {
-    //                 set(tab.favIconUrl);
-    //             }
-    //         }).catch((e) => console.error(new Error(e)));
-    // };
-
-    // browser.tabs.onUpdated.addListener(onUpdate);
-    // browser.tabs.onActivated.addListener(onActivated);
-
-    // return function stop() {
-    //     browser.tabs.onUpdated.removeListener(onUpdate);
-    //     browser.tabs.onActivated.removeListener(onActivated);
-    // }
 });
 
 
@@ -192,34 +169,6 @@ export const currentUrlStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => { if (tabs[0].url) set(filterBlockPage(tabs[0].url)) })
         .catch((e) => console.error(new Error(e)));
-
-
-    
-
-    // const onUpdate = (_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
-        
-    //     if (changeInfo.url) {
-    //         set(filterBlockPage(changeInfo.url));
-    //     }
-    // };
-
-    // const onActivated = (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
-    //     browser.tabs.get(activeInfo.tabId)
-    //         .then((tab: browser.Tabs.Tab) => {
-    //             if (tab.url) {
-    //                 set(filterBlockPage(tab.url));
-    //             }
-    //         })
-    //         .catch((e) => console.error(new Error(e)));
-    // };
-
-    // browser.tabs.onUpdated.addListener(onUpdate);
-    // browser.tabs.onActivated.addListener(onActivated);
-
-    // return function stop() {
-    //     browser.tabs.onUpdated.removeListener(onUpdate);
-    //     browser.tabs.onActivated.removeListener(onActivated);
-    // };
 });
 
 

@@ -8,6 +8,7 @@
 
     export let text: string | undefined = undefined;
     export let fontSize: string = "16px";
+    export let bold: boolean = false;
     export let textColor: string = "var(--text)";
     export let textFadeColor: string = "var(--textFade)";
     export let verticalPadding: string = "10px";
@@ -33,7 +34,7 @@
         class:inactive={!isActive}
     >
 
-    <div id="text" style="--fontSize:{fontSize}; --textColor:{textColor}; --textFadeColor:{textFadeColor}">{text}</div>
+    <div id="text" class:bold style="--fontSize:{fontSize}; --textColor:{textColor}; --textFadeColor:{textFadeColor}">{text}</div>
 
     </button>
 </div>
@@ -54,6 +55,7 @@
         color: var(--textFadeColor);
         font-family: 'Roboto', sans-serif;
         font-size: var(--fontSize);
+        transition: color 0.1s;
     }
 
     button.isActive > #text {
@@ -63,7 +65,7 @@
 
 
     button {
-        cursor: not-allowed;
+        cursor: default;
 
         background-color: transparent;
         padding: var(--verticalPadding) var(--horizontalPadding);
@@ -86,6 +88,8 @@
         background-color: var(--active);
     }
 
-
+    .bold {
+        font-weight: bold;
+    }
 
 </style>

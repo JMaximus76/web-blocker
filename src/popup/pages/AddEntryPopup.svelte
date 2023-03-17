@@ -77,7 +77,8 @@
         </div>
 
         <div id="button" title={addButtonTitle  }>
-            <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"}/>
+            <TextButton on:click={addEntryPopupStore.close} text={"Exit"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
+            <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
         </div>
     </div>
 
@@ -113,7 +114,7 @@
     }
 
     #mode {
-        margin-top: 25px;
+        margin-top: 15px;
     }
 
     #main {
@@ -129,7 +130,6 @@
 
 
         background-color: var(--popup);
-        border-radius: var(--radius);
         
     }
 
@@ -147,7 +147,7 @@
 
 
     #button {
-        margin-top: 11px;
+        margin-top: 14px;
         float: right;
     }
    

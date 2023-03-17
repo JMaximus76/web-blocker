@@ -1,48 +1,29 @@
 <script lang="ts">
-    import ListBlock from "./ListBlock.svelte";
     import { infoListStore } from "../../modules/store";
+    import type { Mode } from "../../modules/types";
 
+    
+    import ListBlock from "../components/ListBlock.svelte";
+
+
+    export let mode: Mode;
+
+    $: list = (mode === "block")? $infoListStore.block : $infoListStore.allow;
     
 
 </script>
 
 <div>
-    {#if $infoListStore.currentInfos.length === 0}
+    {#if list.length === 0}
 
-        <p>No {$infoListStore.activeMode} lists</p>
+        <p>No {mode} lists</p>
         
     {:else}
 
-        {#each $infoListStore.currentInfos as infos (infos.id)}
+        {#each list as infos (infos.id)}
             <ListBlock info={infos} />
         {/each}
 
     {/if}
 </div>
-
-
-
-<style>
-    div {
-
-        width: 100%;
-        height: 100%;
-
-
-
-        border-radius: var(--radius);
-        background-color: var(--panel);
-
-        overflow-y: scroll;
-        scrollbar-width: none;
-    }
-
-
-    div::-webkit-scrollbar {
-        display: none;
-    }
-
-
-
-</style>
 

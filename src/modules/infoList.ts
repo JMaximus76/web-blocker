@@ -2,7 +2,7 @@ import type { Subscriber } from "svelte/store";
 import browser from "webextension-polyfill";
 import Info from "./info";
 import { getStorageItem, setStorageItem } from "./storage";
-import type { StorageInfo, Mode, UpdateMessageMap, StorageInfoList } from "./types";
+import type { Mode, UpdateMessageMap, StorageInfoList } from "./types";
 import { sendMessage, type Message } from "./util";
 
 
@@ -221,16 +221,16 @@ export default class InfoList {
     get block(): Info[] {
         return Object.values(this.#infos).filter( info => info.mode === "block" );
     }
-    get allow(): StorageInfo[] {
-        return Object.values(this.#infos).filter(info => info.mode === "allow");
+    get allow(): Info[] {
+        return Object.values(this.#infos).filter( info => info.mode === "allow" );
     }
 
     get activeInfos(): Info[] {
-        return Object.values(this.#infos).filter(info => info.active && (info.mode === this.#activeMode));
+        return Object.values(this.#infos).filter( info => info.active && (info.mode === this.#activeMode) );
     }
 
     get currentInfos(): Info[] {
-        return Object.values(this.#infos).filter(info => info.mode === this.#activeMode);
+        return Object.values(this.#infos).filter( info => info.mode === this.#activeMode );
     }
 
     get infos(): Info[] {

@@ -63,9 +63,9 @@ browser.runtime.onInstalled.addListener(() => {
         const infoList = new InfoList();
         await infoList.syncFromStorage();
 
-        const test = await infoList.registerNewList("this is a space", "block");
+        const test = await infoList.registerNewList("Test List", "block");
         test.toggleActive();
-
+        test.toggleLocked();
         const testList = await test.pullList();
         testList.addEntry(List.createEntry("fullDomain", "https://www.wikipedia.org/"));
         await testList.save();
@@ -73,7 +73,7 @@ browser.runtime.onInstalled.addListener(() => {
         await test.toggleTimer();
         const timer = await test.pullTimer();
         
-        await timer.setMax(1);
+        await timer.setMax(65);
 
 
 

@@ -46,11 +46,10 @@
 <style>
 
     h2 {
-        font-size: 10px;
+        font-size: 13px;
         color: var(--text); 
         font-family: 'Roboto', sans-serif;
-        margin: 0;
-        margin-top: 3px;
+        margin: 3px 0 0 0;
         font-weight: normal;
     }
 
@@ -59,11 +58,10 @@
         color: var(--text); 
         font-family: 'Roboto', sans-serif;
         margin: 0;
-        height: 1em;
-        width: 100%;
+        height: 15px;
+        width: 265px;
         box-shadow: 0 2px var(--neutral);
-        padding: 5px;
-        padding-left: 0;
+        padding: 2px 5px 2px 2px;
     }
 
 </style>
