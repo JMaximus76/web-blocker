@@ -1,21 +1,22 @@
 <script lang='ts'>
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
-    import Header from "./components/Header.svelte";
+    import Header from "./pages/blocks/Header.svelte";
     import { addEntryPopupStore, popupPageStore } from "../modules/store";
     import { fly } from "svelte/transition";
     import Settings from "../modules/settings";
     import { onMount } from "svelte";
-    import AddEntryPopup from "./pages/AddEntryPopup.svelte";
+    import AddEntryPopup from "./dropdowns/AddEntry.svelte";
+    import EditList from "./pages/EditListPage.svelte";
 
 
     let loading: Promise<void>;
     onMount(() => {
         loading = Settings.getSetting("isActive").then((isActive) => {
             if (isActive) {
-                popupPageStore.goto("main");
+                popupPageStore.main();
             } else  {
-                popupPageStore.goto("deactivated");
+                popupPageStore.deactivated();
             }
         });
     })
@@ -50,6 +51,14 @@
                 <DeactivatedPage />
             </div>
         {/if}
+
+        {#if $popupPageStore.page === "list"}
+            <div id="list" 
+            in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
+            out:fly={{x: $popupPageStore.out, duration: transitionTime}}>
+                <EditList />
+            </div>
+        {/if}
     {/await}
 
     
@@ -63,7 +72,7 @@
 
 
 <style>
-    #deactivated, #main {
+    #deactivated, #main, #list {
         position: absolute;
     }
 

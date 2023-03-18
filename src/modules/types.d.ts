@@ -67,6 +67,30 @@ export type StorageItemMap = {
 
 
 
+type Buttons = {
+    [key: string]: {
+        onClick: () => void;
+        title?: string;
+    }
+
+
+};
+
+type Radio<T> = {
+    [key: string]: {
+        value: T;
+        title?: string;
+    }
+};
+
+
+export type Options = {
+    buttons?: Buttons;
+    radio?: Radio<any>
+}
+
+
+
 
 
 

@@ -21,7 +21,7 @@
         width: 27px;
         height: 27px;
         margin-right: 5px;
-        background-image: url("../../svg/logo.svg");
+        background-image: url("../../../svg/logo.svg");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;

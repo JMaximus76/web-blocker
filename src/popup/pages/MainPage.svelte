@@ -3,7 +3,7 @@
 
     import TextButton from "../components/TextButton.svelte";
     import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
-    import Lists from "../components/Lists.svelte";
+    import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
 
 
@@ -14,7 +14,7 @@
     }
 
     function toggleIsActive(): void {
-        popupPageStore.goto("deactivated");
+        popupPageStore.deactivated();
         $settingsStore.toggleIsActive();
     }
 

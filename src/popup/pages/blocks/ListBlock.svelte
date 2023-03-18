@@ -1,9 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type Info from "../../modules/info";
-    import List from "../../modules/list";
-    import { addEntryPopupStore, currentUrlStore, timerDisplayStore } from "../../modules/store";
-    import { handelError } from "../../modules/util";
+    import type Info from "../../../modules/info";
+    import List from "../../../modules/list";
+    import { addEntryPopupStore, currentUrlStore, popupPageStore, timerDisplayStore } from "../../../modules/store";
+    import type { Options } from "../../../modules/types";
+    import { handelError } from "../../../modules/util";
+    import OptionsBlock from "../../components/OptionsBlock.svelte";
   
 
 
@@ -14,11 +16,7 @@
     let match: boolean = false;
 
     $: matchTitle = `Match Found: This list matched with ${List.clipURL("domain", $currentUrlStore)}`;
-
-
     const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
-    const addTitle = "Add a list entry";
-    const editTitle = "Edit List";
 
 
     function toggleActive(): void {
@@ -39,6 +37,21 @@
 
     });
 
+
+
+    const options: Options = {
+        buttons: {
+            "Add Entry": {
+                onClick: () => addEntryPopupStore.open(info.id),
+                title: "Add a list entry"
+            },
+
+            "Edit List": {
+                onClick: () => popupPageStore.list(info.id),
+                title: "View List"
+            }
+        }
+    }
     
 
 </script>
@@ -46,36 +59,29 @@
 
 
 
-<div id="main">
-    <div class:active={info.active} id="infoButton">
+<div class="main">
+
+    <OptionsBlock options={options} lineColor={(info.active) ? "var(--text)" : "var(--textFade"}>
+        <div class:active={info.active} class="infoButton">
+            <button class:locked={info.locked} on:click={toggleActive}>{info.name}</button>
+
+            <div class="spacer"></div>
 
 
-        <button class:locked={info.locked} on:click={toggleActive}>{info.name}</button>
+            {#if info.useTimer}
+                <div class="timer">
+                    {$timerDisplayStore.get(info.timerId)}
+                </div>
+            {/if}
 
-        <div id="spacer"></div>
 
-
-        {#if info.useTimer}
-            <div id="timer">
-                {$timerDisplayStore.get(info.timerId)}
+            <div class="indicators">
+                <div class:invisible={!match} id="match" title={matchTitle}>M</div>
+                <div class:invisible={!info.locked} id="lock" title={lockedTitle}>L</div>
             </div>
-        {/if}
 
-
-        <div id="indicators">
-            <div class:invisible={!match} id="match" title={matchTitle}>M</div>
-            <div class:invisible={!info.locked} id="lock" title={lockedTitle}>L</div>
         </div>
-
-
-        
-    </div>
-
-
-    <div id="buttons">
-        <button on:click={() => addEntryPopupStore.open(info.id)} title={addTitle}>Add Entry</button>
-        <button class:locked={info.locked} title={editTitle}>Edit List</button>
-    </div>
+    </OptionsBlock>
 
 
 </div>
@@ -89,24 +95,21 @@
 
 
 
-    #main {
+    .main {
         box-sizing: content-box;
-        width: 250px;
+        width: 275px;
         margin-bottom: 7px;
         background-color: transparent;
     }
 
 
 
-    #infoButton {
+    .infoButton {
         display: flex;
         flex-direction: row;        
-        box-shadow: 0 2px var(--textFade);
-        transition: box-shadow 0.3s;
-        
     }
 
-    #infoButton button {
+    .infoButton button {
         padding: 0;
         border: none;
         width: 100%;
@@ -118,45 +121,21 @@
         transition: color 0.3s;
     }
 
-    #infoButton button.locked {
+    .infoButton button.locked {
         cursor: default;
     }
 
-    #infoButton.active {
+    .infoButton.active {
         color: var(--text);
         box-shadow: 0 2px var(--text);
     }
 
-    #infoButton.active button {
+    .infoButton.active button {
         color: var(--text);
     }
 
-    #buttons button {
-        border: none;
-        font-size: 10px;
-        color: var(--textFade);
-        font-family: 'Roboto', sans-serif;
-        cursor: pointer;
-        transition: color 0.2s;
-        padding: 0;
-        margin-right: 8px;
-    }
 
-    #buttons button:hover {
-        color: var(--text);
-    }
-
-    #buttons button.locked {
-        cursor: default;
-    }
-
-    #buttons button.locked:hover {
-        color: var(--textFade);
-    }
-
-
-
-    #indicators {
+    .indicators {
         margin-left: 4px;
         margin-top: auto;
         display: flex;
@@ -164,7 +143,7 @@
         cursor: default;
         width: 45px;
     }
-    #match, #lock {
+    .indicators div {
         font-family: 'Tilt Neon', cursive;
         font-size: 13px;
         margin: 0 5px;
@@ -180,10 +159,10 @@
     }
 
 
-    #spacer {
+    .spacer {
         margin-left: auto;
     }
-    #timer {
+    .timer {
         font-style: italic;
         font-size: 14px;
         margin-top: auto;
@@ -193,7 +172,7 @@
         margin-right: 5px;
     }
 
-    #infoButton.active #timer {
+    .infoButton.active .timer {
         color: var(--text);
     }
     

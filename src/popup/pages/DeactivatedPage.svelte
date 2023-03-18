@@ -5,7 +5,7 @@
 
 
     function toggleIsActive(): void {
-        popupPageStore.goto("main");
+        popupPageStore.main();
         $settingsStore.toggleIsActive();
     }
 </script>

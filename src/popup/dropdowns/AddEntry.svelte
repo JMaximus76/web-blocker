@@ -6,8 +6,8 @@
     import List from "../../modules/list";
     import { addEntryPopupStore, infoListStore } from "../../modules/store";
     import type { EntryMode } from "../../modules/types";
-    import ClipPreview from "../components/ClipPreview.svelte";
-    import InputUrl from "../components/InputURL.svelte";
+    import ClipPreview from "./blocks/ClipPreview.svelte";
+    import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
     
 
@@ -64,9 +64,14 @@
 
 
     <div transition:fly={{y: -400, duration: 300}} id="main">
+        <button on:click={addEntryPopupStore.close} id="exit">
+            Close
+        </button>
 
         <h1>Add List Entry:</h1>
         <h2>{info.name}</h2>
+
+        
 
         <div id="input">
             <InputUrl bind:isValid bind:value={url}/>
@@ -76,9 +81,7 @@
             <ClipPreview bind:mode url={url}/>
         </div>
 
-        <div id="exit">
-            <TextButton on:click={addEntryPopupStore.close} text={"Exit"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
-        </div>
+        
 
         <div id="add" title={addButtonTitle  }>
             <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
@@ -150,13 +153,27 @@
 
 
     #add {
-        margin-top: 14px;
+        margin-top: 5px;
         float: right;
     }
 
     #exit {
-        margin-top: 14px;
-        float: left;
+        float: right;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text);
+        transition: color 0.3s;
+        font-size: 14px;
+        font-family: 'Roboto', sans-serif;
+        margin-top: 1px;
+        margin-right: 2px;
+        font-style: italic;
+    }
+
+    #exit:hover {
+        color: var(--lightRed);
+        
     }
    
 

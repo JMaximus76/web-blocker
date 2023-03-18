@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { infoListStore } from "../../modules/store";
-    import type { Mode } from "../../modules/types";
+    import { infoListStore } from "../../../modules/store";
+    import type { Mode } from "../../../modules/types";
 
     
-    import ListBlock from "../components/ListBlock.svelte";
+    import ListBlock from "./ListBlock.svelte";
 
 
     export let mode: Mode;

@@ -178,6 +178,7 @@ type Page = "main" | "deactivated" | "list";
 
 type PopupPage = {
     page: Page | "blank";
+    infoId: string | null;
     in: number;
     out: number;
 }
@@ -185,41 +186,62 @@ type PopupPage = {
 export const popupPageStore = createPopupPageStore();
 
 function createPopupPageStore() {
-
-    const popupPage: PopupPage = {
-        page: "blank",
-        in: 0,
-        out: 0,
-    };
-
-    const store = writable(popupPage);
-
     const index = {
         deactivated: -1,
         main: 0,
         list: 1,
+    };
+
+    const popupPage: PopupPage = {
+        page: "blank",
+        infoId: null,
+        in: 0,
+        out: 0,
+    };
+
+
+    function goto(to: Page): void {
+        if (popupPage.page === "list") popupPage.infoId = null;
+
+        if(popupPage.page === "blank") {
+            popupPage.in = 0;
+            popupPage.out = 0;
+        } else if (index[to] < index[popupPage.page]) {
+            popupPage.out = 300;
+            popupPage.in = -300;
+        } else {
+            popupPage.out = -300;
+            popupPage.in = 300;
+        }
+        popupPage.page = to;
+        store.set(popupPage);
     }
+
+    const store = writable(popupPage);
+
+    
 
     return {
         subscribe: store.subscribe,
 
-        
-        goto(to: Page): void {
 
-            if (popupPage.page === "blank") {
-                popupPage.in = 0;
-                popupPage.out = 0;
-            } else if (index[to] < index[popupPage.page]) {
-                popupPage.out = 300;
-                popupPage.in = -300;
-            } else {
-                popupPage.out = -300;
-                popupPage.in = 300;
-            }
 
-            popupPage.page = to;
-            store.set(popupPage);
+
+        main(): void {
+            goto("main"); 
+        },
+
+        deactivated(): void {
+            goto("deactivated");
+        },
+
+        list(infoId: string) {
+            popupPage.infoId = infoId;
+            goto("list");
         }
+
+
+        
     }
 
 }

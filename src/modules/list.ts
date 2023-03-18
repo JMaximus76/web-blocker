@@ -22,14 +22,14 @@ export default class List {
     static clipURL(mode: EntryMode, url: string): string | null {
         if (mode === "exact") return url;
 
-        let regex: RegExpExecArray | null;
+        let regex: RegExpExecArray | null = null;
 
-        // yes, I know these regexes are terrible, sorry
-        if (mode === "domain") {
+        // yes, I know these regexes are terrible, I'm sorry
+        if(mode === "fullDomain") {
+            regex = /(?<=:\/\/)(?:[\w-]*\.)?([\w-]*\.[\w-]*)/.exec(url);
+        } else if (mode === "domain") {
             regex = /(?<=:\/\/)[^?#\/]*(?=\/)?/.exec(url);
-        } else if (mode === "fullDomain") {
-            regex = /(?<=:\/\/)(?:.*\.)?([\w-]*\.[\w-]*)/.exec(url);
-        } else {
+        } else if (mode === "url") {
             regex = /(?<=:\/\/)[^?#]*/.exec(url);
         }
 

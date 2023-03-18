@@ -219,7 +219,7 @@ function block(url: string, tabId: number) {
 
 
 async function check(url: string, tabId: number): Promise<void> {
-    const startTime = Date.now();
+    //const startTime = Date.now();
 
 
 
@@ -233,13 +233,13 @@ async function check(url: string, tabId: number): Promise<void> {
     }
 
     if (!isHttp(url)) {
-        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
         return
     };
 
     if (!await Settings.getSetting("isActive")) {
         if (urlIsBlockedPage) browser.tabs.update(tabId, { url: url }).catch(handelError);
-        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
         return;
     }
 
@@ -255,7 +255,7 @@ async function check(url: string, tabId: number): Promise<void> {
     // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
     if ((matched === (infoList.activeMode === "block")) && !urlIsBlockedPage) {
         block(url, tabId);
-        console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
         return;
     }
     
@@ -263,7 +263,7 @@ async function check(url: string, tabId: number): Promise<void> {
     if ((!matched === (infoList.activeMode === "block")) && urlIsBlockedPage) {
         browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
-    console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+    //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
 
 }
 
@@ -369,10 +369,13 @@ browser.runtime.onMessage.addListener((message) => {
 
 });
 
-browser.storage.onChanged.addListener((changes) => {
-    console.table(changes);
 
-});
+
+
+// browser.storage.onChanged.addListener((changes) => {
+//     console.table(changes);
+
+// });
 
 
 
