@@ -68,11 +68,6 @@ export function createTimerDisplayMessage(timer: Timer): Message {
 }
 
 
-function createTimerDisplay() {
-    const display: TimerDisplay = {};
-    return display;
-}
-
 function formatTime(time: number): string {
     if (time < 1000) return "0:00";
     const second = 1000;
@@ -95,8 +90,7 @@ export const timerDisplayStore = createTimerDisplayStore();
 
 function createTimerDisplayStore() {
 
-    const timerDisplay = createTimerDisplay();
-
+    const timerDisplay: TimerDisplay = {};
 
     const timerView = {
         get: (id: string) => {
