@@ -1,47 +1,52 @@
 import browser from 'webextension-polyfill';
-import type { StorageItemMap } from '../modules/types';
-import type { PromiseError } from './util';
 
 
 
 
 
 
+export default class Storage {
 
 
-export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T): Promise<StorageItemMap[T]> {
-    const item = await browser.storage.local.get(itemKey);
+    #cache: Record<string, object> = {}
 
-    if (item[itemKey] === undefined) {
-        const error: PromiseError = {
-            message: new Error(`getStorageItem tried to get an item and got undefined. THIS IS VERY BAD`),
-            details: itemKey
+    async get(keys: string[]): Promise<Record<string, object>> {
+        //const items: Record<string, object> = keys.reduce((acc, key) => Object.assign(acc, {[key]: this.#cache[key]}), {});
+        const items: Record<string, object> = {};
+        for (const key of keys) {
+            items[key] = this.#cache[key];
         }
-        return Promise.reject(error);
+
+        for (const key in items) {
+            if (items[key] === undefined) {
+                Object.assign(items, await browser.storage.local.get(key))
+            }
+        }
+        Object.assign(this.#cache, items);
+
+        const proxys: Record<string, object> = {};
+        for (const key in items) {
+            proxys[key] = this.#makeProxy(items[key], key);
+        }
+
+        return proxys;
     }
 
-    return item[itemKey];
+
+    async set(items: Record<string, object>): Promise<void> {
+        Object.assign(this.#cache, items);
+        await browser.storage.local.set(items);
+    }
+
+
+    #makeProxy<T extends object>(obj: T, key: string): T {
+        return new Proxy(obj, {
+            set: (target, prop, value) => {
+                Reflect.set(target, prop, value);
+                browser.storage.local.set({ [key]: target });
+                return true;
+            }
+        })
+    }
+
 }
-
-
-
-
-
-export async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
-    await browser.storage.local.set({ [key]: item });
-}
-
-
-
-
-// these are just wrapers
-export async function pullItem(key: string): Promise<any> {
-    const item = await browser.storage.local.get(key);
-    return item[key];
-}
-
-export async function pushItem(key: string, value: any): Promise<void> {
-    await browser.storage.local.set({ [key]: value })
-}
-
-

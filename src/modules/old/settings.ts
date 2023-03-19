@@ -1,7 +1,7 @@
 import type { Subscriber } from "svelte/store"
 import { pullItem, pushItem } from "./storage"
 import browser from "webextension-polyfill"
-import { sendMessage, type Message } from "./util"
+import { sendMessage, type Message } from "../util"
 
 
 

@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill';
 import InfoList from '../modules/infoList';
 import List from '../modules/list';
 import Settings from '../modules/settings';
-import { getStorageItem, pullItem, setStorageItem } from '../modules/storage';
+import { getStorageItem, pullItem, setStorageItem } from '../modules/other';
 import Timer from '../modules/timer';
 import type { TimerList } from '../modules/types';
 
