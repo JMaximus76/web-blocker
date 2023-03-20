@@ -3,7 +3,7 @@ import browser from "webextension-polyfill";
 import Info from "./info";
 import { getStorageItem, setStorageItem } from "./storage";
 import type { Mode, UpdateMessageMap, StorageInfoList } from "./types";
-import { sendMessage, type Message } from "./util";
+import { sendMessage, type Message } from "../util";
 
 
 
