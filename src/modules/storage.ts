@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { deepCopy } from './util';
+import { jsonCopy } from './util';
 
 
 
@@ -9,7 +9,7 @@ import { deepCopy } from './util';
 export default class Storage {
 
 
-    #cache: Record<string, object> = {}
+    #cache: Record<string, object | undefined> = {}
 
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
@@ -21,13 +21,19 @@ export default class Storage {
         // if its also undefined in local storage will return undefined for that key.
         const items: object[] = [];
         for (const key of keys) {
-            items.push(this.#cache[key] ?? await this.#getLocalStorage(key));
+            const item = this.#cache[key] ?? await this.#getLocalStorage(key);
+            if (item !== undefined) {
+                items.push(this.#makeProxy(key, item));
+            } else {
+                throw new Error("When getting keys from storage got undefiend");
+            }
+            
         }
         return items as T[];
     }
 
 
-    /** Sets items in local storage and cache. 
+    /** Adds items to local storage and cache. 
      *  This should only be used to set brand new objects ie. they not in the cache or local storage.
      *  Throws an error if items are already in cache.
      */
@@ -43,7 +49,7 @@ export default class Storage {
 
         // add items to cache and local storage
         for (const [key, value] of Object.entries(items)) {
-            this.#cache[key] = this.#makeProxy(key, deepCopy(value));
+            this.#cache[key] = jsonCopy(value);
         }
         // not async/await because we don't care how long it takes.
         browser.storage.local.set(items).catch((e) => console.error(e));
@@ -69,7 +75,9 @@ export default class Storage {
      */
     update(items: Record<string, object>): void {
         for (const [key, value] of Object.entries(items)) {
-            if (this.#cache[key] !== undefined) Object.assign(this.#cache[key], value);
+            if (this.#cache[key] !== undefined) {
+                Object.assign(this.#cache[key] as object, value);
+            }
         }
     }
 
@@ -92,10 +100,11 @@ export default class Storage {
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {
         const item = await browser.storage.local.get(key);
-        if (item[key] === undefined) return undefined;
-        const proxy = this.#makeProxy(key, item[key]);
-        Object.assign(this.#cache, { [key]: proxy});
-        return proxy;
+        if (typeof item !== "object" || typeof item !== "undefined") {
+            throw new Error("When getting item from local storage got something that was not an object or undefined");
+        }
+        Object.assign(this.#cache, item);
+        return item;
     }
 
 }

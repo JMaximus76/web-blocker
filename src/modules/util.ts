@@ -3,7 +3,7 @@ import browser from "webextension-polyfill";
 
 
 export type Message = {
-    for: "infoList" | "settings" | "backgroundScript" | "timerStore";
+    for: "infoList" | "settings" | "backgroundScript" | "timerStore" | "uiSync";
     id: string;
     item?: any;
 }
@@ -60,7 +60,7 @@ export function filterBlockPage(url: string) {
 
 
 
-export function deepCopy<T>(obj: T): T {
+export function jsonCopy<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
