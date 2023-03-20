@@ -1,45 +1,30 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
 import browser from "webextension-polyfill";
+import type { Subscriber } from "svelte/store";
+import type { Entry, Info, Mode, Timer } from "./listComponets";
 
 
-type Mode = "block" | "allow";
 
-type Info = {
-    readonly id: string;
-    name: string;
-    mode: Mode;
-    active: boolean;
-    locked: boolean;
-    useTimer: boolean;
-}
-
-
-type EntryMode = "domain" | "fullDomain" | "url" | "exact";
-
-type ListEntry = {
-    mode: EntryMode;
-    value: string;
-};
-
-type List = ListEntry[];
-
-
-type Timer = {
-    total: number;
-    max: number;
-    start: number | null;
-}
 
 type ListRecord = string[];
 
-
+type RequestMap = {
+    info: Info;
+    entrys: Entry[];
+    timer: Timer;
+}
 
 export default class ListServer {
 
     #storage = new Storage();
     #record: ListRecord = [];
+    #svelte: Subscriber<ListServer> | null = null;
 
+
+    set svelte(s: Subscriber<ListServer>) {
+        this.#svelte = s;
+    }
     
 
     /** Syncs the internal record to the one in local storage. */
@@ -53,6 +38,9 @@ export default class ListServer {
         // should change this probably
         await browser.storage.local.set({ record: this.#record });
     }
+
+
+
 
     /** Registers a new list and all of its components. */
     registerList(): string {
@@ -70,7 +58,7 @@ export default class ListServer {
             useTimer: false
         }
 
-        const list: List = [];
+        const entrys: Entry[] = [];
 
         const timer: Timer = {
             total: 0,
@@ -81,7 +69,7 @@ export default class ListServer {
 
         this.#storage.add({
             [this.#infoId(id)]: info,
-            [this.#listId(id)]: list,
+            [this.#entrysId(id)]: entrys,
             [this.#timerId(id)]: timer
         });
 
@@ -92,36 +80,79 @@ export default class ListServer {
     deleteList(id: string): void {
         this.#record = this.#record.filter((i) => i !== id);
         this.#updateRecord().catch((e) => console.error(e));
-        this.#storage.delete([this.#infoId(id), this.#listId(id), this.#timerId(id)]);
+        this.#storage.delete([this.#infoId(id), this.#entrysId(id), this.#timerId(id)]);
     }
 
-    async requestInfos({active, locked, useTimer}: { active?: boolean, locked?: boolean, useTimer?: boolean }): Promise<Info[]> {
-        const items = await this.#storage.get(this.#record.map((id) => this.#infoId(id))) as (Info | undefined)[];
+
+
+
+
+
+
+    /** Gets requested list Infos from storage. */
+    async requestInfos({active, mode, useTimer}: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Info[]> {
+        const items = await this.#storage.get<Info>(this.#record.map((id) => this.#infoId(id)));
         
         const infos = items.filter((item) => {
             if (item === undefined) return false;
             if (active !== undefined && item.active !== active) return false;
-            if (locked !== undefined && item.locked !== locked) return false;
+            if (mode !== undefined && item.mode !== mode) return false;
             if (useTimer !== undefined && item.useTimer !== useTimer) return false;
             return true;
-        }) as Info[];
+        });
 
-        return infos;
+        return infos.map((o) => this.#svelteProxy(o));
     }
+
+    /** Gets requested list Entrys from storage. */
+    async requestEntrys(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Entry[]> {
+        const infos = await this.requestInfos(details);
+        const items = await this.#storage.get<Entry>(infos.map((info) => this.#entrysId(info.id)));
+        return items.map((o) => this.#svelteProxy(o));
+    }
+
+    /** Gets requested list Timers from storage. */
+    async requestTimers(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Timer[]> {
+        const infos = await this.requestInfos(details);
+        const items = await this.#storage.get<Timer>(infos.map((info) => this.#timerId(info.id)));
+        return items.map((o) => this.#svelteProxy(o));
+    }
+
+    async requestById<T extends keyof RequestMap>(request: keyof RequestMap, id: string): Promise<RequestMap[T]> {
+        switch(request) {
+            case "info": id = this.#infoId(id); break;
+            case "entrys": id = this.#entrysId(id); break;
+            case "timer": id = this.#timerId(id); break;
+        }
+
+        const item = await this.#storage.get<RequestMap[T]>(id);
+        return this.#svelteProxy(item[0]);
+    }
+
+
+
+    #svelteProxy<T extends object>(obj: T) {
+        return new Proxy(obj, {
+            set: (target, prop, value) => {
+                Reflect.set(target, prop, value);
+                if (this.#svelte !== null) this.#svelte(this);
+                return true;
+            }
+        });
+    }
+
 
 
     #infoId(id: string): string {
         return `info-${id}`;
     }
 
-    #listId(id: string): string {
+    #entrysId(id: string): string {
         return `list-${id}`;
     }
 
     #timerId(id: string): string {
         return `timer-${id}`;
     }
-
-
 
 }

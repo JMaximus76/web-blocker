@@ -14,15 +14,16 @@ export default class Storage {
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
     */
-    async get(keys: string[]): Promise<(object | undefined)[]> {
-        
+    async get<T extends object>(keys: string | string[]): Promise<T[]> {
+        if (typeof keys === "string") keys = [keys];
+
         // gets all items from cache, some of those might be undefined so we get those from local storage.
         // if its also undefined in local storage will return undefined for that key.
         const items: object[] = [];
         for (const key of keys) {
             items.push(this.#cache[key] ?? await this.#getLocalStorage(key));
         }
-        return items;
+        return items as T[];
     }
 
 
@@ -44,6 +45,7 @@ export default class Storage {
         for (const [key, value] of Object.entries(items)) {
             this.#cache[key] = this.#makeProxy(key, deepCopy(value));
         }
+        // not async/await because we don't care how long it takes.
         browser.storage.local.set(items).catch((e) => console.error(e));
     }
 
@@ -55,6 +57,8 @@ export default class Storage {
         for (const key of keys) {
             delete this.#cache[key];
         }
+
+        // not async/await because we don't care how long it takes.
         browser.storage.local.remove(keys).catch((e) => console.error(e));
     }
 
