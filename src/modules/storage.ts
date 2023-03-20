@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import { deepCopy } from './util';
 
 
 
@@ -41,7 +42,7 @@ export default class Storage {
 
         // add items to cache and local storage
         for (const [key, value] of Object.entries(items)) {
-            this.#cache[key] = this.#makeProxy(key, value);
+            this.#cache[key] = this.#makeProxy(key, deepCopy(value));
         }
         browser.storage.local.set(items).catch((e) => console.error(e));
     }
