@@ -13,12 +13,13 @@ export default class Storage {
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
     */
-    async get(keys: string[]): Promise<Record<string, object | undefined>> {
-
-        // gets all items from cache, some of them might be undefined so we get those from local storage
-        const items: Record<string, object> = {};
+    async get(keys: string[]): Promise<(object | undefined)[]> {
+        
+        // gets all items from cache, some of those might be undefined so we get those from local storage.
+        // if its also undefined in local storage will return undefined for that key.
+        const items: object[] = [];
         for (const key of keys) {
-            items[key] = this.#cache[key] ?? await this.#getLocalStorage(key);
+            items.push(this.#cache[key] ?? await this.#getLocalStorage(key));
         }
         return items;
     }

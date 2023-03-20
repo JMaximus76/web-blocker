@@ -95,21 +95,16 @@ export default class ListServer {
         this.#storage.delete([this.#infoId(id), this.#listId(id), this.#timerId(id)]);
     }
 
-    async requestInfos(requestDetails: { active?: boolean, locked?: boolean, useTimer?: boolean }): Promise<Info[]> {
-        const infos: Record<string, Info>;
-
+    async requestInfos({active, locked, useTimer}: { active?: boolean, locked?: boolean, useTimer?: boolean }): Promise<Info[]> {
+        const items = await this.#storage.get(this.#record.map((id) => this.#infoId(id))) as (Info | undefined)[];
         
-
-
-
-        for (const id of this.#record) {
-            if (info) {
-                if (requestDetails.active && !info.active) continue;
-                if (requestDetails.locked && !info.locked) continue;
-                if (requestDetails.useTimer && !info.useTimer) continue;
-                infos.push(info);
-            }
-        }
+        const infos = items.filter((item) => {
+            if (item === undefined) return false;
+            if (active !== undefined && item.active !== active) return false;
+            if (locked !== undefined && item.locked !== locked) return false;
+            if (useTimer !== undefined && item.useTimer !== useTimer) return false;
+            return true;
+        }) as Info[];
 
         return infos;
     }
