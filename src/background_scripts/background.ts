@@ -1,11 +1,5 @@
 import browser from 'webextension-polyfill';
-import InfoList from '../modules/infoList';
-import List from '../modules/list';
-import Settings from '../modules/settings';
-import { getStorageItem, pullItem, setStorageItem } from '../modules/other';
-import Timer from '../modules/timer';
-import type { TimerList } from '../modules/types';
-
+import ListServer from '../modules/listServer';
 
 import { handelError, isHttp, type Message } from '../modules/util';
 
@@ -30,11 +24,11 @@ browser.runtime.onInstalled.addListener(() => {
         // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
         await browser.storage.local.clear();
 
-        await Settings.init();
+        //await Settings.init();
 
-        await InfoList.init();
-        await setStorageItem("timerList", []);
-
+        //await InfoList.init();
+        //await setStorageItem("timerList", []);
+        ListServer.init();
 
         
         

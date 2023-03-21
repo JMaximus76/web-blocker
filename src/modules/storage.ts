@@ -14,9 +14,17 @@ type messageMap = {
 
 export default class Storage {
 
-
-    #cache: Record<string, object | undefined> = {}
+    // should work like a singleton so that across all instances of storage they all share the same cache
+    static #cache: Record<string, object | undefined> = {};
     #message = makeMessageSender<messageMap, "storage">("storage");
+
+
+    // WON"T WORK BECAUSE listening aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    // private constructor() {};
+    // static #self: Storage;
+    // public static get Instance() {
+    //     return this.#self || (this.#self = new this());
+    // }
 
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
@@ -28,7 +36,7 @@ export default class Storage {
         // if its also undefined in local storage will return undefined for that key.
         const items: (object | undefined)[] = [];
         for (const key of keys) {
-            const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
+            const item = Object.hasOwn(Storage.#cache, key) ? Storage.#cache[key] : await this.#getLocalStorage(key);
 
             if (typeof item === "object") {
                 items.push(this.#makeProxy(key, item));
@@ -41,23 +49,25 @@ export default class Storage {
     }
 
 
-    /** Gets an item from local storage and wraps it in a proxy object.
-     *  This item is then placed in the cache and returned.
-     *  Returns undefined if the item does not exist in local storage.
+    /** 
+     * Gets an item from local storage and wraps it in a proxy object.
+     * This item is then placed in the cache and returned.
+     * Returns undefined if the item does not exist in local storage.
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {
         const item = await browser.storage.local.get(key);
         if (typeof item !== "object" || typeof item !== "undefined") {
             throw new Error("When getting item from local storage got something that was not an object or undefined");
         }
-        Object.assign(this.#cache, item);
+        Object.assign(Storage.#cache, item);
         return item;
     }
 
 
-    /** Adds items to local storage and cache. 
-     *  This should only be used to set brand new objects ie. they not in the cache or local storage.
-     *  Throws an error if items are already in cache as an object.
+    /** 
+     * Adds items to local storage and cache. 
+     * This should only be used to set brand new objects ie. not in the cache or local storage.
+     * Throws an error if items are already in cache as an object.
      */
     add(items: Record<string, object>): void {
 
@@ -66,12 +76,12 @@ export default class Storage {
 
         // check for duplicates in cache.
         for (const key in items) {
-            if (this.#cache[key] !== undefined) throw new Error(`Item with key "${key}" is already in cache.`);
+            if (Storage.#cache[key] !== undefined) throw new Error(`Item with key "${key}" is already in cache.`);
         }
 
         // add items to cache and local storage
         for (const [key, value] of Object.entries(items)) {
-            this.#cache[key] = jsonCopy(value);
+            Storage.#cache[key] = jsonCopy(value);
             this.#message({id: "add", data: {key, value}});
         }
         // not async/await because we don't care how long it takes.
@@ -79,12 +89,13 @@ export default class Storage {
     }
 
 
-    /** Delete items from cache and local storage.
-     *  Passing keys that are not in cach or local storage does not matter.
+    /** 
+     * Delete items from cache and local storage.
+     * Passing keys that are not in cach or local storage does not matter.
      */
     delete(keys: string[]): void {
         for (const key of keys) {
-            delete this.#cache[key];
+            delete Storage.#cache[key];
             this.#message({id: "delete", data: key});
         }
 
@@ -102,8 +113,9 @@ export default class Storage {
 
 
 
-    /** Updates the values of items in cache.
-     *  Passing keys that are not in cache does nothing.
+    /** 
+     * Updates the values of items in cache.
+     * Passing keys that are not in cache does nothing.
      */
     #update(message: Message<messageMap>): void {
 
@@ -115,27 +127,27 @@ export default class Storage {
 
             case "modify": {
                 const data = message.data as messageMap["storage"]["modify"];
-                if (!Object.hasOwn(this.#cache, data.key)) break;
+                if (!Object.hasOwn(Storage.#cache, data.key)) break;
                 
                 // this is safe because the only time update("modify") is called is off a proxy object with itself as the value. /hopefully/
-                Object.assign(this.#cache[data.key] as object, data.value);
+                Object.assign(Storage.#cache[data.key] as object, data.value);
                 
                 break;
             }
 
             case "delete":{
                 const data = message.data as messageMap["storage"]["delete"];
-                if (!Object.hasOwn(this.#cache, data)) break;
-                delete this.#cache[data];
+                if (!Object.hasOwn(Storage.#cache, data)) break;
+                delete Storage.#cache[data];
             }
 
             case "add": {
                 const data = message.data as messageMap["storage"]["add"];
-                if (Object.hasOwn(this.#cache, data.key)) {
+                if (Object.hasOwn(Storage.#cache, data.key)) {
                     throw new Error(`When updating storage with 'add', key "${data.key}" already existed in cache.`);
                 }
 
-                this.#cache[data.key] = jsonCopy(data.value);
+                Storage.#cache[data.key] = jsonCopy(data.value);
             }
                 
         }
@@ -143,7 +155,9 @@ export default class Storage {
     }
 
 
-    /** Makes a proxy object that will update the local storage when a property is changed. */
+    /** 
+     * Makes a proxy object that will update the local storage when a property is changed.
+     */
     #makeProxy<T extends object>(key: string, obj: T): T {
         return new Proxy(obj, {
             set: (target, prop, value) => {

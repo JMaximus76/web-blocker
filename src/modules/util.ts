@@ -10,7 +10,7 @@ type MessageTemplate = {
 export function makeMessageSender<Template extends MessageTemplate, Target extends keyof Template>(target: Target) {
     return async function sender<Id extends keyof Template[Target]>(details: Template[Target][Id] extends undefined ? { id: Id } : { id: Id, data: Template[Target][Id] }) {
         const data = (Object.hasOwn(details, "data")) ? (details as { id: Id, data: Template[Target][Id] }).data : undefined;
-        await browser.runtime.sendMessage({target, id: details.id, data});
+        await browser.runtime.sendMessage({ target, id: details.id, data }).catch(() => console.log(`Message Bounced: ${{ target, id: details.id, data }}`));
     }
 }
 

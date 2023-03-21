@@ -1,9 +1,8 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
-import browser from "webextension-polyfill";
 import type { Subscriber } from "svelte/store";
 import type { Entry, Info, Mode, Timer } from "./listComponets";
-
+import browser from "webextension-polyfill";
 
 
 
@@ -17,39 +16,52 @@ type RequestMap = {
 
 export default class ListServer {
 
-    #storage = new Storage();
+    /** Sets a new "ListRecord" into local storage.
+     *  ONLY all this on extension install.
+     */
+    static init() {
+        browser.storage.local.set({record: []});
+    }
 
-    // NEED TO ADD: make sure this syncs with multiple instances of listServer
+
+    #storage = new Storage();
+    
+
     #record: ListRecord = [];
     #svelte: Subscriber<ListServer> | null = null;
 
 
-    set svelte(s: Subscriber<ListServer>) {
+    /** 
+     * The svelte seter for keeping in sync with ui 
+     */
+    startListening(s: Subscriber<ListServer>) {
         this.#svelte = s;
+        return this.#storage.startListening();
     }
     
 
-    /** Syncs the internal record to the one in local storage. */
+    /** 
+     * Syncs the internal record to the one in local storage.
+     */
     async sync(): Promise<void> {
         // should change this probably
-        this.#record = (await browser.storage.local.get("record"))["record"];
+        const item = await this.#storage.get<ListRecord>("record");
+        if (item[0] === undefined) throw new Error("When syncing a listServer got undefined for the record");
+        this.#record = item[0];
     }
 
-    /** Updates the record in local storage . */
-    async #updateRecord(): Promise<void> {
-        // should change this probably
-        await browser.storage.local.set({ record: this.#record });
-    }
+    
 
 
 
 
-    /** Registers a new list and all of its components. */
+    /** 
+     * Registers a new list and all of its components. 
+     */
     registerList(): string {
         const id = uuidv4();
 
         this.#record.push(id);
-        this.#updateRecord().catch((e) => console.error(e));
 
         const info: Info = {
             name: "New List",
@@ -78,20 +90,19 @@ export default class ListServer {
         return id;
     }
 
-    /** Deletes a list and all of its components */
+    /** 
+     * Deletes a list and all of its components 
+     */
     deleteList(id: string): void {
         this.#record = this.#record.filter((i) => i !== id);
-        this.#updateRecord().catch((e) => console.error(e));
         this.#storage.delete([this.#infoId(id), this.#entrysId(id), this.#timerId(id)]);
     }
 
 
 
-
-
-
-
-    /** Gets requested list Infos from storage. */
+    /** 
+     * Gets requested list Infos from storage.
+     */
     async requestInfos({active, mode, useTimer}: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Info[]> {
         const items = await this.#storage.get<Info>(this.#record.map((id) => this.#infoId(id)));
         
@@ -105,30 +116,38 @@ export default class ListServer {
 
         return infos.map((o) => {
             if (o === undefined) throw new Error("listServer got undefined when getting infos");
-            return this.#svelteProxy(o)
+            return this.#svelteProxy(o, this)
         });
     }
 
-    /** Gets requested list Entrys from storage. */
+    /** 
+     * Gets requested list Entrys from storage.
+     */
     async requestEntrys(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Entry[]> {
         const infos = await this.requestInfos(details);
         const items = await this.#storage.get<Entry>(infos.map((info) => this.#entrysId(info.id)));
         return items.map((o) => {
             if (o === undefined) throw new Error("listServer got undefined when getting entrys");
-            return this.#svelteProxy(o)
+            return this.#svelteProxy(o, this)
         });
     }
 
-    /** Gets requested list Timers from storage. */
+    /** 
+     * Gets requested list Timers from storage.
+     */
     async requestTimers(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Timer[]> {
         const infos = await this.requestInfos(details);
         const items = await this.#storage.get<Timer>(infos.map((info) => this.#timerId(info.id)));
         return items.map((o) => {
             if (o === undefined) throw new Error("listServer got undefined when getting timers");
-            return this.#svelteProxy(o)
+            return this.#svelteProxy(o, this)
         });
     }
 
+    /** 
+     * Gets the requested id.
+     * Must be a list component.
+     */
     async requestById<T extends keyof RequestMap>(request: keyof RequestMap, id: string): Promise<RequestMap[T] | undefined> {
         switch(request) {
             case "info": id = this.#infoId(id); break;
@@ -138,16 +157,19 @@ export default class ListServer {
 
         const item = await this.#storage.get<RequestMap[T]>(id);
         if (item[0] === undefined) throw new Error(`listServer got undefined when getting id ${id}`)
-        return this.#svelteProxy(item[0]);
+        return this.#svelteProxy(item[0], this);
     }
 
 
-
-    #svelteProxy<T extends object>(obj: T) {
+    /** 
+     * Wraps outgoing objects in a svelte proxy if this.#svelte is set.
+     * Sets a "set" trap that updates the ui.
+     */
+    #svelteProxy<T extends object>(obj: T, ref: ListServer) {
         return new Proxy(obj, {
             set: (target, prop, value) => {
                 Reflect.set(target, prop, value);
-                if (this.#svelte !== null) this.#svelte(this);
+                if (ref.#svelte !== null) ref.#svelte(ref);
                 return true;
             }
         });
