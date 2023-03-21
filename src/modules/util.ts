@@ -2,43 +2,13 @@ import browser from "webextension-polyfill";
 
 
 
-
-type oldMessage<T extends MessageTemplate> = {
-    target: T["target"];
-
-    map: {
-        
-        [K in keyof T["map"]]: {
-            [L in K]: T["map"][K];
-        };
-    }[keyof T["map"]];
-} 
-
-const test: oldMessage<testMT> = {
-    target: "test",
-    map: {
-        a: {
-            foo: true,
-            bar: "you"
-        },
-        b: false
-    }
-}
-
-
-
-
 type MessageTemplate = {
     target: string;
     map: Record<string, any>;
 };
 
 
-type old2Message<T extends MessageTemplate, U extends keyof T["map"]> = {
-    target: T["target"];
-    id: U;
-    data: T["map"][U];
-}
+
 
 type Message<T extends MessageTemplate> = {
     target: T["target"];
@@ -48,30 +18,13 @@ type Message<T extends MessageTemplate> = {
 
 
 
-type testMT = {
-    target: "test";
-    map: {
-        a: {
-            foo: boolean;
-            bar: string;
-        };
-        b: boolean;
+
+export function makeMessageSender<T extends MessageTemplate>(target: T["target"]) {
+    return async function sender<U extends keyof T["map"]>(details: T["map"][U] extends undefined ? {id: U} : { id: U, data: T["map"][U] }) {
+        const data = (Object.hasOwn(details, "data")) ? (details as { id: U, data: T["map"][U] }).data : undefined;
+        await browser.runtime.sendMessage({target, id: details.id, data});
     }
 }
-
-// export async function sendMessage<T extends MessageTemplate>(message: Message<T>): Promise<void> {
-//     browser.runtime.sendMessage(message).catch((e) => console.log(`Message bounced ${e}`));
-// }
-
-function sendMessage<T extends MessageTemplate>(message: Message<T>): Promise<void>;
-function sendMessage<T extends MessageTemplate>(message: Omit<Message<T>, "id">): Promise<void>;
-
-async function sendMessage<T extends MessageTemplate>(message: Message<T> | Omit<Message<T>, "id">): Promise<void> {
-    browser.runtime.sendMessage(message).catch((e) => console.log(`Message bounced ${e}`));
-}
-
-
-sendMessage<testMT>({target: "test", data: false});
 
 
 
@@ -80,8 +33,6 @@ export type PromiseError = {
     message: Error;
     details?: any;
 };
-
-
 
 
 
@@ -101,9 +52,6 @@ export function isBadURL(url: string): boolean {
     const regexArray = /^https?:\/\/[\w-]+\.[\w-]+/.exec(url);
     return (regexArray !== null) && !url.includes(" ");
 }
-
-
-
 
 
 
