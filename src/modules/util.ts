@@ -2,11 +2,78 @@ import browser from "webextension-polyfill";
 
 
 
-export type Message = {
-    for: "infoList" | "settings" | "backgroundScript" | "timerStore" | "uiSync";
-    id: string;
-    item?: any;
+
+type oldMessage<T extends MessageTemplate> = {
+    target: T["target"];
+
+    map: {
+        
+        [K in keyof T["map"]]: {
+            [L in K]: T["map"][K];
+        };
+    }[keyof T["map"]];
+} 
+
+const test: oldMessage<testMT> = {
+    target: "test",
+    map: {
+        a: {
+            foo: true,
+            bar: "you"
+        },
+        b: false
+    }
 }
+
+
+
+
+type MessageTemplate = {
+    target: string;
+    map: Record<string, any>;
+};
+
+
+type old2Message<T extends MessageTemplate, U extends keyof T["map"]> = {
+    target: T["target"];
+    id: U;
+    data: T["map"][U];
+}
+
+type Message<T extends MessageTemplate> = {
+    target: T["target"];
+    id: keyof T["map"];
+    data: T["map"][keyof T["map"]];
+}
+
+
+
+type testMT = {
+    target: "test";
+    map: {
+        a: {
+            foo: boolean;
+            bar: string;
+        };
+        b: boolean;
+    }
+}
+
+// export async function sendMessage<T extends MessageTemplate>(message: Message<T>): Promise<void> {
+//     browser.runtime.sendMessage(message).catch((e) => console.log(`Message bounced ${e}`));
+// }
+
+function sendMessage<T extends MessageTemplate>(message: Message<T>): Promise<void>;
+function sendMessage<T extends MessageTemplate>(message: Omit<Message<T>, "id">): Promise<void>;
+
+async function sendMessage<T extends MessageTemplate>(message: Message<T> | Omit<Message<T>, "id">): Promise<void> {
+    browser.runtime.sendMessage(message).catch((e) => console.log(`Message bounced ${e}`));
+}
+
+
+sendMessage<testMT>({target: "test", data: false});
+
+
 
 
 export type PromiseError = {
@@ -37,9 +104,7 @@ export function isBadURL(url: string): boolean {
 
 
 
-export async function sendMessage(message: Message) {
-    await browser.runtime.sendMessage(message).catch(() => {/* do nothing */});
-}
+
 
 
 

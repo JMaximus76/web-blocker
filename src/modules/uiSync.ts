@@ -1,6 +1,7 @@
 import type { Subscriber } from "svelte/store";
 import type Storage from "./storage";
-import { sendMessage } from "./util";
+import type { Message } from "./util";
+import browser from "webextension-polyfill";
 
 
 
@@ -8,11 +9,12 @@ export default class UiSync {
 
 
     #set: Subscriber<object>;
-    #update: Storage["update"];
+    #storage: Storage;
     
     constructor(set: Subscriber<object>, update: Storage["update"]) {
         this.#set = set;
         this.#update = update;
+        browser.runtime.onMessage.addListener(onMessage);
     }
 
 
@@ -21,10 +23,16 @@ export default class UiSync {
             set: (target, prop, value) => {
                 Reflect.set(target, prop, value);
                 this.#set(this);
-                sendMessage({for: "uiSync", id: key, item: target})
                 return true;
             }
         });
+    }
+
+
+    onMessage(message: Message) {
+        if (message.for === "uiSync") {
+            this.#update();
+        }
     }
 
 
