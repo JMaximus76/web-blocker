@@ -3,27 +3,21 @@ import browser from "webextension-polyfill";
 
 
 type MessageTemplate = {
-    target: string;
-    map: Record<string, any>;
+    [targets: string]: Record<string, any>;
 };
 
 
-
-
-type Message<T extends MessageTemplate> = {
-    target: T["target"];
-    id: keyof T["map"];
-    data: T["map"][keyof T["map"]];
-}
-
-
-
-
-export function makeMessageSender<T extends MessageTemplate>(target: T["target"]) {
-    return async function sender<U extends keyof T["map"]>(details: T["map"][U] extends undefined ? {id: U} : { id: U, data: T["map"][U] }) {
-        const data = (Object.hasOwn(details, "data")) ? (details as { id: U, data: T["map"][U] }).data : undefined;
+export function makeMessageSender<Template extends MessageTemplate, Target extends keyof Template>(target: Target) {
+    return async function sender<Id extends keyof Template[Target]>(details: Template[Target][Id] extends undefined ? { id: Id } : { id: Id, data: Template[Target][Id] }) {
+        const data = (Object.hasOwn(details, "data")) ? (details as { id: Id, data: Template[Target][Id] }).data : undefined;
         await browser.runtime.sendMessage({target, id: details.id, data});
     }
+}
+
+export type Message<T extends MessageTemplate> = {
+    target: keyof T;
+    id: keyof T[keyof T];
+    data: T[keyof T][keyof T[keyof T]];
 }
 
 

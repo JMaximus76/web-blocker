@@ -1,21 +1,22 @@
 import browser from 'webextension-polyfill';
-import { jsonCopy, sendMessage } from './util';
+import { jsonCopy, makeMessageSender, type Message } from './util';
 
 
-export type UpdateMap = {
-    "modify": { key: string; value: object };
-    "delete": { key: string };
-    "add": { key: string; value: object };
+type messageMap = {
+    storage: {
+        modify: { key: string, value: object };
+        add: { key: string, value: object };
+        delete: string;
+    }
 }
 
-export type MessageMap = {
-    ""
-}
+
 
 export default class Storage {
 
 
     #cache: Record<string, object | undefined> = {}
+    #message = makeMessageSender<messageMap, "storage">("storage");
 
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
@@ -40,6 +41,20 @@ export default class Storage {
     }
 
 
+    /** Gets an item from local storage and wraps it in a proxy object.
+     *  This item is then placed in the cache and returned.
+     *  Returns undefined if the item does not exist in local storage.
+     */
+    async #getLocalStorage(key: string): Promise<object | undefined> {
+        const item = await browser.storage.local.get(key);
+        if (typeof item !== "object" || typeof item !== "undefined") {
+            throw new Error("When getting item from local storage got something that was not an object or undefined");
+        }
+        Object.assign(this.#cache, item);
+        return item;
+    }
+
+
     /** Adds items to local storage and cache. 
      *  This should only be used to set brand new objects ie. they not in the cache or local storage.
      *  Throws an error if items are already in cache as an object.
@@ -57,7 +72,7 @@ export default class Storage {
         // add items to cache and local storage
         for (const [key, value] of Object.entries(items)) {
             this.#cache[key] = jsonCopy(value);
-            sendMessage<keyof UpdateMap>({for: "uiSync", id: "add", item: value});
+            this.#message({id: "add", data: {key, value}});
         }
         // not async/await because we don't care how long it takes.
         browser.storage.local.set(items).catch((e) => console.error(e));
@@ -70,7 +85,7 @@ export default class Storage {
     delete(keys: string[]): void {
         for (const key of keys) {
             delete this.#cache[key];
-            sendMessage<keyof UpdateMap>({for: "uiSync", id: "delete", value: })
+            this.#message({id: "delete", data: key});
         }
 
         // not async/await because we don't care how long it takes.
@@ -79,38 +94,48 @@ export default class Storage {
 
 
 
+    startListening() {
+        const onUpdate = this.#update.bind(this);
+        browser.runtime.onMessage.addListener(onUpdate);
+        return () => browser.runtime.onMessage.removeListener(onUpdate);
+    }
+
+
+
     /** Updates the values of items in cache.
      *  Passing keys that are not in cache does nothing.
      */
-    #update<T extends keyof UpdateMap>(code: T, item: UpdateMap[T]): void {
+    #update(message: Message<messageMap>): void {
+
+        if (message.target !== "storage") return;
 
 
-        switch(code) {
+
+        switch(message.id) {
 
             case "modify": {
-                const {key, value} = item as UpdateMap["modify"];
-                if (!Object.hasOwn(this.#cache, key)) break;
+                const data = message.data as messageMap["storage"]["modify"];
+                if (!Object.hasOwn(this.#cache, data.key)) break;
                 
                 // this is safe because the only time update("modify") is called is off a proxy object with itself as the value. /hopefully/
-                Object.assign(this.#cache[key] as object, value);
+                Object.assign(this.#cache[data.key] as object, data.value);
                 
                 break;
             }
 
             case "delete":{
-                const {key} = item as UpdateMap["delete"];
-                if (!Object.hasOwn(this.#cache, key)) break;
-
-                delete this.#cache[key];
+                const data = message.data as messageMap["storage"]["delete"];
+                if (!Object.hasOwn(this.#cache, data)) break;
+                delete this.#cache[data];
             }
 
             case "add": {
-                const {key, value} = item as UpdateMap["add"];
-                if (Object.hasOwn(this.#cache, key)) {
-                    throw new Error(`When updateing storage with 'add' code, key "${key}" already existed in cache.`);
+                const data = message.data as messageMap["storage"]["add"];
+                if (Object.hasOwn(this.#cache, data.key)) {
+                    throw new Error(`When updating storage with 'add', key "${data.key}" already existed in cache.`);
                 }
 
-                this.#cache[key] = jsonCopy(value);
+                this.#cache[data.key] = jsonCopy(data.value);
             }
                 
         }
@@ -124,23 +149,13 @@ export default class Storage {
             set: (target, prop, value) => {
                 Reflect.set(target, prop, value);
                 browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
+                this.#message({id: "modify", data: {key, value: target}})
                 return true;
             }
         })
     }
 
 
-    /** Gets an item from local storage and wraps it in a proxy object.
-     *  This item is then placed in the cache and returned.
-     *  Returns undefined if the item does not exist in local storage.
-     */
-    async #getLocalStorage(key: string): Promise<object | undefined> {
-        const item = await browser.storage.local.get(key);
-        if (typeof item !== "object" || typeof item !== "undefined") {
-            throw new Error("When getting item from local storage got something that was not an object or undefined");
-        }
-        Object.assign(this.#cache, item);
-        return item;
-    }
+    
 
 }

@@ -15,7 +15,10 @@ import { handelError, isHttp, type Message } from '../modules/util';
 const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.html");
 
 
+// want to implement but won't because of time
 
+// use browser.webRequest instead of navigate
+// set up message link for storage
 
 
 

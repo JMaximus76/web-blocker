@@ -18,6 +18,8 @@ type RequestMap = {
 export default class ListServer {
 
     #storage = new Storage();
+
+    // NEED TO ADD: make sure this syncs with multiple instances of listServer
     #record: ListRecord = [];
     #svelte: Subscriber<ListServer> | null = null;
 
@@ -101,24 +103,33 @@ export default class ListServer {
             return true;
         });
 
-        return infos.map((o) => this.#svelteProxy(o));
+        return infos.map((o) => {
+            if (o === undefined) throw new Error("listServer got undefined when getting infos");
+            return this.#svelteProxy(o)
+        });
     }
 
     /** Gets requested list Entrys from storage. */
     async requestEntrys(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Entry[]> {
         const infos = await this.requestInfos(details);
         const items = await this.#storage.get<Entry>(infos.map((info) => this.#entrysId(info.id)));
-        return items.map((o) => this.#svelteProxy(o));
+        return items.map((o) => {
+            if (o === undefined) throw new Error("listServer got undefined when getting entrys");
+            return this.#svelteProxy(o)
+        });
     }
 
     /** Gets requested list Timers from storage. */
     async requestTimers(details: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Timer[]> {
         const infos = await this.requestInfos(details);
         const items = await this.#storage.get<Timer>(infos.map((info) => this.#timerId(info.id)));
-        return items.map((o) => this.#svelteProxy(o));
+        return items.map((o) => {
+            if (o === undefined) throw new Error("listServer got undefined when getting timers");
+            return this.#svelteProxy(o)
+        });
     }
 
-    async requestById<T extends keyof RequestMap>(request: keyof RequestMap, id: string): Promise<RequestMap[T]> {
+    async requestById<T extends keyof RequestMap>(request: keyof RequestMap, id: string): Promise<RequestMap[T] | undefined> {
         switch(request) {
             case "info": id = this.#infoId(id); break;
             case "entrys": id = this.#entrysId(id); break;
@@ -126,6 +137,7 @@ export default class ListServer {
         }
 
         const item = await this.#storage.get<RequestMap[T]>(id);
+        if (item[0] === undefined) throw new Error(`listServer got undefined when getting id ${id}`)
         return this.#svelteProxy(item[0]);
     }
 
