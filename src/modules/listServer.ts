@@ -172,7 +172,14 @@ export default class ListServer {
             if (this.#svelte !== null) return this.#svelteProxy(o, this, this.#svelte);
             return o;
         });
-    }   
+    }
+
+
+    async testbyIds<T extends keyof RequestMap, U extends string | string[]>(type: T, ids: U): Promise<U extends string[] ? RequestMap[T][] : RequestMap[T]> {
+        if (Array.isArray(ids)) {
+            const test = ids;
+        }
+    }
 
 
     /** 
