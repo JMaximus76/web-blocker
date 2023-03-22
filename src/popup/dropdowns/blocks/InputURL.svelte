@@ -1,8 +1,8 @@
 
 <script lang="ts">
     import { isBadURL } from "../../../modules/util";
-    import { currentUrlStore } from "../../../modules/store";
-    import type { Options } from "../../../modules/types";
+    import { currentUrlStore } from "../../../modules/stores/data";
+    import type { Options } from "../../popupTypes";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
 
 

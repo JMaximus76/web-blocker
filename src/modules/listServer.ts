@@ -151,7 +151,7 @@ export default class ListServer {
     /** 
      * Gets the requested id.
      */
-    async byId<T extends keyof RequestMap>(type: T, id: string): Promise<RequestMap[T]> {
+    async getId<T extends keyof RequestMap>(type: T, id: string): Promise<RequestMap[T]> {
         id = this.#requestId(type, id);
         const item = await this.#storage.get<RequestMap[T]>(id);
         if (item[0] === undefined) throw new Error(`listServer got undefined when getting id ${id}`);
@@ -163,7 +163,7 @@ export default class ListServer {
     /**
      * Gets the requested ids.
      */
-    async byIds<T extends keyof RequestMap>(type: T, ids: string[]): Promise<Array<RequestMap[T]>> {
+    async getIds<T extends keyof RequestMap>(type: T, ids: string[]): Promise<Array<RequestMap[T]>> {
         ids = ids.map((id) => this.#requestId(type, id));
 
         const items = await this.#storage.get<RequestMap[T]>(ids);

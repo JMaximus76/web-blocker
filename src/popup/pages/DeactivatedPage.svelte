@@ -1,12 +1,13 @@
 
 <script lang="ts">
     import TextButton from "../components/TextButton.svelte";
-    import { popupPageStore, settingsStore } from "../../modules/store";
+    import { popupPageStore } from "../../modules/stores/popupState";
+    import { itemStore } from "../../modules/stores/server";
 
 
-    function toggleIsActive(): void {
-        popupPageStore.main();
-        $settingsStore.toggleIsActive();
+    function toggleIsActive<T extends {isActive: boolean;}>(runtimeSettings: T): void {
+        runtimeSettings.isActive = false;
+        popupPageStore.deactivated();
     }
 </script>
 
@@ -18,12 +19,12 @@
 
 
 
-
-<div id="main">
-    <h1>The Extension is Deactivated</h1>
-    <TextButton on:click={toggleIsActive} text={"Activate"} />
-</div>
-
+{#await $itemStore.get("runtimeSettings") then rts}
+    <div id="main">
+        <h1>The Extension is Deactivated</h1>
+        <TextButton on:click={() => toggleIsActive(rts)} text={"Activate"} />
+    </div>
+{/await}
 
 <style>
 

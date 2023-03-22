@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { Info } from "../listComponets";
 
 
 
@@ -81,7 +82,7 @@ function createPopupPageStore() {
 
 type AddEntryPopupState = {
     active: boolean;
-    infoId: string | null;
+    info: Info | null;
 }
 
 export const addEntryPopupStore = createAddEntryPopupStore();
@@ -90,16 +91,16 @@ function createAddEntryPopupStore() {
 
     const state: AddEntryPopupState = {
         active: false,
-        infoId: null,
+        info: null,
     }
 
     const store = writable(state);
 
     return {
         subscribe: store.subscribe,
-        open: (infoId: string) => {
+        open: (info: Info) => {
             state.active = true;
-            state.infoId = infoId;
+            state.info = info;
             store.set(state);
         },
 

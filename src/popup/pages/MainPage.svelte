@@ -2,29 +2,24 @@
 
 
     import TextButton from "../components/TextButton.svelte";
-    import { listStore, itemStore } from "../../modules/stores/server";
+    import { itemStore } from "../../modules/stores/server";
     import { popupPageStore } from "../../modules/stores/popupState";
     import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+
 
 
 
 
     
 
+    // if flickering use onMount and a default version of rts and await the promise then load it on.
 
 
-    function toggleActiveMode(): void {
-        $itemStore.
-    }
-
-    function toggleIsActive(): void {
+    function toggleIsActive<T extends {isActive: boolean;}>(runtimeSettings: T): void {
+        runtimeSettings.isActive = false;
         popupPageStore.deactivated();
-        $settingsStore.toggleIsActive();
     }
-
-
 
 </script>
 
@@ -40,8 +35,6 @@
             {:else}
                 <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
             {/if}
-            
-            
         </div>
 
         <!-- <div id="list-info">
@@ -50,8 +43,8 @@
         </div> -->
 
 
-        <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
-        <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+        <TextButton on:click={() => toggleIsActive(rts)} text={"Deactivate"} />
+        <TextButton on:click={() => rts.mode = rts.mode === "block"? "allow" : "block"} text={"Change Mode"} />
 
 
     </div>
@@ -67,7 +60,7 @@
     }
 
 
-    #list-info {
+    /* #list-info {
         display: flex;
         flex-direction: row;
         
@@ -81,7 +74,7 @@
         display: inline-block;
         margin-right: 15px;
 
-    }
+    } */
 
     #main {
         background-color: transparent;

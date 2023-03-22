@@ -25,10 +25,13 @@ type M = {
 
 export type Message = {
     target: keyof M;
-    id: keyof M[keyof M];
-    data: M[keyof M][keyof M[keyof M]];
+    id: string;
+    data: any;
 }
 
+
+
+export type Id<T extends keyof M> = keyof M[T];
 export type Data<T extends keyof M, U extends keyof M[T]> = M[T][U];
 
 

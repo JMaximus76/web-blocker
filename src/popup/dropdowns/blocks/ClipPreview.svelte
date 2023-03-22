@@ -1,9 +1,11 @@
 <script lang="ts">
-    import List from "../../../modules/list";
 
     import { isBadURL } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
+    import type { EntryMode } from "../../../modules/listComponets";
+    import EntryControler from "../../../modules/entryControler";
+    import type { Options } from "../../popupTypes";
 
 
     export let mode: EntryMode = "fullDomain";
@@ -21,7 +23,7 @@
             }
         }
 
-        const clip = List.clipURL(mode, url);
+        const clip = EntryControler.clipURL(mode, url);
         if (clip === null || clip === "") {
             return "Invalid URL";
         } else {

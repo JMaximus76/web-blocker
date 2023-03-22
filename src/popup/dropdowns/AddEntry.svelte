@@ -1,49 +1,33 @@
 
 <script lang="ts">
-    import { onMount } from "svelte";
+
     import { fade, fly } from "svelte/transition";
-    import type Info from "../../modules/info";
-    import List from "../../modules/list";
-    import { addEntryPopupStore, infoListStore } from "../../modules/store";
-    import type { EntryMode } from "../../modules/types";
     import ClipPreview from "./blocks/ClipPreview.svelte";
     import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
+    import type { EntryMode, Info } from "../../modules/listComponets";
+    import { addEntryPopupStore } from "../../modules/stores/popupState";
+    import { listStore } from "../../modules/stores/server";
+    import EntryControler from "../../modules/entryControler";
+    import { handelError } from "../../modules/util";
     
 
     let url: string;
     let mode: EntryMode;
     let isValid: boolean;
 
-    let info: Info | undefined = undefined;
+    // should work but it might be null ?? but it also should be an info.
+    let info: Info = $addEntryPopupStore.info as Info;
 
-    $: {
-        const infoId = $addEntryPopupStore.infoId;
-        if (infoId === null) {
-            info = undefined
-        } else {
-            info = $infoListStore.getInfoWithId(infoId);
-        }
-    }
-
-    let addButtonTitle: string;
-
-
-    onMount(() => {
-        if (info !== undefined) {
-            addButtonTitle = `Add new entry to ${info.name}`;
-        }
-    });
-
+    let addButtonTitle = `Add new entry to ${info.name}`;
 
     function addEntry() {
-        if (info !== undefined && isValid) {
-            info.pullList().then((list) => {
-                list.addEntry(List.createEntry(mode, url));
-                return list.save();
-            }).then(() => {
+        if (isValid) {
+            $listStore.getId("entrys", info.id).then((item) => {
+                const entrys = new EntryControler(item);
+                entrys.addEntry(mode, url);
                 addEntryPopupStore.close();
-            });
+            }).catch(handelError);
         }
     }
 

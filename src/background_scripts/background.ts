@@ -17,6 +17,7 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 // set up message link for storage
 // better svelte proxy usage when applying
 // better request functions for listServer (they suck rn)
+// *make a "svelte data" class that holds all list components and settings on start and then listends for changes (This might need to happen)
 
 
 
@@ -37,20 +38,20 @@ browser.runtime.onInstalled.addListener(() => {
         await listServer.sync();
 
         const blockListID = listServer.registerList({name: "Block List", mode: "block"});
-        const blockEntrys = new EntryControler(await listServer.byId("entrys", blockListID));
+        const blockEntrys = new EntryControler(await listServer.getId("entrys", blockListID));
         blockEntrys.addEntry("domain", "https://www.youtube.com/");
         blockEntrys.addEntry("domain", "https://www.netflix.com/");
         blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
 
         const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-        const allowEntrys = new EntryControler(await listServer.byId("entrys", allowListID));
+        const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
         allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
         allowEntrys.addEntry("domain", "https://www.learncpp.com/");
         allowEntrys.addEntry("domain", "https://www.google.com/");
 
 
         const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1});
-        const testEntrys = new EntryControler(await listServer.byId("entrys", testID));
+        const testEntrys = new EntryControler(await listServer.getId("entrys", testID));
         testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
@@ -82,7 +83,7 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
     const timerList = await itemServer.get("activeTimers");
 
-    const items = await listServer.byIds("timer", timerList);
+    const items = await listServer.getIds("timer", timerList);
     const timers = items.map(item => new TimerControler(item));
 
     timers.forEach(timer => timer.stop());
@@ -171,7 +172,7 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
 
     for (const info of infos) {
         if (info.useTimer) {
-            const timer = new TimerControler(await listServer.byId("timer", info.id));
+            const timer = new TimerControler(await listServer.getId("timer", info.id));
             // could change this to xor but i'm lazy
             if (timer.done && info.mode === "block") {
                 doBlocking = true;

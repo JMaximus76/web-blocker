@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { infoListStore } from "../../../modules/store";
-    import type { Mode } from "../../../modules/types";
+    import type { Mode } from "../../../modules/listComponets";
+    import { listStore } from "../../../modules/stores/server";
+    
 
     
     import ListBlock from "./ListBlock.svelte";
@@ -8,22 +9,23 @@
 
     export let mode: Mode;
 
-    $: list = (mode === "block")? $infoListStore.block : $infoListStore.allow;
+    $: promiseList = (mode === "block")? $listStore.request("info", {mode: "block"}) : $listStore.request("info", {mode: "block"});
     
 
 </script>
 
-<div>
-    {#if list.length === 0}
+{#await promiseList then list}
+    <div>
+        {#if list.length === 0}
 
-        <p>No {mode} lists</p>
-        
-    {:else}
+            <p>No {mode} lists</p>
+            
+        {:else}
 
-        {#each list as infos (infos.id)}
-            <ListBlock info={infos} />
-        {/each}
+            {#each list as infos (infos.id)}
+                <ListBlock info={infos} />
+            {/each}
 
-    {/if}
-</div>
-
+        {/if}
+    </div>
+{/await}

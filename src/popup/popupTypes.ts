@@ -1,4 +1,4 @@
-type Buttons = {
+export type Buttons = {
     [key: string]: {
         onClick: () => void;
         title?: string;
@@ -7,7 +7,7 @@ type Buttons = {
 
 };
 
-type Radio<T> = {
+export type Radio<T> = {
     [key: string]: {
         value: T;
         title?: string;
@@ -15,7 +15,7 @@ type Radio<T> = {
 };
 
 
-type Options = {
+export type Options = {
     buttons?: Buttons;
     radio?: Radio<any>
 }

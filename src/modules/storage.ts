@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { jsonCopy, sendMessage, type Data, type Message } from './util';
+import { jsonCopy, sendMessage, type Data, type Id, type Message } from './util';
 
 
 
@@ -117,7 +117,7 @@ export default class Storage {
 
 
 
-        switch(message.id) {
+        switch(message.id as Id<"storage">) {
 
             case "modify": {
                 const data = message.data as Data<"storage", "modify">;

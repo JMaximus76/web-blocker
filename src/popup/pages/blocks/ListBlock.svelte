@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type Info from "../../../modules/info";
-    import List from "../../../modules/list";
-    import { addEntryPopupStore, currentUrlStore, popupPageStore, timerDisplayStore } from "../../../modules/store";
-    import type { Options } from "../../../modules/types";
     import { handelError } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
-  
+    import type { Info } from "../../../modules/listComponets";
+    import EntryControler from "../../../modules/entryControler";
+    import { currentUrlStore, timerStore } from "../../../modules/stores/data";
+    import { listStore } from "../../../modules/stores/server";
+    import { addEntryPopupStore, popupPageStore } from "../../../modules/stores/popupState";
+    import type { Options } from "../../popupTypes";
 
 
 
@@ -15,24 +16,25 @@
 
     let match: boolean = false;
 
-    $: matchTitle = `Match Found: This list matched with ${List.clipURL("domain", $currentUrlStore)}`;
+    $: matchTitle = `Match Found: This list matched with ${EntryControler.clipURL("domain", $currentUrlStore)}`;
     const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
 
 
     function toggleActive(): void {
         if (info.locked) return;
-        info.toggleActive();
+        info.active = !info.active;
     }
 
     onMount(() => {
         if (info.useTimer) {
-            info.pullTimer().then((timer) => {
-                timerDisplayStore.addTimer(timer);
+            $listStore.getId("timer", info.id).then((timer) => {
+                timerStore.addTimer(timer);
             }).catch(handelError);
         }
         
-        info.pullList().then((list) => {
-            match = list.check($currentUrlStore);
+
+        $listStore.getId("entrys", info.id).then((entrys) => {
+            match = new EntryControler(entrys, true).check($currentUrlStore);
         }).catch(handelError);
 
     });
@@ -42,7 +44,7 @@
     const options: Options = {
         buttons: {
             "Add Entry": {
-                onClick: () => addEntryPopupStore.open(info.id),
+                onClick: () => addEntryPopupStore.open(info),
                 title: "Add a list entry"
             },
 
@@ -70,7 +72,7 @@
 
             {#if info.useTimer}
                 <div class="timer">
-                    {$timerDisplayStore.get(info.timerId)}
+                    {$timerStore.get(info.id)}
                 </div>
             {/if}
 

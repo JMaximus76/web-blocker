@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Options } from "../../modules/types";
+    import type { Options } from "../popupTypes";
 
     // not sure how to avoid using any here, I'm bad at type script ;-;
     export let radioValue: any = null;
