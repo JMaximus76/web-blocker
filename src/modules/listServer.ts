@@ -175,11 +175,11 @@ export default class ListServer {
     }
 
 
-    async testbyIds<T extends keyof RequestMap, U extends string | string[]>(type: T, ids: U): Promise<U extends string[] ? RequestMap[T][] : RequestMap[T]> {
-        if (Array.isArray(ids)) {
-            const test = ids;
-        }
-    }
+    // async testbyIds<T extends keyof RequestMap, U extends string | string[]>(type: T, ids: U): Promise<U extends string[] ? RequestMap[T][] : RequestMap[T]> {
+    //     if (Array.isArray(ids)) {
+    //         const test = ids;
+    //     }
+    // }
 
 
     /** 

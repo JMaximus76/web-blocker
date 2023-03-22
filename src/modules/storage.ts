@@ -107,7 +107,6 @@ export default class Storage {
     }
 
 
-
     /** 
      * Updates the values of items in cache.
      * Passing keys that are not in cache does nothing.

@@ -1,6 +1,6 @@
 <script lang="ts">
     import List from "../../../modules/list";
-    import type { EntryMode, Options } from "../../../modules/types";
+
     import { isBadURL } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";

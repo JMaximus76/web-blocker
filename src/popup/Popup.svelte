@@ -2,18 +2,18 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./pages/blocks/Header.svelte";
-    import { addEntryPopupStore, popupPageStore } from "../modules/store";
+    import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupState";
     import { fly } from "svelte/transition";
-    import Settings from "../modules/settings";
     import { onMount } from "svelte";
     import AddEntryPopup from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
+    import { itemStore } from "../modules/stores/server";
 
 
     let loading: Promise<void>;
     onMount(() => {
-        loading = Settings.getSetting("isActive").then((isActive) => {
-            if (isActive) {
+        loading = $itemStore.get("runtimeSettings").then((rts) => {
+            if (rts.isActive) {
                 popupPageStore.main();
             } else  {
                 popupPageStore.deactivated();

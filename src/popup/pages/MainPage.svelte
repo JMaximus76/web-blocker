@@ -2,15 +2,21 @@
 
 
     import TextButton from "../components/TextButton.svelte";
-    import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
+    import { listStore, itemStore } from "../../modules/stores/server";
+    import { popupPageStore } from "../../modules/stores/popupState";
     import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
+    import { onMount } from "svelte";
 
+
+
+
+    
 
 
 
     function toggleActiveMode(): void {
-        $infoListStore.toggleActiveMode();
+        $itemStore.
     }
 
     function toggleIsActive(): void {
@@ -25,39 +31,31 @@
 
 
 
+{#await $itemStore.get("runtimeSettings") then rts}
+    <div id="main">
 
-<div id="main">
-    
-    
-    
-    
+        <div id="lists">
+            {#if rts.mode === "block"}
+                <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
+            {:else}
+                <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
+            {/if}
+            
+            
+        </div>
 
-    <div id="lists">
-        {#if $infoListStore.activeMode === "block"}
-            <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
-        {:else}
-            <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
-        {/if}
-        
-        
+        <!-- <div id="list-info">
+            <p>Total Lists: {$infoListStore.currentInfos.length}</p>
+            <p>Active Lists: {$infoListStore.activeInfos.length}</p>
+        </div> -->
+
+
+        <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
+        <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
+
+
     </div>
-
-    <div id="list-info">
-        <p>Total Lists: {$infoListStore.currentInfos.length}</p>
-        <p>Active Lists: {$infoListStore.activeInfos.length}</p>
-    </div>
-
-
-    <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
-    <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
-
-    
-
-
-    
-
-</div>
-
+{/await}
 
 
     
