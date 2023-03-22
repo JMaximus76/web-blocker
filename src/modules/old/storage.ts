@@ -6,7 +6,7 @@ import type { PromiseError } from '../util';
 
 
 
-export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T): Promise<StorageItemMap[T]> {
+async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T): Promise<StorageItemMap[T]> {
     const item = await browser.storage.local.get(itemKey);
 
     if (item[itemKey] === undefined) {
@@ -24,7 +24,7 @@ export async function getStorageItem<T extends keyof StorageItemMap>(itemKey: T)
 
 
 
-export async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
+async function setStorageItem<T extends keyof StorageItemMap>(key: T, item: StorageItemMap[T]): Promise<void> {
     await browser.storage.local.set({ [key]: item });
 }
 
@@ -32,12 +32,12 @@ export async function setStorageItem<T extends keyof StorageItemMap>(key: T, ite
 
 
 // these are just wrapers
-export async function pullItem(key: string): Promise<any> {
+async function pullItem(key: string): Promise<any> {
     const item = await browser.storage.local.get(key);
     return item[key];
 }
 
-export async function pushItem(key: string, value: any): Promise<void> {
+async function pushItem(key: string, value: any): Promise<void> {
     await browser.storage.local.set({ [key]: value })
 }
 

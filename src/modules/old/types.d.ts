@@ -1,93 +1,93 @@
 
-export type Mode = "block" | "allow";
+// type Mode = "block" | "allow";
 
 
 
-export type UpdateMessageMap = {
-    "info": StorageInfo;
-    "infos": StorageInfo[];
-    "activeMode": Mode;
-    "useSchedule": boolean;
-};
+// type UpdateMessageMap = {
+//     "info": StorageInfo;
+//     "infos": StorageInfo[];
+//     "activeMode": Mode;
+//     "useSchedule": boolean;
+// };
 
 
 
-export type StorageInfo = {
-    readonly name: string;
-    readonly mode: Mode;
-    active: boolean;
-    locked: boolean;
-    useTimer: boolean;
-};
+// type StorageInfo = {
+//     readonly name: string;
+//     readonly mode: Mode;
+//     active: boolean;
+//     locked: boolean;
+//     useTimer: boolean;
+// };
 
 
-export type StorageInfoList = {
-    activeMode: Mode;
-    useSchedule: boolean;
-    infos: StorageInfo[];
+// type StorageInfoList = {
+//     activeMode: Mode;
+//     useSchedule: boolean;
+//     infos: StorageInfo[];
 
-};
-
-
-export type StorageTimer = {
-    total: number;
-    max: number;
-    start: number | null;
-}
+// };
 
 
-export type EntryMode = "domain" | "fullDomain" | "url" | "exact";
-
-export type ListEntry = {
-    mode: EntryMode;
-    value: string;
-};
-
+// type StorageTimer = {
+//     total: number;
+//     max: number;
+//     start: number | null;
+// }
 
 
-export type TimerList = string[];
+// type EntryMode = "domain" | "fullDomain" | "url" | "exact";
+
+// type ListEntry = {
+//     mode: EntryMode;
+//     value: string;
+// };
 
 
 
-
-export type StorageSettings = {
-    isActive: boolean;
-};
+// type TimerList = string[];
 
 
 
 
-export type StorageItemMap = {
-    schedule: {};
-    settings: StorageSettings;
-    infoList: StorageInfoList;
-    timerList: TimerList;
-}
+// type StorageSettings = {
+//     isActive: boolean;
+// };
 
 
 
 
-type Buttons = {
-    [key: string]: {
-        onClick: () => void;
-        title?: string;
-    }
+// type StorageItemMap = {
+//     schedule: {};
+//     settings: StorageSettings;
+//     infoList: StorageInfoList;
+//     timerList: TimerList;
+// }
 
 
-};
-
-type Radio<T> = {
-    [key: string]: {
-        value: T;
-        title?: string;
-    }
-};
 
 
-export type Options = {
-    buttons?: Buttons;
-    radio?: Radio<any>
-}
+// type Buttons = {
+//     [key: string]: {
+//         onClick: () => void;
+//         title?: string;
+//     }
+
+
+// };
+
+// type Radio<T> = {
+//     [key: string]: {
+//         value: T;
+//         title?: string;
+//     }
+// };
+
+
+// type Options = {
+//     buttons?: Buttons;
+//     radio?: Radio<any>
+// }
 
 
 

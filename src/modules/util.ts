@@ -1,24 +1,60 @@
 import browser from "webextension-polyfill";
+import ItemServer from "./itemServer";
+import ListServer from "./listServer";
 
 
 
-type MessageTemplate = {
-    [targets: string]: Record<string, any>;
-};
 
 
-export function makeMessageSender<Template extends MessageTemplate, Target extends keyof Template>(target: Target) {
-    return async function sender<Id extends keyof Template[Target]>(details: Template[Target][Id] extends undefined ? { id: Id } : { id: Id, data: Template[Target][Id] }) {
-        const data = (Object.hasOwn(details, "data")) ? (details as { id: Id, data: Template[Target][Id] }).data : undefined;
-        await browser.runtime.sendMessage({ target, id: details.id, data }).catch(() => console.log(`Message Bounced: ${{ target, id: details.id, data }}`));
+type M = {
+    storage: {
+        modify: { key: string, value: object };
+        add: { key: string, value: object };
+        delete: string;
+    };
+
+    background: {
+        update: undefined;
+    };
+
+    timerStore: {
+        start: string;
+        stop: string;
     }
 }
 
-export type Message<T extends MessageTemplate> = {
-    target: keyof T;
-    id: keyof T[keyof T];
-    data: T[keyof T][keyof T[keyof T]];
+export type Message = {
+    target: keyof M;
+    id: keyof M[keyof M];
+    data: M[keyof M][keyof M[keyof M]];
 }
+
+export type Data<T extends keyof M, U extends keyof M[T]> = M[T][U];
+
+
+export async function sendMessage<T extends keyof M, I extends keyof M[T], D extends M[T][I]>(target: T, id: I, data: D) {
+    await browser.runtime.sendMessage({ target, id, data }).catch(() => console.log(`Message Bounced: ${{ target, id, data }}`));
+}
+
+
+
+
+// I'm sorry 
+// export function makeMessageSender<Template extends MessageTemplate, Target extends keyof Template>(target: Target) {
+//     return async function sender<Id extends keyof Template[Target]>(details: Template[Target][Id] extends undefined ? { id: Id } : { id: Id, data: Template[Target][Id] }) {
+//         const data = (Object.hasOwn(details, "data")) ? (details as { id: Id, data: Template[Target][Id] }).data : undefined;
+//         await browser.runtime.sendMessage({ target, id: details.id, data }).catch(() => console.log(`Message Bounced: ${{ target, id: details.id, data }}`));
+//     }
+// }
+
+// export type MessageTemplate = {
+//     [targets: string]: Record<string, any>;
+// };
+
+
+
+
+
 
 
 
@@ -71,6 +107,20 @@ export function jsonCopy<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
 
+
+
+export async function makeServers() {
+    const listServer = new ListServer();
+    await listServer.sync();
+    const itemServer = new ItemServer();
+
+    return { listServer, itemServer };
+}
+
+export type Servers = {
+    listServer: ListServer;
+    itemServer: ItemServer;
+};
 
 
 

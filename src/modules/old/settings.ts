@@ -11,7 +11,7 @@ type SettingsMap = {
 
 
 
-export default class Settings {
+class Settings {
 
 
     static async init(): Promise<void> {

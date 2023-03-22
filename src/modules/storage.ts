@@ -1,22 +1,17 @@
 import browser from 'webextension-polyfill';
-import { jsonCopy, makeMessageSender, type Message } from './util';
+import { jsonCopy, sendMessage, type Data, type Message } from './util';
 
 
-type messageMap = {
-    storage: {
-        modify: { key: string, value: object };
-        add: { key: string, value: object };
-        delete: string;
-    }
-}
 
 
+// dont' think I'll need to seal the objects because typescript should make sure I don't 
+// add any properties to them. And I also need to add props for the entry lists so... not sure.
 
 export default class Storage {
 
     // should work like a singleton so that across all instances of storage they all share the same cache
     static #cache: Record<string, object | undefined> = {};
-    #message = makeMessageSender<messageMap, "storage">("storage");
+
 
 
     // WON"T WORK BECAUSE listening aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -82,7 +77,7 @@ export default class Storage {
         // add items to cache and local storage
         for (const [key, value] of Object.entries(items)) {
             Storage.#cache[key] = jsonCopy(value);
-            this.#message({id: "add", data: {key, value}});
+            sendMessage("storage", "add", { key, value });
         }
         // not async/await because we don't care how long it takes.
         browser.storage.local.set(items).catch((e) => console.error(e));
@@ -96,7 +91,7 @@ export default class Storage {
     delete(keys: string[]): void {
         for (const key of keys) {
             delete Storage.#cache[key];
-            this.#message({id: "delete", data: key});
+            sendMessage("storage", "delete", key);
         }
 
         // not async/await because we don't care how long it takes.
@@ -117,7 +112,7 @@ export default class Storage {
      * Updates the values of items in cache.
      * Passing keys that are not in cache does nothing.
      */
-    #update(message: Message<messageMap>): void {
+    #update(message: Message): void {
 
         if (message.target !== "storage") return;
 
@@ -126,7 +121,7 @@ export default class Storage {
         switch(message.id) {
 
             case "modify": {
-                const data = message.data as messageMap["storage"]["modify"];
+                const data = message.data as Data<"storage", "modify">;
                 if (!Object.hasOwn(Storage.#cache, data.key)) break;
                 
                 // this is safe because the only time update("modify") is called is off a proxy object with itself as the value. /hopefully/
@@ -136,13 +131,13 @@ export default class Storage {
             }
 
             case "delete":{
-                const data = message.data as messageMap["storage"]["delete"];
+                const data = message.data as Data<"storage", "delete">;
                 if (!Object.hasOwn(Storage.#cache, data)) break;
                 delete Storage.#cache[data];
             }
 
             case "add": {
-                const data = message.data as messageMap["storage"]["add"];
+                const data = message.data as Data<"storage", "add">;
                 if (Object.hasOwn(Storage.#cache, data.key)) {
                     throw new Error(`When updating storage with 'add', key "${data.key}" already existed in cache.`);
                 }
@@ -163,7 +158,7 @@ export default class Storage {
             set: (target, prop, value) => {
                 Reflect.set(target, prop, value);
                 browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
-                this.#message({id: "modify", data: {key, value: target}})
+                sendMessage("storage", "modify", { key, value: target });
                 return true;
             }
         })

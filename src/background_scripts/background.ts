@@ -1,7 +1,9 @@
 import browser from 'webextension-polyfill';
+import EntryControler from '../modules/entryControler';
+import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
-
-import { handelError, isHttp, type Message } from '../modules/util';
+import TimerControler from '../modules/timerControler';
+import { handelError, isHttp, makeServers, type Message, type Servers } from '../modules/util';
 
 
 
@@ -13,6 +15,8 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 // use browser.webRequest instead of navigate
 // set up message link for storage
+// better svelte proxy usage when applying
+// better request functions for listServer (they suck rn)
 
 
 
@@ -24,71 +28,38 @@ browser.runtime.onInstalled.addListener(() => {
         // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
         await browser.storage.local.clear();
 
-        //await Settings.init();
 
-        //await InfoList.init();
-        //await setStorageItem("timerList", []);
         ListServer.init();
-
+        ItemServer.init();
         
+
+        const listServer = new ListServer();
+        await listServer.sync();
+
+        const blockListID = listServer.registerList({name: "Block List", mode: "block"});
+        const blockEntrys = new EntryControler(await listServer.byId("entrys", blockListID));
+        blockEntrys.addEntry("domain", "https://www.youtube.com/");
+        blockEntrys.addEntry("domain", "https://www.netflix.com/");
+        blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
+
+        const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
+        const allowEntrys = new EntryControler(await listServer.byId("entrys", allowListID));
+        allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
+        allowEntrys.addEntry("domain", "https://www.learncpp.com/");
+        allowEntrys.addEntry("domain", "https://www.google.com/");
+
+
+        const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1});
+        const testEntrys = new EntryControler(await listServer.byId("entrys", testID));
+        testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
-
-        await test();
-
-        const infoList = new InfoList();
-        await infoList.syncFromStorage();
-
-        const block = await infoList.registerNewList("Blocklist", "block");
-        block.toggleActive();
-        const blockList = await block.pullList();
-        blockList.addEntry(List.createEntry("domain", "https://www.youtube.com/"));
-        blockList.addEntry(List.createEntry("domain", "https://www.netflix.com/"));
-        blockList.addEntry(List.createEntry("url", "https://commons.wikimedia.org/wiki/Main_Page"));
-        await blockList.save();
-
-        const allow = await infoList.registerNewList("Allowlist", "allow");
-        allow.toggleActive();
-        const allowList = await allow.pullList();
-        allowList.addEntry(List.createEntry("domain", "https://www.freecodecamp.org/"));
-        allowList.addEntry(List.createEntry("domain", "https://www.learncpp.com/"));
-        allowList.addEntry(List.createEntry("domain", "https://www.google.com/"));
-        await allowList.save();
-
-    }
-
-    async function test(): Promise<void> {
-        const infoList = new InfoList();
-        await infoList.syncFromStorage();
-
-        const test = await infoList.registerNewList("Test List", "block");
-        test.toggleActive();
-        test.toggleLocked();
-        const testList = await test.pullList();
-        testList.addEntry(List.createEntry("fullDomain", "https://www.wikipedia.org/"));
-        await testList.save();
-
-        await test.toggleTimer();
-        const timer = await test.pullTimer();
-        
-        await timer.setMax(65);
-
-
-
 
         // for (let i = 0; i < 20; i++) {
-        //     const t = await infoList.registerNewList(`test${i}`, "block");
-        //     t.toggleActive();
-        //     const l = await t.pullList();
-
+        //     const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
+        //     const entrys = new EntryControler(await listServer.requestById("entrys", id));
         //     for (let j = 0; j < 20; j++) {
-        //         l.addEntry(List.createEntry("fullDomain", `https://www.wikipedia.org/`));
+        //         entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
         //     }
-        //     await l.save();
-
-        //     await t.toggleTimer();
-        //     const te = await t.pullTimer();
-
-        //     await te.setMax(1);
         // }
 
     }
@@ -96,61 +67,32 @@ browser.runtime.onInstalled.addListener(() => {
 
     init().catch(handelError);
     
-   
-    
-    
 });
 
 
 
-// gets all timers off timerList (the timers that are were active) and totals them
-async function resetTimers() {
-    const timerList = await getStorageItem("timerList");
-
-    for (const id of timerList) {
-        const timer = new Timer(id, await pullItem(id))
-        await timer.totalUp();
-    }
-
-    if (timerList.length !== 0) await setStorageItem("timerList", []);
-
-}
 
 
-async function setTimers(ids: TimerList): Promise<void> {
+// hey future me:
+// if you start getting weird behavior from the timers you might have a race condition with the ActiveTimers list
+// when you reset it, it sends that to storage BUT if manageTimers is called very quickly after that it might not get the right list
+// this would be bad, good luck *smile* (try putting async on eveything and just ingore them when using?)
+async function manageTimers({ listServer, itemServer }: Servers): Promise<void> {
 
-    if (ids.length === 0) throw new Error("setTimers was given an empty TimerList");
 
+    const timerList = await itemServer.get("activeTimers");
+
+    const items = await listServer.byIds("timer", timerList);
+    const timers = items.map(item => new TimerControler(item));
+
+    timers.forEach(timer => timer.stop());
+
+    // remove all timers from activeTimers /hopefully/
+    timerList.length = 0;
     
-    let lowestTime = Number.POSITIVE_INFINITY;
-
-
-
-
-    for (let i = 0; i < ids.length; i++) {
-        const timer = new Timer(ids[i], await pullItem(ids[i]));
-        if (timer.isDone()) {
-            // remove timer from list since its done
-            ids.splice(i, 1);
-        } else {
-            timer.start();
-            lowestTime = Math.min(lowestTime, timer.timeLeft);
-        }
-    }
-
-    await setStorageItem("timerList", ids);
-
-    if (lowestTime === Number.POSITIVE_INFINITY) return;
-    browser.alarms.create("blockTimer", { when: Date.now() + lowestTime });
-}
-
-
-async function manageTimers(): Promise<void> {
-    
-    
-    await resetTimers();
     browser.alarms.clear("blockTimer");
-    if (!await Settings.getSetting("isActive")) return;
+    const runtimeSettings = await itemServer.get("runtimeSettings");
+    if (!runtimeSettings.isActive) return;
 
     const tabs = await browser.tabs.query({ active: true });
     if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
@@ -158,66 +100,48 @@ async function manageTimers(): Promise<void> {
     console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
 
 
-    const infoList = new InfoList();
-    await infoList.syncFromStorage();
-    const timerList: TimerList = [];
+    let lowestTime = Number.POSITIVE_INFINITY;
 
     for (const tab of tabs) {
         if (tab.url === undefined) continue;
         if (!isHttp(tab.url)) continue;
 
-        const infos = await infoList.getActiveMatch(tab.url);
-
-        for (const info of infos) {
-            if (info.useTimer) {
-                timerList.push(info.timerId);
+        const items = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url});
+        const timers = items.map((item) => new TimerControler(item));
+        
+        
+        for (const timer of timers) {
+            if (!timer.done) {
+                timerList.push(timer.id);
+                timer.start();
+                lowestTime = Math.min(lowestTime, timer.timeLeft);
             }
         }
 
     }
-    
-    if (timerList.length === 0) return;
-    await setTimers(timerList);
+
+    if (lowestTime !== Number.POSITIVE_INFINITY) {
+        browser.alarms.create("blockTimer", { when: Date.now() + lowestTime });
+    }
 }
 
 
 
 
 
-async function isMatch(url: string, infoList: InfoList): Promise<boolean> {
 
-    const matchedInfos = await infoList.getActiveMatch(url);
-    
-    // this is not very pretty. If its in block mode then when there is a not done timer we DON'T match but in allow mode we DO match
-    // vise versa for done timers so we do this "thing"
-    const listStatus = infoList.activeMode === "block";
 
-    for (const info of matchedInfos) {
-        if (info.useTimer) {
-            const timer = await info.pullTimer();
-            if (timer.isDone()) {
-                return listStatus;
-            } else if(infoList.activeMode === "allow") {
-                return true;
-            }
-        } else {
-            return true;
+async function check(url: string, tabId: number, { listServer, itemServer }: Servers): Promise<void> {
+
+    function decide(doBlocking: boolean, urlIsBlockedPage: boolean, url: string, tabId: number) {
+        if (doBlocking && !urlIsBlockedPage) {
+            console.log(`BLOCKING a page with url of ${url}`);
+            browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
+        } else if (!doBlocking && urlIsBlockedPage) {
+            console.log(`UNBLOCKING page with url of ${url}`);
+            browser.tabs.update(tabId, { url: url }).catch(handelError);
         }
     }
-
-    return false;
-}
-
-
-function block(url: string, tabId: number) {
-    console.log(`BLOCKING a page with a url of ${url}`);
-    browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
-}
-
-
-async function check(url: string, tabId: number): Promise<void> {
-    //const startTime = Date.now();
-
 
 
     let urlIsBlockedPage = false;
@@ -229,49 +153,53 @@ async function check(url: string, tabId: number): Promise<void> {
         urlIsBlockedPage = true;
     }
 
-    if (!isHttp(url)) {
-        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
-        return
-    };
+    if (!isHttp(url)) return;
 
-    if (!await Settings.getSetting("isActive")) {
-        if (urlIsBlockedPage) browser.tabs.update(tabId, { url: url }).catch(handelError);
-        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
-        return;
-    }
+    const runtimeSettings = await itemServer.get("runtimeSettings")
+    if (!runtimeSettings.isActive) return;
+
+    
 
 
     console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
+    const infos = await listServer.request("info", {active: true, mode: runtimeSettings.mode, match: url});
 
-    const infoList = new InfoList();
-    await infoList.syncFromStorage();
+    let doBlocking = runtimeSettings.mode === "allow";
 
-    const matched = await isMatch(url, infoList);
-
-    // same as this: if ((matched && infoList.activeMode === "block") || (!matched && infoList.activeMode === "allow")) 
-    if ((matched === (infoList.activeMode === "block")) && !urlIsBlockedPage) {
-        block(url, tabId);
-        //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
-        return;
-    }
     
-    // I didn't check super well if this works and I don't know how it works but it does so I'm leaving it how it is.
-    if ((!matched === (infoList.activeMode === "block")) && urlIsBlockedPage) {
-        browser.tabs.update(tabId, { url: url }).catch(handelError);
+
+    for (const info of infos) {
+        if (info.useTimer) {
+            const timer = new TimerControler(await listServer.byId("timer", info.id));
+            // could change this to xor but i'm lazy
+            if (timer.done && info.mode === "block") {
+                doBlocking = true;
+                break;
+            } else if(!timer.done && info.mode === "allow") {
+                doBlocking = false;
+                break;
+            }
+        } else {
+            doBlocking = !doBlocking;
+            break;
+        }
     }
-    //console.log(`CHECK TOOK ------------------------------ ${Date.now() - startTime}`);
+
+    decide(doBlocking, urlIsBlockedPage, url, tabId);
+
 
 }
 
 
-
-async function checkAll() {
+// Make this better
+async function checkAll(servers: Servers) {
     // gets all tabs
     const allTabs = await browser.tabs.query({});
+
     for (const tab of allTabs) {
         if (tab.url !== undefined && tab.id !== undefined) {
-            await check(tab.url, tab.id);
+            await check(tab.url, tab.id, servers);
         }
     }
 }
@@ -285,7 +213,7 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     console.log("doing on navigate");
 
     async function navigated() {
-        await check(navigate.url, navigate.tabId).catch(handelError);
+        await check(navigate.url, navigate.tabId, await makeServers()).catch(handelError);
     }
 
     navigated().catch(handelError);
@@ -302,8 +230,10 @@ browser.tabs.onActivated.addListener((activeInfo) => {
     async function activated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
             console.log("doing on activated");
-            await manageTimers();
-            await check(tab.url, tab.id);
+            const servers = await makeServers();
+
+            await manageTimers(servers);
+            await check(tab.url, tab.id, servers);
         }
     }
 
@@ -322,9 +252,11 @@ browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
             const active = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
             if (active.id === tab.id && active.url === tab.url) {
                 console.log("doing on updated");
-                await manageTimers();
+                const servers = await makeServers();
 
-                if (changeInfo.status !== "loading") check(tab.url, tab.id);
+                await manageTimers(servers);
+
+                if (changeInfo.status !== "loading") check(tab.url, tab.id, servers);
             }
         }
     }
@@ -343,8 +275,9 @@ browser.alarms.onAlarm.addListener((alarm) => {
     console.log("timer went off");
 
     async function alarmed() {
-        await manageTimers();
-        await checkAll();
+        const servers = await makeServers();
+        await manageTimers(servers);
+        await checkAll(servers);
     }
 
     if (alarm.name === "blockTimer") {
@@ -354,14 +287,21 @@ browser.alarms.onAlarm.addListener((alarm) => {
 
 
 
+
+
+
+
 browser.runtime.onMessage.addListener((message) => {
+
     async function messaged(message: Message): Promise<void> {
         // switch message.id if more are added
-        if (message.for === "backgroundScript" && message.id === "update") {
-            await manageTimers();
-            await checkAll();
+        if (message.target === "background" && message.id === "update") {
+            const servers = await makeServers();
+            await manageTimers(servers);
+            await checkAll(servers);
         }
     }
+
     messaged(message).catch(handelError);
 
 });

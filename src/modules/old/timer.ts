@@ -6,7 +6,7 @@ import { sendMessage } from './util';
 
 
 
-export default class Timer {
+class Timer {
 
 
     #id: string;

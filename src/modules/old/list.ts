@@ -6,7 +6,7 @@ import { sendMessage } from "./util";
 
 
 
-export default class List {
+class List {
 
     #id: string;
     #list: ListEntry[];

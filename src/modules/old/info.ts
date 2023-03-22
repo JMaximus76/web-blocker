@@ -9,7 +9,7 @@ import type { ListEntry, Mode, StorageInfo, StorageTimer } from "./types";
 
 
 
-export default class Info {
+class Info {
 
     static async registerNewList(name: string, mode: Mode, ref: InfoList): Promise<Info> {
         const info = new Info( {name: name, mode: mode, active: false, locked: false, useTimer: false}, Info.makeSaveFunc(ref) );

@@ -7,7 +7,7 @@ import { sendMessage, type Message } from "../util";
 
 
 
-export default class InfoList {
+class InfoList {
 
 
     #activeMode: Mode;
