@@ -19,6 +19,10 @@ type StorageMap = {
     activeTimers: ActiveTimers;
 }
 
+// export type ItemEdit = {
+//     modify: () => void;
+// }
+
 
 export default class ItemServer {
 
@@ -29,35 +33,37 @@ export default class ItemServer {
     }
 
     #storage = new Storage();
-    #svelte: (() => void) | null = null;
+    //#svelte: ItemEdit | null = null;
 
 
     async get<T extends keyof StorageMap>(key: T): Promise<StorageMap[T]> {
         const item = await this.#storage.get<StorageMap[T]>(key);
         if (item[0] === undefined) throw new Error(`ItemServer: got undefined when getting ${key}`);
 
-        if (this.#svelte === null) return item[0];
-        return this.#svelteProxy(item[0], this.#svelte);
+        //if (this.#svelte !== null) return this.#svelteProxy(item[0], this.#svelte.modify);
+        return item[0];
+        
     }
 
-    startListening(set: () => void) {
-        this.#svelte = set;
+
+
+
+    startListening() {
+        //this.#svelte = s;
         return this.#storage.startListening();
     }
 
 
-    
-
-
-    #svelteProxy<T extends StorageMap[keyof StorageMap]>(obj: T, set: () => void) {
-        return new Proxy(obj, {
-            set: (target, prop, value) => {
-                Reflect.set(target, prop, value);
-                set();
-                return true;
-            }
-        });
-    }
+    // #svelteProxy<T extends StorageMap[keyof StorageMap]>(obj: T, set: () => void) {
+    //     return new Proxy(obj, {
+    //         set: (target, prop, value) => {
+    //             Reflect.set(target, prop, value);
+    //             console.log("ItemServer set");
+    //             set();
+    //             return true;
+    //         }
+    //     });
+    // }
 
     
 }

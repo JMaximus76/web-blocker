@@ -2,7 +2,7 @@
 
 <script lang="ts">
     import { onMount } from "svelte";
-    import { popupPageStore } from "../../modules/stores/popupState";
+    import { popupPageStore } from "../../modules/stores/popupStateStores";
     import TextButton from "../components/TextButton.svelte";
 
     

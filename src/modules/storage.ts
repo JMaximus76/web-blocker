@@ -10,22 +10,11 @@ import { jsonCopy, sendMessage, type Data, type Id, type Message } from './util'
 export default class Storage {
 
     // should work like a singleton so that across all instances of storage they all share the same cache
-    static #cache: Record<string, object | undefined> = new Proxy({}, {
-        set: (t, p, v, r) => {
-            Reflect.set(t, p, v, r);
-            console.table(t);
-            return true;
-        }
-    });
+    // should be using a map here but i'm lazy and this works so prob wont' change it
+    static #cache: Record<string, object | undefined> = {};
+    
+    
 
-
-
-    // WON"T WORK BECAUSE listening aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    // private constructor() {};
-    // static #self: Storage;
-    // public static get Instance() {
-    //     return this.#self || (this.#self = new this());
-    // }
 
     /** Gets keys from cache or local storage.
      *  If key does not exist in either location it throws an error.
@@ -163,7 +152,6 @@ export default class Storage {
                 Reflect.set(target, prop, value);
                 browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
                 sendMessage("storage", "modify", { key, value: target });
-                console.log("modifying object");
                 return true;
             }
         })

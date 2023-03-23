@@ -1,7 +1,7 @@
-import { readable, type Readable } from "svelte/store";
+import { writable, type Readable } from "svelte/store";
 import ItemServer, { type RuntimeSettings } from "../itemServer";
 import { buildList, type List } from "../listComponets";
-import ListServer, { type SvelteEdit } from "../listServer";
+import ListServer, { type ListEdit } from "../listServer";
 
 
 
@@ -25,7 +25,6 @@ function createStorageStore(): Readable<Storage> {
             const entrys = await listServer.getId("entrys", info.id);
             const timer = await listServer.getId("timer", info.id);
             storage.lists[info.id] = buildList(info, entrys, timer);
-
         }
         const rts = await itemServer.get("runtimeSettings");
         storage.runtimeSettings = rts;
@@ -45,29 +44,32 @@ function createStorageStore(): Readable<Storage> {
         lists: {}
     };
 
-    return readable(storage, function start(set) {
+    return writable(storage, function start(set) {
         
+        // const doSet = () => {
+        //     //set(storage);
+        // };
 
-        const listEdit: SvelteEdit = {
+        const listEdit: ListEdit = {
             add: (id: string, list: Promise<List>) => {
                 list.then((l) => storage.lists[id] = l);
-                set(storage);
+
             },
 
             delete: (id: string) => {
                 delete storage.lists[id];
-                set(storage);
+
             },
+        };
 
-            modify: () => {
-                set(storage);
-            }
-        }
+        // const itemEdit: ItemEdit = {
+        //     modify: doSet,
+        // };
 
-        const doSet = () => set(storage);
+        
 
         const stopListeningList = listServer.startListening(listEdit);
-        const stopListeningItem = itemServer.startListening(doSet);
+        const stopListeningItem = itemServer.startListening();
 
 
 

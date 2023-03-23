@@ -14,10 +14,9 @@ type RequestMap = {
     timer: Timer;
 }
 
-export type SvelteEdit = {
+export type ListEdit = {
     add: (id: string, list: Promise<List>) => void;
     delete: (id: string) => void;
-    modify: () => void;
 }
 
 
@@ -33,15 +32,14 @@ export default class ListServer {
 
     #storage = new Storage();
     
-
     #record: ListRecord = [];
-    #svelte: SvelteEdit | null = null;
+    #svelte: ListEdit | null = null;
 
 
     /** 
      * The svelte seter for keeping in sync with ui 
      */
-    startListening(s: SvelteEdit) {
+    startListening(s: ListEdit) {
         this.#svelte = s;
         return this.#storage.startListening();
     }
@@ -164,7 +162,7 @@ export default class ListServer {
         const items = await this.#storage.get<RequestMap[T]>(infos.map((info) => this.#requestId(type, info.id)));
         return items.map((o) => {
             if (o === undefined) throw new Error(`listServer got undefined when getting ${type}`);
-            if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
+            //if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
             return o;
         });
     }
@@ -179,7 +177,7 @@ export default class ListServer {
         const item = await this.#storage.get<RequestMap[T]>(id);
         if (item[0] === undefined) throw new Error(`listServer got undefined when getting id ${id}`);
 
-        if (this.#svelte !== null) return this.#svelteProxy(item[0], this.#svelte.modify);
+        //if (this.#svelte !== null) return this.#svelteProxy(item[0], this.#svelte.modify);
         return item[0];
     }
 
@@ -192,7 +190,7 @@ export default class ListServer {
         const items = await this.#storage.get<RequestMap[T]>(ids);
         return items.map((o) => {
             if (o === undefined) throw new Error(`listServer got undefined when getting id ${ids}`);
-            if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
+            //if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
             return o;
         });
     }
@@ -212,15 +210,16 @@ export default class ListServer {
      * Wraps outgoing objects in a svelte proxy if this.#svelte is set.
      * Sets a "set" trap that updates the ui.
      */
-    #svelteProxy<T extends object>(obj: T, set: () => void) {
-        return new Proxy(obj, {
-            set: (target, prop, value) => {
-                Reflect.set(target, prop, value);
-                set();
-                return true;
-            }
-        });
-    }
+    // #svelteProxy<T extends object>(obj: T, set: () => void) {
+    //     return new Proxy(obj, {
+    //         set: (target, prop, value) => {
+    //             Reflect.set(target, prop, value);
+    //             console.log("listServer set")
+    //             set();
+    //             return true;
+    //         }
+    //     });
+    // }
 
 
 

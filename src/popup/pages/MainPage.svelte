@@ -1,7 +1,7 @@
 <script lang="ts">
     import TextButton from "../components/TextButton.svelte";
-    import { storageStore } from "../../modules/stores/storage";
-    import { popupPageStore } from "../../modules/stores/popupState";
+    import { storageStore } from "../../modules/stores/storageStores";
+    import { popupPageStore } from "../../modules/stores/popupStateStores";
     import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
 

@@ -6,7 +6,7 @@
     import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
     import type { EntryMode, List } from "../../modules/listComponets";
-    import { addEntryPopupStore } from "../../modules/stores/popupState";
+    import { addEntryPopupStore } from "../../modules/stores/popupStateStores";
 
 
     let url: string;

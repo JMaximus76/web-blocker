@@ -2,18 +2,11 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./pages/blocks/Header.svelte";
-    import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupState";
+    import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupStateStores";
     import { fly } from "svelte/transition";
-
     import AddEntryPopup from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
-    import { storageStore } from "../modules/stores/storage";
-
-
-  
-
-    
-
+    import { storageStore } from "../modules/stores/storageStores";
 
 
     const transitionTime = 200;
@@ -80,7 +73,6 @@
     }
 
     .blur {
-        
         filter: blur(20px);
     }
 
