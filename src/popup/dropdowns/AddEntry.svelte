@@ -5,29 +5,23 @@
     import ClipPreview from "./blocks/ClipPreview.svelte";
     import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
-    import type { EntryMode, Info } from "../../modules/listComponets";
+    import type { EntryMode, List } from "../../modules/listComponets";
     import { addEntryPopupStore } from "../../modules/stores/popupState";
-    import { listStore } from "../../modules/stores/server";
-    import EntryControler from "../../modules/entryControler";
-    import { handelError } from "../../modules/util";
-    
+
 
     let url: string;
     let mode: EntryMode;
-    let isValid: boolean;
+    let isValid: boolean = false;
 
     // should work but it might be null ?? but it also should be an info.
-    let info: Info = $addEntryPopupStore.info as Info;
+    let list: List = $addEntryPopupStore.list as List;
 
-    let addButtonTitle = `Add new entry to ${info.name}`;
+    let addButtonTitle = `Add new entry to ${list.info.name}`;
 
     function addEntry() {
         if (isValid) {
-            $listStore.getId("entrys", info.id).then((item) => {
-                const entrys = new EntryControler(item);
-                entrys.addEntry(mode, url);
-                addEntryPopupStore.close();
-            }).catch(handelError);
+            list.entrys.addEntry(mode, url);
+            addEntryPopupStore.close();
         }
     }
 
@@ -40,40 +34,36 @@
 
 <button on:click={addEntryPopupStore.close} transition:fade={{duration: 200}} id="close"></button>
 
-{#if info === undefined}
-    <div id="error">
-        <h1>ERROR</h1>
-    </div>
-{:else}
 
 
-    <div transition:fly={{y: -400, duration: 300}} id="main">
-        <button on:click={addEntryPopupStore.close} id="exit">
-            Close
-        </button>
 
-        <h1>Add List Entry:</h1>
-        <h2>{info.name}</h2>
+<div transition:fly={{y: -400, duration: 300}} id="main">
+    <button on:click={addEntryPopupStore.close} id="exit">
+        Close
+    </button>
 
-        
+    <h1>Add List Entry:</h1>
+    <h2>{list.info.name}</h2>
 
-        <div id="input">
-            <InputUrl bind:isValid bind:value={url}/>
-        </div>
+    
 
-        <div id="mode">
-            <ClipPreview bind:mode url={url}/>
-        </div>
-
-        
-
-        <div id="add" title={addButtonTitle  }>
-            <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
-        </div>
+    <div id="input">
+        <InputUrl bind:isValid bind:value={url}/>
     </div>
 
+    <div id="mode">
+        <ClipPreview bind:mode url={url}/>
+    </div>
 
-{/if}
+    
+
+    <div id="add" title={addButtonTitle  }>
+        <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
+    </div>
+</div>
+
+
+
 
 
 
@@ -161,8 +151,6 @@
     }
    
 
-    #error {
-        color: red;
-    }
+   
 
 </style>

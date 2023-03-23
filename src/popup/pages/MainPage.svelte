@@ -1,8 +1,6 @@
 <script lang="ts">
-
-
     import TextButton from "../components/TextButton.svelte";
-    import { itemStore } from "../../modules/stores/server";
+    import { storageStore } from "../../modules/stores/storage";
     import { popupPageStore } from "../../modules/stores/popupState";
     import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
@@ -11,26 +9,30 @@
 
 
 
-    
-
     // if flickering use onMount and a default version of rts and await the promise then load it on.
 
 
-    function toggleIsActive<T extends {isActive: boolean;}>(runtimeSettings: T): void {
-        runtimeSettings.isActive = false;
+    function deactivate(): void {
+        $storageStore.runtimeSettings.isActive = false;
         popupPageStore.deactivated();
     }
+
+    function changeMode(): void {
+        $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
+    }
+
+
 
 </script>
 
 
 
 
-{#await $itemStore.get("runtimeSettings") then rts}
+{#if $storageStore.ready}
     <div id="main">
 
         <div id="lists">
-            {#if rts.mode === "block"}
+            {#if $storageStore.runtimeSettings.mode === "block"}
                 <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
             {:else}
                 <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
@@ -43,12 +45,12 @@
         </div> -->
 
 
-        <TextButton on:click={() => toggleIsActive(rts)} text={"Deactivate"} />
-        <TextButton on:click={() => rts.mode = rts.mode === "block"? "allow" : "block"} text={"Change Mode"} />
+        <TextButton on:click={deactivate} text={"Deactivate"} />
+        <TextButton on:click={changeMode} text={"Change Mode"} />
 
 
     </div>
-{/await}
+{/if}
 
 
     

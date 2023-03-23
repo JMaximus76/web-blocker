@@ -36,7 +36,7 @@ export type Data<T extends keyof M, U extends keyof M[T]> = M[T][U];
 
 
 export async function sendMessage<T extends keyof M, I extends keyof M[T], D extends M[T][I]>(target: T, id: I, data: D) {
-    await browser.runtime.sendMessage({ target, id, data }).catch(() => console.log(`Message Bounced: ${{ target, id, data }}`));
+    await browser.runtime.sendMessage({ target, id, data }).catch(() => {/*console.log(`Message Bounced:`, target, id, data)*/});
 }
 
 

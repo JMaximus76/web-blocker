@@ -41,3 +41,5 @@ export function buildList(info: Info, entrys: EntryList, timer: Timer) {
 }
 
 export type List = ReturnType<typeof buildList>;
+
+

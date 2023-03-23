@@ -1,12 +1,12 @@
 import type { Mode } from "./listComponets";
 import Storage from "./storage";
-import type { Subscriber } from "svelte/store";
+
 import browser from "webextension-polyfill";
 
 
 
 
-type RuntimeSettings = {
+export type RuntimeSettings = {
     isActive: boolean;
     mode: Mode;
 }
@@ -29,27 +29,31 @@ export default class ItemServer {
     }
 
     #storage = new Storage();
-    #svelte: Subscriber<ItemServer> | null = null;
+    #svelte: (() => void) | null = null;
 
 
     async get<T extends keyof StorageMap>(key: T): Promise<StorageMap[T]> {
         const item = await this.#storage.get<StorageMap[T]>(key);
         if (item[0] === undefined) throw new Error(`ItemServer: got undefined when getting ${key}`);
+
         if (this.#svelte === null) return item[0];
-        return this.#svelteProxy(item[0], this, this.#svelte);
+        return this.#svelteProxy(item[0], this.#svelte);
     }
 
-    startListening(set: Subscriber<ItemServer>) {
+    startListening(set: () => void) {
         this.#svelte = set;
         return this.#storage.startListening();
     }
 
 
-    #svelteProxy<T extends StorageMap[keyof StorageMap]>(obj: T, ref: ItemServer, set: Subscriber<ItemServer>) {
+    
+
+
+    #svelteProxy<T extends StorageMap[keyof StorageMap]>(obj: T, set: () => void) {
         return new Proxy(obj, {
             set: (target, prop, value) => {
                 Reflect.set(target, prop, value);
-                set(ref);
+                set();
                 return true;
             }
         });

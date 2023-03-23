@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
-import type { Info } from "../listComponets";
+import ItemServer from "../itemServer";
+import type { List } from "../listComponets";
 
 
 
@@ -10,7 +11,7 @@ type Page = "main" | "deactivated" | "list";
 
 type PopupPage = {
     page: Page | "blank";
-    infoId: string | null;
+    list: List | null;
     in: number;
     out: number;
 }
@@ -26,14 +27,15 @@ function createPopupPageStore() {
 
     const popupPage: PopupPage = {
         page: "blank",
-        infoId: null,
+        list: null,
         in: 0,
         out: 0,
     };
 
+    
 
     function goto(to: Page): void {
-        if (popupPage.page === "list") popupPage.infoId = null;
+        if (popupPage.page === "list") popupPage.list = null;
 
         if (popupPage.page === "blank") {
             popupPage.in = 0;
@@ -52,12 +54,18 @@ function createPopupPageStore() {
     const store = writable(popupPage);
 
 
+    const itemServer = new ItemServer();
+    itemServer.get("runtimeSettings").then((rts) => {
+        if (rts.isActive) {
+            goto("main")
+        } else {
+            goto("deactivated");
+        }
+    });
+
 
     return {
         subscribe: store.subscribe,
-
-
-
 
         main(): void {
             goto("main");
@@ -67,12 +75,10 @@ function createPopupPageStore() {
             goto("deactivated");
         },
 
-        list(infoId: string) {
-            popupPage.infoId = infoId;
+        list(list: List) {
+            popupPage.list = list;
             goto("list");
         }
-
-
 
     }
 
@@ -82,7 +88,7 @@ function createPopupPageStore() {
 
 type AddEntryPopupState = {
     active: boolean;
-    info: Info | null;
+    list: List | null;
 }
 
 export const addEntryPopupStore = createAddEntryPopupStore();
@@ -91,16 +97,16 @@ function createAddEntryPopupStore() {
 
     const state: AddEntryPopupState = {
         active: false,
-        info: null,
+        list: null,
     }
 
     const store = writable(state);
 
     return {
         subscribe: store.subscribe,
-        open: (info: Info) => {
+        open: (list: List) => {
             state.active = true;
-            state.info = info;
+            state.list = list;
             store.set(state);
         },
 

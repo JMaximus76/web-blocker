@@ -10,7 +10,13 @@ import { jsonCopy, sendMessage, type Data, type Id, type Message } from './util'
 export default class Storage {
 
     // should work like a singleton so that across all instances of storage they all share the same cache
-    static #cache: Record<string, object | undefined> = {};
+    static #cache: Record<string, object | undefined> = new Proxy({}, {
+        set: (t, p, v, r) => {
+            Reflect.set(t, p, v, r);
+            console.table(t);
+            return true;
+        }
+    });
 
 
 
@@ -51,11 +57,11 @@ export default class Storage {
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {
         const item = await browser.storage.local.get(key);
-        if (typeof item !== "object" || typeof item !== "undefined") {
+        if (typeof item[key] !== "object" || typeof item[key] === "undefined") {
             throw new Error("When getting item from local storage got something that was not an object or undefined");
         }
         Object.assign(Storage.#cache, item);
-        return item;
+        return item[key];
     }
 
 
@@ -116,7 +122,6 @@ export default class Storage {
         if (message.target !== "storage") return;
 
 
-
         switch(message.id as Id<"storage">) {
 
             case "modify": {
@@ -158,6 +163,7 @@ export default class Storage {
                 Reflect.set(target, prop, value);
                 browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
                 sendMessage("storage", "modify", { key, value: target });
+                console.log("modifying object");
                 return true;
             }
         })

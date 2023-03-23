@@ -1,7 +1,6 @@
 import { readable, writable } from "svelte/store";
 import browser from "webextension-polyfill";
-import type { Timer } from "../listComponets";
-import TimerControler from "../timerControler";
+import type TimerControler from "../timerControler";
 import { filterBlockPage, type Data, type Id, type Message } from "../util";
 
 
@@ -117,12 +116,10 @@ function createTimerStore() {
 
     return {
         subscribe: store.subscribe,
-        addTimer: (timer: Timer) => {
-            const tc = new TimerControler(timer);
-
+        addTimer: (timer: TimerControler) => {
             timerRecord[timer.id] = {
-                active: tc.active,
-                timeLeft: tc.timeLeft,
+                active: timer.active,
+                timeLeft: timer.timeLeft,
             };
             store.set(timerView);
         }

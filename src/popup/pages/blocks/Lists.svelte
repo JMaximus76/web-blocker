@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Mode } from "../../../modules/listComponets";
-    import { listStore } from "../../../modules/stores/server";
+    import { storageStore } from "../../../modules/stores/storage";
     
 
     
@@ -9,23 +9,23 @@
 
     export let mode: Mode;
 
-    $: promiseList = (mode === "block")? $listStore.request("info", {mode: "block"}) : $listStore.request("info", {mode: "block"});
+    $: lists = Object.values($storageStore.lists).filter((list) => list.info.mode === mode);
     
 
 </script>
 
-{#await promiseList then list}
-    <div>
-        {#if list.length === 0}
 
-            <p>No {mode} lists</p>
-            
-        {:else}
+<div>
+    {#if lists.length === 0}
 
-            {#each list as infos (infos.id)}
-                <ListBlock info={infos} />
-            {/each}
+        <p>No {mode} lists</p>
+        
+    {:else}
 
-        {/if}
-    </div>
-{/await}
+        {#each lists as list (list.info.id)}
+            <ListBlock list={list} />
+        {/each}
+
+    {/if}
+</div>
+

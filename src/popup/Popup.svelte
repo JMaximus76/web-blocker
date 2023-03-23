@@ -4,22 +4,14 @@
     import Header from "./pages/blocks/Header.svelte";
     import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupState";
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+
     import AddEntryPopup from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
-    import { itemStore } from "../modules/stores/server";
+    import { storageStore } from "../modules/stores/storage";
 
 
-    let loading: Promise<void>;
-    onMount(() => {
-        loading = $itemStore.get("runtimeSettings").then((rts) => {
-            if (rts.isActive) {
-                popupPageStore.main();
-            } else  {
-                popupPageStore.deactivated();
-            }
-        });
-    })
+  
+
     
 
 
@@ -35,7 +27,7 @@
 <div class:blur={$addEntryPopupStore.active} id="popup">
     <Header />
 
-    {#await loading then}
+    {#if $storageStore.ready }
         {#if $popupPageStore.page === "main"}
             <div id="main" 
             in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
@@ -59,7 +51,7 @@
                 <EditList />
             </div>
         {/if}
-    {/await}
+    {/if}
 
     
     
