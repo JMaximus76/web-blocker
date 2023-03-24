@@ -28,7 +28,7 @@ export default class Storage {
             const item = Object.hasOwn(Storage.#cache, key) ? Storage.#cache[key] : await this.#getLocalStorage(key);
 
             if (typeof item === "object") {
-                items.push(this.#makeProxy(key, item));
+                items.push(this.#proxy(key, item));
             } else {
                 items.push(item);
             }
@@ -38,14 +38,10 @@ export default class Storage {
     }
 
 
-    async getKey<T extends object>(key: string, arrayProxy: boolean = false) {
+    async getKey<T extends object>(key: string) {
         const item = Object.hasOwn(Storage.#cache, key) ? Storage.#cache[key] : await this.#getLocalStorage(key);
         if (typeof item === "object") {
-            if (arrayProxy) {
-                return this.#makeArrayProxy(key, item) as T;
-            } else {
-                return this.#makeProxy(key, item) as T;
-            }
+            return this.#proxy(key, item) as T;
         } else {
             return item;
         }
@@ -105,34 +101,39 @@ export default class Storage {
         return () => browser.runtime.onMessage.removeListener(onMessage);
     }
 
-    /** 
-     * Makes a proxy object that will update the local storage when a property is changed.
-     */
-    #makeProxy<T extends object>(key: string, obj: T): T {
-        return new Proxy(obj, {
-            set: (target, prop, value) => {
-                Reflect.set(target, prop, value);
-                browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
-                sendMessage("storage", "update", { key, value: target });
-                return true;
-            }
-        })
-    }
+    
 
-    /**
-     * A special version of makeProxy that only updates when the length of an array changes.
-     */
-    #makeArrayProxy<T extends object>(key: string, obj: T): T {
-        return new Proxy(obj, {
-            set: (target, prop, value) => {
-                Reflect.set(target, prop, value);
-                if (prop === "length") {
-                    browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
-                    sendMessage("storage", "update", { key, value: target });
+
+
+
+    #proxy<T extends object>(key: string, obj: T): T {
+        const doUpdates = (target: T) => {
+            browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
+            sendMessage("storage", "update", { key, value: target });
+            sendMessage("background", "update", null);
+        }
+
+        if (Array.isArray(obj)) {
+
+            return new Proxy(obj, {
+                set: (target, prop, value) => {
+                    Reflect.set(target, prop, value);
+                    if (prop === "length") doUpdates(target);
+                    return true;
                 }
-                return true;
-            }
-        })
+            });
+
+        } else {
+
+            return new Proxy(obj, {
+                set: (target, prop, value) => {
+                    Reflect.set(target, prop, value);
+                    doUpdates(target);
+                    return true;
+                }
+            });
+            
+        }
     }
 
 

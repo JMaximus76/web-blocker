@@ -43,7 +43,7 @@ export default class ListServer {
      * Syncs the internal record to the one in local storage.
      */
     async sync(): Promise<void> {
-        const item = await this.#storage.getKey<ListRecord>("record", true);
+        const item = await this.#storage.getKey<ListRecord>("record");
         if (item === undefined) throw new Error("When syncing a listServer got undefined for the record");
         this.#record = item;
     }
@@ -53,7 +53,7 @@ export default class ListServer {
         const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
         if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
 
-        const entrys = await this.#storage.getKey<EntryList>(ListServer.entrysId(id));
+        const entrys = await this.#storage.getKey<EntryList>(ListServer.entryListId(id));
         if (entrys === undefined) throw new Error("ListServer: When building list from storage got undefiend entrys");
 
         const timer = await this.#storage.getKey<Timer>(ListServer.timerId(id));
@@ -94,7 +94,7 @@ export default class ListServer {
 
         this.#storage.add({
             [ListServer.infoId(id)]: info,
-            [ListServer.entrysId(id)]: entrys,
+            [ListServer.entryListId(id)]: entrys,
             [ListServer.timerId(id)]: timer
         });
 
@@ -106,7 +106,7 @@ export default class ListServer {
      */
     deleteList(id: string): void {
         this.#record.splice(this.#record.indexOf(id), 1);
-        this.#storage.delete([ListServer.infoId(id), ListServer.entrysId(id), ListServer.timerId(id)]);
+        this.#storage.delete([ListServer.infoId(id), ListServer.entryListId(id), ListServer.timerId(id)]);
     }
 
 
@@ -130,12 +130,18 @@ export default class ListServer {
      * Takes a url and a list of infos and returns a list of all infos that have a list that matches the url.
      */
     async #entrysFilter(url: string, infos: Info[]) {
-        return infos.filter(async (info) => {
-            const item = await this.#storage.getKey<EntryList>(ListServer.entrysId(info.id));
-            if (item === undefined) throw new Error("listServer got undefined when filtering entrys");
-            const entryList = new EntryControler(item, true);
-            return entryList.check(url);
-        });
+        const entryControler = new EntryControler();
+
+        const filtered: Info[] = [];
+
+        for (const info of infos) {
+            const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
+            if (entryList === undefined) throw new Error("listServer got undefined when filtering entrys");
+            entryControler.setList(entryList);
+            if (entryControler.check(url)) filtered.push(info);
+        }
+
+        return filtered;
     }
 
     /**
@@ -183,7 +189,7 @@ export default class ListServer {
         return `info-${id}`;
     }
 
-    static entrysId(id: string): string {
+    static entryListId(id: string): string {
         return `list-${id}`;
     }
 
@@ -195,7 +201,7 @@ export default class ListServer {
     #requestId<T extends keyof RequestMap>(type: T, id: string): string {
         switch(type) {
             case "info": return ListServer.infoId(id);
-            case "entrys": return ListServer.entrysId(id);
+            case "entrys": return ListServer.entryListId(id);
             case "timer": return ListServer.timerId(id);
             default: throw new Error("listServer got invalid request type");
         }

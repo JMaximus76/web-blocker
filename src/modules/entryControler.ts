@@ -1,50 +1,49 @@
 import type { Entry, EntryList } from "./listComponets";
-import { jsonCopy } from "./util";
+
 
 type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
 export default class EntryControler {
 
 
-    #list: EntryList | readonly Entry[];
-    #record: Record<string, boolean> = {};
+
+    // if someone ever forgets to set a list all the methods on this calss with me weird.
+    // they'll still work but not like expected and no errors will be thrown.
+    // however if I do want errors to be thrown it will take to much time because all
+    // the methods on this class are called A LOT
+    #list: EntryList = [];
+
 
     // DON"T LOCK and also make sawpable list
-    constructor(list: EntryList, lock: boolean = false) {
-        this.#list = list;
-        if (lock) this.#list = Object.freeze(jsonCopy(this.#list));
+    constructor(list?: EntryList) {
+        if (list !== undefined) {
+            this.#list = list;
+        }
     }
 
-    
+    setList(list: EntryList) {
+        this.#list = list;
+    }
 
 
     check(url: string): boolean {
-        let isMatch = false;
-
         for (const entry of this.#list) {
             const clipedURL = EntryControler.clipURL(entry.mode, url);
-            // I don't think we care if its null becuase it will just return false (null for things like about:blank)
-            // extension will not support blocking any url except for http and https (because I'm lazy)
             if (clipedURL === entry.value) {
-                isMatch = true;
-                break;
+                return true;
             };
         }
-        
-        if (Object.isFrozen(this.#list)) this.#record[url] = isMatch;
-        return isMatch;
+        return false;
     }
 
 
     addEntry(mode: EntryMode, url: string): void {
-        if (Object.isFrozen(this.#list)) throw new Error(`addEntry() was called on a locked list`);
-        (this.#list as EntryList).push({ mode, value: url });
+        this.#list.push({ mode, value: url });
     }
 
     removeEntry(index: number): void {
-        if (Object.isFrozen(this.#list)) throw new Error(`removeEntry() was called on a locked list`);
         if (index < 0 || index >= this.#list.length) throw new Error(`removeEntry() was given an index that was out of bounds`);
-        (this.#list as EntryList).splice(index, 1);
+        this.#list.splice(index, 1);
     }
 
     getIndex(entry: Entry): number {

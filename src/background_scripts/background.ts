@@ -15,9 +15,7 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 // use browser.webRequest instead of navigate
 // set up message link for storage
-// better svelte proxy usage when applying
-// better request functions for listServer (they suck rn)
-// *make a "svelte data" class that holds all list components and settings on start and then listends for changes (This might need to happen)
+
 
 
 
@@ -98,7 +96,7 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
     const tabs = await browser.tabs.query({ active: true });
     if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
 
-    //console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
+    console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
 
 
     let lowestTime = Number.POSITIVE_INFINITY;
@@ -136,10 +134,10 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
 
     function decide(doBlocking: boolean, urlIsBlockedPage: boolean, url: string, tabId: number) {
         if (doBlocking && !urlIsBlockedPage) {
-            //console.log(`BLOCKING a page with url of ${url}`);
+            console.log(`BLOCKING a page with url of ${url}`);
             browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
         } else if (!doBlocking && urlIsBlockedPage) {
-            //console.log(`UNBLOCKING page with url of ${url}`);
+            console.log(`UNBLOCKING page with url of ${url}`);
             browser.tabs.update(tabId, { url: url }).catch(handelError);
         }
     }
@@ -159,16 +157,14 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
     const runtimeSettings = await itemServer.get("runtimeSettings")
     if (!runtimeSettings.isActive) return;
 
-    
 
-
-    //console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
+    console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
     const infos = await listServer.request("info", {active: true, mode: runtimeSettings.mode, match: url});
+    console.log(infos);
+
 
     let doBlocking = runtimeSettings.mode === "allow";
-
-    
 
     for (const info of infos) {
         if (info.useTimer) {
@@ -211,7 +207,9 @@ async function checkAll(servers: Servers) {
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     if (navigate.frameId !== 0) return;
-    //console.log("doing on navigate");
+    // on chrome it frequently generates onNavigate events for tabIds with huge numbers then again on the correct tabId
+    // if (navigate.tabId > 5000000) return;
+    console.log("doing on navigate");
 
     async function navigated() {
         await check(navigate.url, navigate.tabId, await makeServers()).catch(handelError);
@@ -226,11 +224,11 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
 
 browser.tabs.onActivated.addListener((activeInfo) => {
-    //console.log("on activated");
+    console.log("on activated");
 
     async function activated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
-            //console.log("doing on activated");
+            console.log("doing on activated");
             const servers = await makeServers();
 
             await manageTimers(servers);
@@ -246,7 +244,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 // would filter this but chrome does not have support for that :/
 browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-    //console.log("on updated");
+    console.log("on updated");
     
     async function updated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
@@ -273,7 +271,7 @@ browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
 
 
 browser.alarms.onAlarm.addListener((alarm) => {
-    //console.log("timer went off");
+    console.log("timer went off");
 
     async function alarmed() {
         const servers = await makeServers();

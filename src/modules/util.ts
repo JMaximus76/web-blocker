@@ -12,7 +12,7 @@ type M = {
     };
 
     background: {
-        update: undefined;
+        update: null;
     };
 
     timerStore: {
