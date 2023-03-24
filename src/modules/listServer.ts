@@ -1,6 +1,6 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
-import { buildList, type EntryList, type Info, type List, type Mode, type Timer } from "./listComponets";
+import { buildList, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
 import browser from "webextension-polyfill";
 import EntryControler from "./entryControler";
 
@@ -14,10 +14,6 @@ type RequestMap = {
     timer: Timer;
 }
 
-export type ListEdit = {
-    add: (id: string, list: Promise<List>) => void;
-    delete: (id: string) => void;
-}
 
 
 export default class ListServer {
@@ -31,16 +27,14 @@ export default class ListServer {
 
 
     #storage = new Storage();
-    
     #record: ListRecord = [];
-    #svelte: ListEdit | null = null;
+
 
 
     /** 
      * The svelte seter for keeping in sync with ui 
      */
-    startListening(s: ListEdit) {
-        this.#svelte = s;
+    startListening() {
         return this.#storage.startListening();
     }
     
@@ -49,25 +43,24 @@ export default class ListServer {
      * Syncs the internal record to the one in local storage.
      */
     async sync(): Promise<void> {
-        // should change this probably
-        const item = await this.#storage.get<ListRecord>("record");
-        if (item[0] === undefined) throw new Error("When syncing a listServer got undefined for the record");
-        this.#record = item[0];
+        const item = await this.#storage.getKey<ListRecord>("record", true);
+        if (item === undefined) throw new Error("When syncing a listServer got undefined for the record");
+        this.#record = item;
     }
 
     
-    static async biuldListFromStorage(id: string, storage: Storage) {
-        const info = await storage.get<Info>(ListServer.infoId(id));
-        if (info[0] === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
+    async biuldListFromStorage(id: string) {
+        const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
+        if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
 
-        const entrys = await storage.get<EntryList>(ListServer.entrysId(id));
-        if (entrys[0] === undefined) throw new Error("ListServer: When building list from storage got undefiend entrys");
+        const entrys = await this.#storage.getKey<EntryList>(ListServer.entrysId(id));
+        if (entrys === undefined) throw new Error("ListServer: When building list from storage got undefiend entrys");
 
-        const timer = await storage.get<Timer>(ListServer.timerId(id));
-        if (timer[0] === undefined) throw new Error("ListServer: When building list from storage got undefiend timer");
+        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(id));
+        if (timer === undefined) throw new Error("ListServer: When building list from storage got undefiend timer");
 
 
-        return buildList(info[0], entrys[0], timer[0]);
+        return buildList(info, entrys, timer);
     }
     
 
@@ -105,10 +98,6 @@ export default class ListServer {
             [ListServer.timerId(id)]: timer
         });
 
-        if (this.#svelte !== null) {
-            this.#svelte.add(id, ListServer.biuldListFromStorage(id, this.#storage));
-        }
-
         return id;
     }
 
@@ -116,9 +105,8 @@ export default class ListServer {
      * Deletes a list and all of its components 
      */
     deleteList(id: string): void {
-        this.#record = this.#record.filter((i) => i !== id);
+        this.#record.splice(this.#record.indexOf(id), 1);
         this.#storage.delete([ListServer.infoId(id), ListServer.entrysId(id), ListServer.timerId(id)]);
-        if (this.#svelte !== null) this.#svelte.delete(id);
     }
 
 
@@ -126,7 +114,7 @@ export default class ListServer {
      * Takes a set of filter parameters and returns a list of all matching infos.
      */
     async #infoFilter({active, mode, useTimer}: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Info[]> {
-        const items = await this.#storage.get<Info>(this.#record.map((id) => ListServer.infoId(id)));
+        const items = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
         
         return items.filter((item) => {
             if (item === undefined) throw new Error("listServer got undefined when filtering infos");
@@ -143,12 +131,11 @@ export default class ListServer {
      */
     async #entrysFilter(url: string, infos: Info[]) {
         return infos.filter(async (info) => {
-            const item = (await this.#storage.get<EntryList>(ListServer.entrysId(info.id)))[0];
+            const item = await this.#storage.getKey<EntryList>(ListServer.entrysId(info.id));
             if (item === undefined) throw new Error("listServer got undefined when filtering entrys");
             const entryList = new EntryControler(item, true);
             return entryList.check(url);
         });
-
     }
 
     /**
@@ -159,10 +146,9 @@ export default class ListServer {
         if (details.match !== undefined) {
             infos = await this.#entrysFilter(details.match, infos);
         }
-        const items = await this.#storage.get<RequestMap[T]>(infos.map((info) => this.#requestId(type, info.id)));
+        const items = await this.#storage.getKeys<RequestMap[T]>(infos.map((info) => this.#requestId(type, info.id)));
         return items.map((o) => {
             if (o === undefined) throw new Error(`listServer got undefined when getting ${type}`);
-            //if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
             return o;
         });
     }
@@ -174,11 +160,9 @@ export default class ListServer {
      */
     async getId<T extends keyof RequestMap>(type: T, id: string): Promise<RequestMap[T]> {
         id = this.#requestId(type, id);
-        const item = await this.#storage.get<RequestMap[T]>(id);
-        if (item[0] === undefined) throw new Error(`listServer got undefined when getting id ${id}`);
-
-        //if (this.#svelte !== null) return this.#svelteProxy(item[0], this.#svelte.modify);
-        return item[0];
+        const item = await this.#storage.getKey<RequestMap[T]>(id);
+        if (item === undefined) throw new Error(`listServer got undefined when getting id ${id}`);
+        return item;
     }
 
     /**
@@ -187,40 +171,12 @@ export default class ListServer {
     async getIds<T extends keyof RequestMap>(type: T, ids: string[]): Promise<Array<RequestMap[T]>> {
         ids = ids.map((id) => this.#requestId(type, id));
 
-        const items = await this.#storage.get<RequestMap[T]>(ids);
+        const items = await this.#storage.getKeys<RequestMap[T]>(ids);
         return items.map((o) => {
             if (o === undefined) throw new Error(`listServer got undefined when getting id ${ids}`);
-            //if (this.#svelte !== null) return this.#svelteProxy(o, this.#svelte.modify);
             return o;
         });
     }
-
-
-    // async testbyIds<T extends keyof RequestMap, U extends string | string[]>(type: T, ids: U): Promise<U extends string[] ? RequestMap[T][] : RequestMap[T]> {
-    //     if (Array.isArray(ids)) {
-    //         const test = ids;
-    //     }
-    // }
-
-
-
-    
-
-    /** 
-     * Wraps outgoing objects in a svelte proxy if this.#svelte is set.
-     * Sets a "set" trap that updates the ui.
-     */
-    // #svelteProxy<T extends object>(obj: T, set: () => void) {
-    //     return new Proxy(obj, {
-    //         set: (target, prop, value) => {
-    //             Reflect.set(target, prop, value);
-    //             console.log("listServer set")
-    //             set();
-    //             return true;
-    //         }
-    //     });
-    // }
-
 
 
     static infoId(id: string): string {

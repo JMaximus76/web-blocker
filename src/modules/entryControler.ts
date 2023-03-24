@@ -6,10 +6,10 @@ type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 export default class EntryControler {
 
 
-    //                        sad
     #list: EntryList | readonly Entry[];
     #record: Record<string, boolean> = {};
 
+    // DON"T LOCK and also make sawpable list
     constructor(list: EntryList, lock: boolean = false) {
         this.#list = list;
         if (lock) this.#list = Object.freeze(jsonCopy(this.#list));

@@ -8,9 +8,7 @@ import ListServer from "./listServer";
 
 type M = {
     storage: {
-        modify: { key: string, value: object };
-        add: { key: string, value: object };
-        delete: string;
+        update: { key: string, value: object };
     };
 
     background: {

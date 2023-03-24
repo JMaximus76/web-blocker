@@ -1,7 +1,7 @@
-import { writable, type Readable } from "svelte/store";
+import { writable } from "svelte/store";
 import ItemServer, { type RuntimeSettings } from "../itemServer";
 import { buildList, type List } from "../listComponets";
-import ListServer, { type ListEdit } from "../listServer";
+import ListServer from "../listServer";
 
 
 
@@ -15,7 +15,7 @@ type Storage = {
 
 export const storageStore = createStorageStore()
 
-function createStorageStore(): Readable<Storage> {
+function createStorageStore() {
 
     async function init() {
         await listServer.sync();
@@ -44,36 +44,9 @@ function createStorageStore(): Readable<Storage> {
         lists: {}
     };
 
-    return writable(storage, function start(set) {
-        
-        // const doSet = () => {
-        //     //set(storage);
-        // };
-
-        const listEdit: ListEdit = {
-            add: (id: string, list: Promise<List>) => {
-                list.then((l) => storage.lists[id] = l);
-
-            },
-
-            delete: (id: string) => {
-                delete storage.lists[id];
-
-            },
-        };
-
-        // const itemEdit: ItemEdit = {
-        //     modify: doSet,
-        // };
-
-        
-
-        const stopListeningList = listServer.startListening(listEdit);
+    const store = writable(storage, function start(set) {
+        const stopListeningList = listServer.startListening();
         const stopListeningItem = itemServer.startListening();
-
-
-
-
 
         init().then(() => set(storage)).catch((e) => console.error(e));
         
@@ -85,41 +58,25 @@ function createStorageStore(): Readable<Storage> {
     });
 
 
+    return {
+        ...store,
+
+        addList(details?: Parameters<ListServer["registerList"]>[0]) {
+            const id = listServer.registerList(details);
+            listServer.biuldListFromStorage(id).then((list) => {
+                storage.lists[id] = list;
+                store.set(storage);
+            });
+        },
+
+        deleteList(id: string) {
+            listServer.deleteList(id);
+            delete storage.lists[id];
+            store.set(storage);
+        }
+    }
+
+
 }
 
 
-
-
-// export const listStore = createListStore();
-
-// function createListStore(): Readable<ListServer> {
-
-//     const server = new ListServer();
-//     server.sync().catch(handelError);
-
-//     return readable(server, function start(set) {
-//         const stopListening = server.startListening(set);
-
-//         return function stop() {
-//             stopListening();
-//         }
-//     });
-// }
-
-
-
-
-// export const itemStore = createItemStore();
-
-// function createItemStore(): Readable<ItemServer> {
-
-//     const server = new ItemServer();
-
-//     return readable(server, function start(set) {
-//         const stopListening = server.startListening(set);
-
-//         return function stop() {
-//             stopListening();
-//         }
-//     });
-// }

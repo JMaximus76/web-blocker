@@ -310,12 +310,6 @@ browser.runtime.onMessage.addListener((message) => {
 
 
 
-// browser.storage.onChanged.addListener((changes) => {
-//     console.table(changes);
-
-// });
-
-
 
 
 

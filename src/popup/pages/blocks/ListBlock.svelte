@@ -6,7 +6,6 @@
     import { currentUrlStore, timerStore } from "../../../modules/stores/dataStores";
     import { addEntryPopupStore, popupPageStore } from "../../../modules/stores/popupStateStores";
     import type { Options } from "../../popupTypes";
-    //import { storageStore } from "../../../modules/stores/storageStores";
 
 
 
@@ -22,9 +21,6 @@
     function toggleActive(): void {
         if (list.info.locked) return;
         list.info.active = !list.info.active;
-
-
-        //$storageStore.lists[list.info.id].info.active = !$storageStore.lists[list.info.id].info.active
     }
 
     onMount(() => {
