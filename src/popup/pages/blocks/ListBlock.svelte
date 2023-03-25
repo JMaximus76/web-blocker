@@ -1,40 +1,32 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import type Info from "../../../modules/info";
-    import List from "../../../modules/list";
-    import { addEntryPopupStore, currentUrlStore, popupPageStore, timerDisplayStore } from "../../../modules/store";
-    import type { Options } from "../../../modules/types";
-    import { handelError } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
-  
+    import type { List } from "../../../modules/listComponets";
+    import EntryControler from "../../../modules/entryControler";
+    import { currentUrlStore, timerStore } from "../../../modules/stores/dataStores";
+    import { addEntryPopupStore, popupPageStore } from "../../../modules/stores/popupStateStores";
+    import type { Options } from "../../popupTypes";
 
 
 
 
-    export let info: Info;
+    export let list: List;
 
-    let match: boolean = false;
+    let match: boolean = list.entrys.check($currentUrlStore);
 
-    $: matchTitle = `Match Found: This list matched with ${List.clipURL("domain", $currentUrlStore)}`;
+    $: matchTitle = `Match Found: This list matched with ${EntryControler.clipURL("domain", $currentUrlStore)}`;
     const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
 
 
     function toggleActive(): void {
-        if (info.locked) return;
-        info.toggleActive();
+        if (list.info.locked) return;
+        list.info.active = !list.info.active;
     }
 
     onMount(() => {
-        if (info.useTimer) {
-            info.pullTimer().then((timer) => {
-                timerDisplayStore.addTimer(timer);
-            }).catch(handelError);
+        if (list.info.useTimer) {
+            timerStore.addTimer(list.timer);
         }
-        
-        info.pullList().then((list) => {
-            match = list.check($currentUrlStore);
-        }).catch(handelError);
-
     });
 
 
@@ -42,12 +34,12 @@
     const options: Options = {
         buttons: {
             "Add Entry": {
-                onClick: () => addEntryPopupStore.open(info.id),
+                onClick: () => addEntryPopupStore.open(list),
                 title: "Add a list entry"
             },
 
             "Edit List": {
-                onClick: () => popupPageStore.list(info.id),
+                onClick: () => popupPageStore.list(list),
                 title: "View List"
             }
         }
@@ -61,23 +53,23 @@
 
 <div class="main">
 
-    <OptionsBlock options={options} lineColor={(info.active) ? "var(--text)" : "var(--textFade"}>
-        <div class:active={info.active} class="infoButton">
-            <button class:locked={info.locked} on:click={toggleActive}>{info.name}</button>
+    <OptionsBlock options={options} lineColor={(list.info.active) ? "var(--text)" : "var(--textFade"}>
+        <div class:active={list.info.active} class="infoButton">
+            <button class:locked={list.info.locked} on:click={toggleActive}>{list.info.name}</button>
 
             <div class="spacer"></div>
 
 
-            {#if info.useTimer}
+            {#if list.info.useTimer}
                 <div class="timer">
-                    {$timerDisplayStore.get(info.timerId)}
+                    {$timerStore.get(list.info.id)}
                 </div>
             {/if}
 
 
             <div class="indicators">
                 <div class:invisible={!match} id="match" title={matchTitle}>M</div>
-                <div class:invisible={!info.locked} id="lock" title={lockedTitle}>L</div>
+                <div class:invisible={!list.info.locked} id="lock" title={lockedTitle}>L</div>
             </div>
 
         </div>

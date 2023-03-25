@@ -1,21 +1,24 @@
 <script lang="ts">
-
-
     import TextButton from "../components/TextButton.svelte";
-    import { infoListStore, popupPageStore, settingsStore } from "../../modules/store";
+    import { storageStore } from "../../modules/stores/storageStores";
+    import { popupPageStore } from "../../modules/stores/popupStateStores";
     import Lists from "./blocks/Lists.svelte";
     import { fly } from "svelte/transition";
 
 
 
 
-    function toggleActiveMode(): void {
-        $infoListStore.toggleActiveMode();
+
+    // if flickering use onMount and a default version of rts and await the promise then load it on.
+
+
+    function deactivate(): void {
+        $storageStore.runtimeSettings.isActive = false;
+        popupPageStore.deactivated();
     }
 
-    function toggleIsActive(): void {
-        popupPageStore.deactivated();
-        $settingsStore.toggleIsActive();
+    function changeMode(): void {
+        $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
     }
 
 
@@ -25,39 +28,29 @@
 
 
 
+{#if $storageStore.ready}
+    <div id="main">
 
-<div id="main">
-    
-    
-    
-    
+        <div id="lists">
+            {#if $storageStore.runtimeSettings.mode === "block"}
+                <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
+            {:else}
+                <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
+            {/if}
+        </div>
 
-    <div id="lists">
-        {#if $infoListStore.activeMode === "block"}
-            <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
-        {:else}
-            <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
-        {/if}
-        
-        
+        <!-- <div id="list-info">
+            <p>Total Lists: {$infoListStore.currentInfos.length}</p>
+            <p>Active Lists: {$infoListStore.activeInfos.length}</p>
+        </div> -->
+
+
+        <TextButton on:click={deactivate} text={"Deactivate"} />
+        <TextButton on:click={changeMode} text={"Change Mode"} />
+
+
     </div>
-
-    <div id="list-info">
-        <p>Total Lists: {$infoListStore.currentInfos.length}</p>
-        <p>Active Lists: {$infoListStore.activeInfos.length}</p>
-    </div>
-
-
-    <TextButton on:click={toggleIsActive} text={"Toggle Active"} />
-    <TextButton on:click={toggleActiveMode} text={"Change Mode"} />
-
-    
-
-
-    
-
-</div>
-
+{/if}
 
 
     
@@ -69,7 +62,7 @@
     }
 
 
-    #list-info {
+    /* #list-info {
         display: flex;
         flex-direction: row;
         
@@ -83,7 +76,7 @@
         display: inline-block;
         margin-right: 15px;
 
-    }
+    } */
 
     #main {
         background-color: transparent;

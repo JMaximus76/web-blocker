@@ -2,26 +2,11 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./pages/blocks/Header.svelte";
-    import { addEntryPopupStore, popupPageStore } from "../modules/store";
+    import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupStateStores";
     import { fly } from "svelte/transition";
-    import Settings from "../modules/settings";
-    import { onMount } from "svelte";
     import AddEntryPopup from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
-
-
-    let loading: Promise<void>;
-    onMount(() => {
-        loading = Settings.getSetting("isActive").then((isActive) => {
-            if (isActive) {
-                popupPageStore.main();
-            } else  {
-                popupPageStore.deactivated();
-            }
-        });
-    })
-    
-
+    import { storageStore } from "../modules/stores/storageStores";
 
 
     const transitionTime = 200;
@@ -35,7 +20,7 @@
 <div class:blur={$addEntryPopupStore.active} id="popup">
     <Header />
 
-    {#await loading then}
+    {#if $storageStore.ready }
         {#if $popupPageStore.page === "main"}
             <div id="main" 
             in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
@@ -59,7 +44,7 @@
                 <EditList />
             </div>
         {/if}
-    {/await}
+    {/if}
 
     
     
@@ -88,7 +73,6 @@
     }
 
     .blur {
-        
         filter: blur(20px);
     }
 

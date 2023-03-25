@@ -25,10 +25,9 @@ export default defineConfig({
   plugins: [
     svelte(),
     webExtension({
-      assets: "public",
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: "chrome",
+      browser: "firefox",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]
@@ -36,7 +35,7 @@ export default defineConfig({
   ],
 
   build: {
-    minify: true,
+    minify: false,
     sourcemap: true,
     
   }

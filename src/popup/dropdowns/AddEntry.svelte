@@ -1,49 +1,27 @@
 
 <script lang="ts">
-    import { onMount } from "svelte";
+
     import { fade, fly } from "svelte/transition";
-    import type Info from "../../modules/info";
-    import List from "../../modules/list";
-    import { addEntryPopupStore, infoListStore } from "../../modules/store";
-    import type { EntryMode } from "../../modules/types";
     import ClipPreview from "./blocks/ClipPreview.svelte";
     import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
-    
+    import type { EntryMode, List } from "../../modules/listComponets";
+    import { addEntryPopupStore } from "../../modules/stores/popupStateStores";
+
 
     let url: string;
     let mode: EntryMode;
-    let isValid: boolean;
+    let isValid: boolean = false;
 
-    let info: Info | undefined = undefined;
+    // should work but it might be null ?? but it also should be an info.
+    let list: List = $addEntryPopupStore.list as List;
 
-    $: {
-        const infoId = $addEntryPopupStore.infoId;
-        if (infoId === null) {
-            info = undefined
-        } else {
-            info = $infoListStore.getInfoWithId(infoId);
-        }
-    }
-
-    let addButtonTitle: string;
-
-
-    onMount(() => {
-        if (info !== undefined) {
-            addButtonTitle = `Add new entry to ${info.name}`;
-        }
-    });
-
+    let addButtonTitle = `Add new entry to ${list.info.name}`;
 
     function addEntry() {
-        if (info !== undefined && isValid) {
-            info.pullList().then((list) => {
-                list.addEntry(List.createEntry(mode, url));
-                return list.save();
-            }).then(() => {
-                addEntryPopupStore.close();
-            });
+        if (isValid) {
+            list.entrys.addEntry(mode, url);
+            addEntryPopupStore.close();
         }
     }
 
@@ -56,40 +34,36 @@
 
 <button on:click={addEntryPopupStore.close} transition:fade={{duration: 200}} id="close"></button>
 
-{#if info === undefined}
-    <div id="error">
-        <h1>ERROR</h1>
-    </div>
-{:else}
 
 
-    <div transition:fly={{y: -400, duration: 300}} id="main">
-        <button on:click={addEntryPopupStore.close} id="exit">
-            Close
-        </button>
 
-        <h1>Add List Entry:</h1>
-        <h2>{info.name}</h2>
+<div transition:fly={{y: -400, duration: 300}} id="main">
+    <button on:click={addEntryPopupStore.close} id="exit">
+        Close
+    </button>
 
-        
+    <h1>Add List Entry:</h1>
+    <h2>{list.info.name}</h2>
 
-        <div id="input">
-            <InputUrl bind:isValid bind:value={url}/>
-        </div>
+    
 
-        <div id="mode">
-            <ClipPreview bind:mode url={url}/>
-        </div>
-
-        
-
-        <div id="add" title={addButtonTitle  }>
-            <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
-        </div>
+    <div id="input">
+        <InputUrl bind:isValid bind:value={url}/>
     </div>
 
+    <div id="mode">
+        <ClipPreview bind:mode url={url}/>
+    </div>
 
-{/if}
+    
+
+    <div id="add" title={addButtonTitle  }>
+        <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
+    </div>
+</div>
+
+
+
 
 
 
@@ -177,8 +151,6 @@
     }
    
 
-    #error {
-        color: red;
-    }
+   
 
 </style>
