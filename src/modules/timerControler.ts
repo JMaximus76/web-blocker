@@ -28,12 +28,14 @@ export default class TimerControler {
     }
 
     start() {
+        console.log(`starting timer ${this.#timer.id}`);
         if (this.#timer.start !== null) return;
         this.#timer.start = Date.now();
         sendMessage("timerStore", "start", this.#timer.id);
     }
 
     stop() {
+        console.log(`stoping timer ${this.#timer.id}`);
         if (this.#timer.start === null) return;
         const timeActive = Date.now() - this.#timer.start;
         this.#timer.total += timeActive;

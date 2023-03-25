@@ -3,7 +3,7 @@ import EntryControler from '../modules/entryControler';
 import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
 import TimerControler from '../modules/timerControler';
-import { handelError, isHttp, makeServers, type Message, type Servers } from '../modules/util';
+import { handelError, isHttp, makeServers, type Id, type Message, type Servers } from '../modules/util';
 
 
 
@@ -161,7 +161,6 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
     console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
     const infos = await listServer.request("info", {active: true, mode: runtimeSettings.mode, match: url});
-    console.log(infos);
 
 
     let doBlocking = runtimeSettings.mode === "allow";
@@ -294,13 +293,14 @@ browser.runtime.onMessage.addListener((message) => {
 
     async function messaged(message: Message): Promise<void> {
         // switch message.id if more are added
-        if (message.target === "background" && message.id === "update") {
+        if (message.target === "background" && message.id as Id<"background"> === "update") {
             const servers = await makeServers();
             await manageTimers(servers);
             await checkAll(servers);
         }
     }
 
+    console.log("got message")
     messaged(message).catch(handelError);
 
 });

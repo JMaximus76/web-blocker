@@ -84,7 +84,7 @@ function createTimerStore() {
                     timerRecord[timerId].active = true;
                 } else {
                     const timerId = message.data as Data<"timerStore", "stop">;
-                    timerRecord[timerId].active = true;
+                    timerRecord[timerId].active = false;
                 }
                 set(timerView);
             }

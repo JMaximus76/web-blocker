@@ -38,7 +38,9 @@ export default class EntryControler {
 
 
     addEntry(mode: EntryMode, url: string): void {
-        this.#list.push({ mode, value: url });
+        const clipedURL = EntryControler.clipURL(mode, url);
+        if (clipedURL === null) throw new Error("addEntry() got null when cliping a url");
+        this.#list.push({ mode, value: clipedURL });
     }
 
     removeEntry(index: number): void {

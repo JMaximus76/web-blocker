@@ -11,8 +11,11 @@ export default class Storage {
 
     // should work like a singleton so that across all instances of storage they all share the same cache
     // should be using a map here but i'm lazy and this works so prob wont' change it
-    static #cache: Record<string, object> = {};
-    
+    #cache: Record<string, object> = {};
+    // ^ this might cause problems
+    // if for some reason in the ui the store gets totally turned off and then data get modifyed
+    // then this will not get updated, it would then have an invalid copy\
+    // yeah so it did cause problems for the backgroudn script
     
 
 
@@ -25,7 +28,7 @@ export default class Storage {
         // if its also undefined in local storage will return undefined for that key.
         const items: (object | undefined)[] = [];
         for (const key of keys) {
-            const item = Object.hasOwn(Storage.#cache, key) ? Storage.#cache[key] : await this.#getLocalStorage(key);
+            const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
 
             if (typeof item === "object") {
                 items.push(this.#proxy(key, item));
@@ -39,7 +42,7 @@ export default class Storage {
 
 
     async getKey<T extends object>(key: string) {
-        const item = Object.hasOwn(Storage.#cache, key) ? Storage.#cache[key] : await this.#getLocalStorage(key);
+        const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
         if (typeof item === "object") {
             return this.#proxy(key, item) as T;
         } else {
@@ -55,7 +58,7 @@ export default class Storage {
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {
         const item = await browser.storage.local.get(key);
-        if (item[key] !== undefined) Object.assign(Storage.#cache, item);
+        if (item[key] !== undefined) Object.assign(this.#cache, item);
         return item[key];
     }
 
@@ -66,7 +69,7 @@ export default class Storage {
      */
     add(items: Record<string, object>): void {
         for (const [key, value] of Object.entries(items)) {
-            Storage.#cache[key] = jsonCopy(value);
+            this.#cache[key] = jsonCopy(value);
         }
         browser.storage.local.set(items).catch((e) => console.error(e));
     }
@@ -78,7 +81,7 @@ export default class Storage {
      */
     delete(keys: string[]): void {
         for (const key of keys) {
-            delete Storage.#cache[key];
+            delete this.#cache[key];
         }
         browser.storage.local.remove(keys).catch((e) => console.error(e));
     }
@@ -89,9 +92,9 @@ export default class Storage {
             if (message.target === "storage") {
                 if (message.id as Id<"storage"> === "update") {
                     const { key, value } = message.data as Data<"storage", "update">;
-                    if (Storage.#cache[key] === undefined) return;
-                    if (Array.isArray(Storage.#cache[key])) (Storage.#cache[key] as any[]).length = 0;
-                    Object.assign(Storage.#cache[key], value);
+                    if (this.#cache[key] === undefined) return;
+                    if (Array.isArray(this.#cache[key])) (this.#cache[key] as any[]).length = 0;
+                    Object.assign(this.#cache[key], value);
                     Object.defineProperties
                 }
             }
