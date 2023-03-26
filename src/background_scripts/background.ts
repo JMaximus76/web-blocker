@@ -15,6 +15,7 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 // use browser.webRequest instead of navigate
 // set up message link for storage
+// beter handling of active vs deactive mode (make somethign to turn all timers off and cut the events right at the start instead of in funcitons)
 
 
 
@@ -80,13 +81,14 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
 
     const timerList = await itemServer.get("activeTimers");
+    const timers = await listServer.getIds("timer", timerList);
+    const timerControler = new TimerControler();
 
-    const items = await listServer.getIds("timer", timerList);
-    const timers = items.map(item => new TimerControler(item));
+    timers.forEach(timer => {
+        timerControler.timer = timer;
+        timerControler.stop();
+    });
 
-    timers.forEach(timer => timer.stop());
-
-    // remove all timers from activeTimers /hopefully/
     timerList.length = 0;
     
     browser.alarms.clear("blockTimer");
@@ -105,15 +107,16 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
         if (tab.url === undefined) continue;
         if (!isHttp(tab.url)) continue;
 
-        const items = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url});
-        const timers = items.map((item) => new TimerControler(item));
+        const timers = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url});
+
         
         
         for (const timer of timers) {
-            if (!timer.done) {
-                timerList.push(timer.id);
-                timer.start();
-                lowestTime = Math.min(lowestTime, timer.timeLeft);
+            timerControler.timer = timer;
+            if (!timerControler.done) {
+                timerList.push(timerControler.id);
+                timerControler.start();
+                lowestTime = Math.min(lowestTime, timerControler.timeLeft);
             }
         }
 
@@ -303,6 +306,13 @@ browser.runtime.onMessage.addListener((message) => {
     console.log("got message")
     messaged(message).catch(handelError);
 
+});
+
+
+browser.storage.local.onChanged.addListener((changes) => {
+
+    console.table(changes);
+    
 });
 
 

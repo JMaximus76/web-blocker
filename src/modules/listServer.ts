@@ -137,11 +137,16 @@ export default class ListServer {
         for (const info of infos) {
             const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
             if (entryList === undefined) throw new Error("listServer got undefined when filtering entrys");
-            entryControler.setList(entryList);
+            entryControler.list = entryList;
             if (entryControler.check(url)) filtered.push(info);
         }
 
         return filtered;
+    }
+
+
+    async #timerFilter(infos: Info[]) {
+
     }
 
     /**

@@ -3,7 +3,7 @@
     import { storageStore } from "../../modules/stores/storageStores";
     import { popupPageStore } from "../../modules/stores/popupStateStores";
     import Lists from "./blocks/Lists.svelte";
-    import { fly } from "svelte/transition";
+    import { fade } from "svelte/transition";
 
 
 
@@ -21,7 +21,7 @@
         $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
     }
 
-
+    const transitionSpeed = 150;
 
 </script>
 
@@ -33,9 +33,17 @@
 
         <div id="lists">
             {#if $storageStore.runtimeSettings.mode === "block"}
-                <div transition:fly|local={{x: -300, duration: 200}} id="block"><Lists mode="block" /></div>
+                <div 
+                in:fade|local={{duration: transitionSpeed, delay: transitionSpeed}} 
+                out:fade|local={{duration: transitionSpeed}} id="block">
+                    <Lists mode="block" />
+                </div>
             {:else}
-                <div transition:fly|local={{x: 300, duration: 200}} id="allow"><Lists mode="allow" /></div>
+                <div 
+                in:fade|local={{duration: transitionSpeed, delay: transitionSpeed}} 
+                out:fade|local={{duration: transitionSpeed}} id="allow">
+                    <Lists mode="allow" />
+                </div>
             {/if}
         </div>
 

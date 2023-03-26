@@ -111,17 +111,21 @@ export default class Storage {
 
     #proxy<T extends object>(key: string, obj: T): T {
         const doUpdates = (target: T) => {
+
+
             browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
             sendMessage("storage", "update", { key, value: target });
             sendMessage("background", "update", null);
+
         }
 
         if (Array.isArray(obj)) {
 
             return new Proxy(obj, {
                 set: (target, prop, value) => {
-                    Reflect.set(target, prop, value);
                     if (prop === "length") doUpdates(target);
+                    Reflect.set(target, prop, value);
+                    
                     return true;
                 }
             });
