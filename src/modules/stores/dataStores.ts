@@ -1,6 +1,5 @@
 import { readable, writable } from "svelte/store";
 import browser from "webextension-polyfill";
-import type TimerControler from "../timerControler";
 import { filterBlockPage, type Data, type Id, type Message } from "../util";
 
 
@@ -82,8 +81,6 @@ function createTimerStore() {
 
         function onMessage(message: Message) {
             if (message.target === "timerStore") {
-
-
 
                 if (message.id as Id<"timerStore"> === "start") {
                     const timerId = message.data as Data<"timerStore", "start">;

@@ -30,7 +30,6 @@ export default class ItemServer {
     #storage = new Storage();
 
     startListening() {
-        // shoudl make this local to the calss not in storage
         return this.#storage.startListening();
     }
 
