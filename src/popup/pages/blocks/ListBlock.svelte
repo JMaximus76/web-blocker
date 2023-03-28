@@ -12,8 +12,10 @@
 
     export let list: List;
 
-    let match: boolean = list.entrys.check($currentUrlStore);
 
+
+
+    $: match = list.entrys.check($currentUrlStore);
     $: matchTitle = `Match Found: This list matched with ${EntryControler.clipURL("domain", $currentUrlStore)}`;
     const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
 
@@ -24,8 +26,9 @@
     }
 
     onMount(() => {
+        console.log(list.timer.id, list.timer.active, list.timer.timeLeft);
         if (list.info.useTimer) {
-            timerStore.addTimer(list.timer);
+            timerStore.addTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
         }
     });
 
@@ -44,7 +47,9 @@
             }
         }
     }
-    
+
+
+ 
 
 </script>
 

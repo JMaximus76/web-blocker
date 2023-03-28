@@ -1,6 +1,5 @@
 import { readable, writable } from "svelte/store";
 import browser from "webextension-polyfill";
-import type TimerControler from "../timerControler";
 import { filterBlockPage, type Data, type Id, type Message } from "../util";
 
 
@@ -17,8 +16,11 @@ export const currentTabFaviconStore = readable("", function start(set) {
 
 export const currentUrlStore = readable("", function start(set) {
     browser.tabs.query({ active: true, currentWindow: true })
-        .then((tabs) => { if (tabs[0].url) set(filterBlockPage(tabs[0].url)) })
-        .catch((e) => console.error(new Error(e)));
+        .then((tabs) => {
+            if (tabs[0].url !== undefined) {
+                set(filterBlockPage(tabs[0].url));
+            }
+        }).catch((e) => console.error(new Error(e)));
 });
 
 
@@ -79,11 +81,14 @@ function createTimerStore() {
 
         function onMessage(message: Message) {
             if (message.target === "timerStore") {
+
                 if (message.id as Id<"timerStore"> === "start") {
                     const timerId = message.data as Data<"timerStore", "start">;
+                    if (timerRecord[timerId] === undefined) return; // we dont care about timers that are not in the store
                     timerRecord[timerId].active = true;
                 } else {
                     const timerId = message.data as Data<"timerStore", "stop">;
+                    if (timerRecord[timerId] === undefined) return;
                     timerRecord[timerId].active = false;
                 }
                 set(timerView);
@@ -116,10 +121,10 @@ function createTimerStore() {
 
     return {
         subscribe: store.subscribe,
-        addTimer: (timer: TimerControler) => {
-            timerRecord[timer.id] = {
-                active: timer.active,
-                timeLeft: timer.timeLeft,
+        addTimer: (id: string, active: boolean, timeLeft: number) => {
+            timerRecord[id] = {
+                active: active,
+                timeLeft: timeLeft,
             };
             store.set(timerView);
         }

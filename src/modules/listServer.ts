@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { buildList, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
 import browser from "webextension-polyfill";
 import EntryControler from "./entryControler";
+import TimerControler from "./timerControler";
 
 
 
@@ -110,50 +111,52 @@ export default class ListServer {
     }
 
 
+
     /**
-     * Takes a set of filter parameters and returns a list of all matching infos.
+     * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #infoFilter({active, mode, useTimer}: { active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Info[]> {
-        const items = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
+    async #entrysFilter(url: string, info: Info, entryControler: EntryControler) {
         
-        return items.filter((item) => {
-            if (item === undefined) throw new Error("listServer got undefined when filtering infos");
-            if (active !== undefined && item.active !== active) return false;
-            if (mode !== undefined && item.mode !== mode) return false;
-            if (useTimer !== undefined && item.useTimer !== useTimer) return false;
-            return true;
-        }) as Info[];
+        const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
+        if (entryList === undefined) throw new Error("listServer got undefined when filtering an entryList");
+        entryControler.list = entryList;
+        return entryControler.check(url);   
     }
 
 
-    /**
-     * Takes a url and a list of infos and returns a list of all infos that have a list that matches the url.
-     */
-    async #entrysFilter(url: string, infos: Info[]) {
-        const entryControler = new EntryControler();
+    async #timerFilter(info: Info, timerControler: TimerControler) {
+        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
+        if (timer === undefined) throw new Error("listServer got undefined when filtering a timer");
+        timerControler.timer = timer;
 
-        const filtered: Info[] = [];
-
-        for (const info of infos) {
-            const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
-            if (entryList === undefined) throw new Error("listServer got undefined when filtering entrys");
-            entryControler.setList(entryList);
-            if (entryControler.check(url)) filtered.push(info);
-        }
-
-        return filtered;
+        // works like an xor
+        return (info.mode === "block") === timerControler.done;
     }
 
     /**
      * Takes a list component type and a set of filter parameters and returns a list of all matching components.
      */
-    async request<T extends keyof RequestMap>(type: T, details: { match?: string, active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Array<RequestMap[T]>> {
-        let infos = await this.#infoFilter(details);
-        if (details.match !== undefined) {
-            infos = await this.#entrysFilter(details.match, infos);
+    async request<T extends keyof RequestMap>(type: T, {match, activeTimer, active, mode, useTimer}: { match?: string, activeTimer?: boolean, active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Array<RequestMap[T]>> {
+        const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
+        const filteredInfos: Info[] = [];
+
+        const entryControler = new EntryControler();
+        const timerControler = new TimerControler();
+
+        for (const info of infos) {
+            if (info === undefined) throw new Error("listServer got an undefined info when filtering");
+            if (active !== undefined && info.active !== active) continue;
+            if (mode !== undefined && info.mode !== mode) continue;
+            if (useTimer !== undefined && info.useTimer !== useTimer) continue;
+            if (activeTimer !== undefined && !(await this.#timerFilter(info, timerControler))) continue;
+            if (match !== undefined && !(await this.#entrysFilter(match, info, entryControler))) continue;
+            filteredInfos.push(info);
         }
-        const items = await this.#storage.getKeys<RequestMap[T]>(infos.map((info) => this.#requestId(type, info.id)));
-        return items.map((o) => {
+
+        if (type === "info") return filteredInfos as Array<RequestMap[T]>;
+
+        const requestedItems = await this.#storage.getKeys<RequestMap[T]>(filteredInfos.map((info) => this.#requestId(type, info.id)));
+        return requestedItems.map((o) => {
             if (o === undefined) throw new Error(`listServer got undefined when getting ${type}`);
             return o;
         });
