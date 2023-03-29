@@ -9,7 +9,7 @@
 
 
 
-    // if flickering use onMount and a default version of rts and await the promise then load it on.
+    // if flickering use onMount and a default version of rts, await the promise then load it on.
 
 
     function deactivate(): void {
@@ -53,8 +53,8 @@
         </div> -->
 
 
-        <TextButton on:click={deactivate} text={"Deactivate"} />
-        <TextButton on:click={changeMode} text={"Change Mode"} />
+        <TextButton on:click={deactivate}>Deactivate</TextButton>
+        <TextButton on:click={changeMode}>Change Mode</TextButton>
 
 
     </div>

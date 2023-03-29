@@ -23,7 +23,7 @@
 {#if $storageStore.ready}
     <div id="main">
         <h1>The Extension is Deactivated</h1>
-        <TextButton on:click={activate} text={"Activate"} />
+        <TextButton on:click={activate}>Activate</TextButton>
     </div>
 {/if}
 

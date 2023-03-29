@@ -6,7 +6,7 @@
     import InputUrl from "./blocks/InputURL.svelte";
     import TextButton from "../components/TextButton.svelte";
     import type { EntryMode, List } from "../../modules/listComponets";
-    import { addEntryPopupStore } from "../../modules/stores/popupStateStores";
+    import { addEntryDropdownStore } from "../../modules/stores/popupStateStores";
 
 
     let url: string;
@@ -14,14 +14,14 @@
     let isValid: boolean = false;
 
     // should work but it might be null ?? but it also should be an info.
-    let list: List = $addEntryPopupStore.list as List;
+    let list: List = $addEntryDropdownStore.list as List;
 
     let addButtonTitle = `Add new entry to ${list.info.name}`;
 
     function addEntry() {
         if (isValid) {
             list.entrys.addEntry(mode, url);
-            addEntryPopupStore.close();
+            addEntryDropdownStore.close();
         }
     }
 
@@ -32,18 +32,18 @@
 
 
 
-<button on:click={addEntryPopupStore.close} transition:fade={{duration: 200}} id="close"></button>
+<button on:click={addEntryDropdownStore.close} transition:fade={{duration: 200}} id="close"></button>
 
 
 
 
 <div transition:fly={{y: -400, duration: 300}} id="main">
-    <button on:click={addEntryPopupStore.close} id="exit">
+    <button on:click={addEntryDropdownStore.close} id="exit">
         Close
     </button>
 
-    <h1>Add List Entry:</h1>
-    <h2>{list.info.name}</h2>
+    <h1>Add List Entry</h1>
+    
 
     
 
@@ -57,8 +57,9 @@
 
     
 
-    <div id="add" title={addButtonTitle  }>
-        <TextButton isActive={isValid} on:click={addEntry} text={"Add"} fontSize={"14px"} horizontalPadding={"12px"} verticalPadding={"4px"} bold={true}/>
+    <div id="add" title={addButtonTitle}>
+        <TextButton isActive={isValid} on:click={addEntry}>Add Entry</TextButton>
+        <h2>{list.info.name}</h2>
     </div>
 </div>
 
@@ -77,15 +78,7 @@
         color: var(--text);
     }
 
-    #main h2 {
-        margin: 5px 0;
-        margin-bottom: 8px;
-        font-size: 19px;
-        font-family: 'Roboto', sans-serif;
-        font-style: italic;
-        font-weight: normal;
-        color: var(--text);
-    }
+    
 
 
     #input {
@@ -127,8 +120,18 @@
 
 
     #add {
-        margin-top: 5px;
-        float: right;
+        margin-top: 25px;
+        float: left;
+        display: flex;
+        align-items: center;
+    }
+
+    #add h2{
+        margin: 0 0 0 7px;
+        font-size: 16px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: normal;
+        color: var(--text);
     }
 
     #exit {

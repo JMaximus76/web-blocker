@@ -13,7 +13,16 @@ type RequestMap = {
     info: Info;
     entrys: EntryList;
     timer: Timer;
-}
+};
+
+type Request = {
+    match?: string;
+    activeTimer?: boolean;
+    active?: boolean;
+    mode?: Mode;
+    useTimer?: boolean;
+};
+
 
 
 
@@ -136,7 +145,7 @@ export default class ListServer {
     /**
      * Takes a list component type and a set of filter parameters and returns a list of all matching components.
      */
-    async request<T extends keyof RequestMap>(type: T, {match, activeTimer, active, mode, useTimer}: { match?: string, activeTimer?: boolean, active?: boolean, mode?: Mode, useTimer?: boolean }): Promise<Array<RequestMap[T]>> {
+    async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
         const filteredInfos: Info[] = [];
 
@@ -148,7 +157,7 @@ export default class ListServer {
             if (active !== undefined && info.active !== active) continue;
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
-            if (activeTimer !== undefined && !(await this.#timerFilter(info, timerControler))) continue;
+            if (activeTimer && !(await this.#timerFilter(info, timerControler))) continue;
             if (match !== undefined && !(await this.#entrysFilter(match, info, entryControler))) continue;
             filteredInfos.push(info);
         }

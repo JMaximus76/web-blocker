@@ -34,27 +34,28 @@
     $: previewText = generatePreviewText(mode, url);
 
     const options: Options = {
-        radio: {
-            "Full Domain": {
+        radio: [
+            {
+                name: "Full Domain",
                 value: "fullDomain",
                 title: "Fully blocks the domain"
             },
-
-            "Domain": {
+            {
+                name: "Domain",
                 value: "domain",
                 title: "Fully blocks all pages under the subdomain"
             },
-
-            "URL": {
+            {
+                name: "URL",
                 value: "url",
                 title: "Only blocks specified URL"
             },
-
-            "Exact": {
+            {
+                name: "Exact",
                 value: "exact",
                 title: "Only blocks exact URL"
             }
-        }
+        ]
     }
 
 

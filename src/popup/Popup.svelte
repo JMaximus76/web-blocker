@@ -2,7 +2,7 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./pages/blocks/Header.svelte";
-    import { addEntryPopupStore, popupPageStore } from "../modules/stores/popupStateStores";
+    import { addEntryDropdownStore, popupPageStore } from "../modules/stores/popupStateStores";
     import { fly } from "svelte/transition";
     import AddEntryPopup from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
@@ -17,7 +17,7 @@
 
 
 
-<div class:blur={$addEntryPopupStore.active} id="popup">
+<div class:blur={$addEntryDropdownStore.active} id="popup">
     <Header />
 
     {#if $storageStore.ready }
@@ -50,7 +50,7 @@
     
 </div>
 
-{#if $addEntryPopupStore.active}
+{#if $addEntryDropdownStore.active}
     <AddEntryPopup />
 {/if}
 

@@ -168,6 +168,7 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
 
     let doBlocking = runtimeSettings.mode === "allow";
 
+    // need to change this to the new request system NOW
     for (const info of infos) {
         if (info.useTimer) {
             const timer = new TimerControler(await listServer.getId("timer", info.id));
@@ -209,8 +210,6 @@ async function checkAll(servers: Servers) {
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     if (navigate.frameId !== 0) return;
-    // on chrome it frequently generates onNavigate events for tabIds with huge numbers then again on the correct tabId
-    // if (navigate.tabId > 5000000) return;
     console.log("doing on navigate");
 
     async function navigated() {

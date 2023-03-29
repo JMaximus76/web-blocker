@@ -1,16 +1,23 @@
 export type Buttons = {
-    [key: string]: {
-        onClick: () => void;
-        title?: string;
-    }
-
-
-};
+    name: string;
+    onClick: () => void;
+    title?: string;
+}[];
 
 export type Radio<T> = {
-    [key: string]: {
-        value: T;
-        title?: string;
+    name: string;
+    value: T;
+    title?: string;
+}[];
+
+export type Text = {
+    globalColor?: string;
+    entrys: {
+        [key: string]: {
+            text: string;
+            color?: string;
+            title?: string; 
+        }
     }
 };
 
@@ -18,4 +25,5 @@ export type Radio<T> = {
 export type Options = {
     buttons?: Buttons;
     radio?: Radio<any>
+    text?: Text;
 }

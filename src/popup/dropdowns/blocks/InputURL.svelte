@@ -27,12 +27,13 @@
 
 
     const options: Options = {
-        buttons: {
-            "Current URL": {
+        buttons: [
+            {
+                name: "Current URL",
                 onClick: setToCurrentURL,
                 title: "Inserts the URL of the current page"
             }
-        }
+        ]
     }
 
 

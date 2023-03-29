@@ -3,20 +3,18 @@
 
     // not sure how to avoid using any here, I'm bad at type script ;-;
     export let radioValue: any = null;
+    export let textKey: string = "";
     export let options: Options = {};
     export let lineColor: string = "var(--neutral)";
 
-</script>
 
-<script context="module">
-    
-</script>
 
+</script>
 
 
 <div class="body">
 
-    <div class="content" style="--lineColor:{lineColor}">
+    <div class="content" style:box-shadow="0 2px {lineColor}">
         <slot></slot>
     </div>
         
@@ -24,12 +22,26 @@
     <div class="options">
 
 
+        {#if options.text?.entrys[textKey] !== undefined}
+            <div class="text">   
+                <span 
+                    title={options.text.entrys[textKey].title} 
+                    style:color={(options.text.entrys[textKey].color ?? options.text.globalColor) ?? "var(--textColor)"}
+                    class="option"
+                >
+                    {options.text.entrys[textKey].text}
+                </span>  
+            </div>
+        {/if}
+
+
+
         {#if options.radio !== undefined}
             <div class="radio">
-                {#each Object.keys(options.radio) as key (key)}
-                    <label title={options.radio[key].title}>
-                        <input type=radio bind:group={radioValue} name="radio" value={options.radio[key].value}>
-                        <span class="option">{key}</span>
+                {#each options.radio as radio (radio.name)}
+                    <label title={radio.title}>
+                        <input type=radio bind:group={radioValue} name="radio" value={radio.value}>
+                        <span class="option">{radio.name}</span>
                     </label>
                 {/each}
             </div>
@@ -38,15 +50,12 @@
 
         {#if options.buttons !== undefined}
             <div class="buttons">
-                {#each Object.keys(options.buttons) as key (key)}
-                    <button class="option" title={options.buttons[key].title} on:click={options.buttons[key].onClick}>{key}</button>
+                {#each options.buttons as button (button.name)}
+                    <button class="option" title={button.title} on:click={button.onClick}>{button.name}</button>
                 {/each}
             </div>
         {/if}
 
-        
-
-        
 
     </div>
 </div>
@@ -67,15 +76,16 @@
 
     .content {
         font-size: 13px;
-        box-shadow: 0 2px var(--lineColor);
         transition: box-shadow 0.3s;
     }
 
 
     .option {
-        font-size: 10px;
-        transition: color 0.2s;
+        display: inline-block;
+        font-size: 12px;
+        transition: color 0.3s;
         margin-right: 7px;
+        margin-top: 5px;
         cursor: pointer;
         color: var(--textFade);
     }
@@ -83,7 +93,6 @@
     
     .radio span {
         cursor: pointer;
-        transition: color 0.2s;
     }
 
     .radio input {

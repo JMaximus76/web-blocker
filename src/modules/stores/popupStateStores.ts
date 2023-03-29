@@ -91,9 +91,9 @@ type AddEntryPopupState = {
     list: List | null;
 }
 
-export const addEntryPopupStore = createAddEntryPopupStore();
+export const addEntryDropdownStore = createAddEntryDropdownStore();
 
-function createAddEntryPopupStore() {
+function createAddEntryDropdownStore() {
 
     const state: AddEntryPopupState = {
         active: false,

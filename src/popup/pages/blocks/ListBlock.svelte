@@ -4,7 +4,7 @@
     import type { List } from "../../../modules/listComponets";
     import EntryControler from "../../../modules/entryControler";
     import { currentUrlStore, timerStore } from "../../../modules/stores/dataStores";
-    import { addEntryPopupStore, popupPageStore } from "../../../modules/stores/popupStateStores";
+    import { addEntryDropdownStore, popupPageStore } from "../../../modules/stores/popupStateStores";
     import type { Options } from "../../popupTypes";
 
 
@@ -34,22 +34,26 @@
 
 
 
+    
+
+
     const options: Options = {
-        buttons: {
-            "Add Entry": {
-                onClick: () => addEntryPopupStore.open(list),
+        buttons: [
+            {
+                name: "Add Entry",
+                onClick: () => addEntryDropdownStore.open(list),
                 title: "Add a list entry"
             },
-
-            "Edit List": {
+            {
+                name: "Edit List",
                 onClick: () => popupPageStore.list(list),
                 title: "View List"
             }
-        }
+        ]
     }
 
 
- 
+    $: lineColor = (list.info.active) ? "var(--text)" : "var(--textFade)";
 
 </script>
 
@@ -58,7 +62,7 @@
 
 <div class="main">
 
-    <OptionsBlock options={options} lineColor={(list.info.active) ? "var(--text)" : "var(--textFade"}>
+    <OptionsBlock options={options} bind:lineColor>
         <div class:active={list.info.active} class="infoButton">
             <button class:locked={list.info.locked} on:click={toggleActive}>{list.info.name}</button>
 
@@ -124,7 +128,6 @@
 
     .infoButton.active {
         color: var(--text);
-        box-shadow: 0 2px var(--text);
     }
 
     .infoButton.active button {
