@@ -11,7 +11,7 @@
 
     let url: string;
     let mode: EntryMode;
-    let isValid: boolean = false;
+    let isValid: boolean;
 
     // should work but it might be null ?? but it also should be an info.
     let list: List = $addEntryDropdownStore.list as List;
@@ -52,13 +52,13 @@
     </div>
 
     <div id="mode">
-        <ClipPreview bind:mode url={url}/>
+        <ClipPreview bind:isValid bind:mode url={url}/>
     </div>
 
     
 
     <div id="add" title={addButtonTitle}>
-        <TextButton isActive={isValid} on:click={addEntry}>Add Entry</TextButton>
+        <TextButton isActive={isValid} onClick={addEntry}>Add Entry</TextButton>
         <h2>{list.info.name}</h2>
     </div>
 </div>

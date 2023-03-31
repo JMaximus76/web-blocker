@@ -79,7 +79,7 @@ export function isHttp(url: string): boolean {
     return regexArray !== null;
 }
 
-export function isBadURL(url: string): boolean {
+export function isURL(url: string): boolean {
     const regexArray = /^https?:\/\/[\w-]+\.[\w-]+/.exec(url);
     return (regexArray !== null) && !url.includes(" ");
 }

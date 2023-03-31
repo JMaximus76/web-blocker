@@ -26,7 +26,6 @@
     }
 
     onMount(() => {
-        console.log(list.timer.id, list.timer.active, list.timer.timeLeft);
         if (list.info.useTimer) {
             timerStore.addTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
         }

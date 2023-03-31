@@ -1,6 +1,5 @@
 <script lang="ts">
 
-    import { isBadURL } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
     import type { EntryMode } from "../../../modules/listComponets";
@@ -10,28 +9,11 @@
 
     export let mode: EntryMode = "fullDomain";
     export let url: string;
+    export let isValid: boolean;
 
 
 
-    function generatePreviewText(mode: EntryMode, url: string): string {
-        
-        if (mode === "exact") {
-            if (isBadURL(url)) {
-                return url;
-            } else {
-                return "Invalid URL";
-            }
-        }
-
-        const clip = EntryControler.clipURL(mode, url);
-        if (clip === null || clip === "") {
-            return "Invalid URL";
-        } else {
-            return clip;
-        }
-    }
-
-    $: previewText = generatePreviewText(mode, url);
+    $: previewText = isValid? (EntryControler.clipURL(mode, url) ?? "Invalid URL") : "Invalid URL";
 
     const options: Options = {
         radio: [
@@ -67,8 +49,6 @@
 <h2>Preview</h2>
 
 <OptionsBlock options={options} bind:radioValue={mode}>
-    
-
     <HorizontalScroll>
         <div class="preview">{previewText}</div>
     </HorizontalScroll>

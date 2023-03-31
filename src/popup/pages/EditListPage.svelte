@@ -1,29 +1,42 @@
 <script lang="ts">
+    import type { List } from "../../modules/listComponets";
     import { popupPageStore } from "../../modules/stores/popupStateStores";
-    import InputName from "./blocks/InputName.svelte";
+    import { storageStore } from "../../modules/stores/storageStores";
+    import TextButton from "../components/TextButton.svelte";
+    import EditNameMode from "./blocks/EditNameMode.svelte";
 
 
-    $: list = $popupPageStore.list;
+    // should be safe because if its on this page then it must have passed a list to do it.
+    $: list = $popupPageStore.list as List;
+
+
+    function deleteList() {
+        storageStore.deleteList(list.info.id);
+        popupPageStore.main();
+    }
 </script>
 
 
 {#if list !== null}
-    <div class="main">
-        <div class="inputName">
-            <InputName bind:listName={list.info.name} />
-        </div>
-            
-
-
-
+    <div class="edit">
+        <EditNameMode info={list.info} />    
     </div>
-{:else}
-    <h1>ERROR: Failed to load list.</h1>
+
+    <div class="buttons">
+        <TextButton isActive={!list.info.locked} onClick={deleteList}>
+            Delete
+        </TextButton>
+    </div>
 {/if}
 
+<TextButton onClick={() => popupPageStore.main()}>
+    Back
+</TextButton>
 
 <style>
-    .inputName {
-        width: 190px;
+    
+
+    .edit {
+        padding: 10px;
     }
 </style>

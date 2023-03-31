@@ -47,14 +47,8 @@
             {/if}
         </div>
 
-        <!-- <div id="list-info">
-            <p>Total Lists: {$infoListStore.currentInfos.length}</p>
-            <p>Active Lists: {$infoListStore.activeInfos.length}</p>
-        </div> -->
-
-
-        <TextButton on:click={deactivate}>Deactivate</TextButton>
-        <TextButton on:click={changeMode}>Change Mode</TextButton>
+        <TextButton onClick={deactivate}>Deactivate</TextButton>
+        <TextButton onClick={changeMode}>Change Mode</TextButton>
 
 
     </div>
@@ -64,27 +58,6 @@
     
 
 <style>
-
-    #lists div {
-        position: fixed;
-    }
-
-
-    /* #list-info {
-        display: flex;
-        flex-direction: row;
-        
-    }
-
-    #list-info p {
-        font-size: 12px;
-        font-family: 'Roboto', sans-serif;
-        color: var(--text);
-        margin: 0;
-        display: inline-block;
-        margin-right: 15px;
-
-    } */
 
     #main {
         background-color: transparent;
@@ -100,7 +73,7 @@
         width: 100%;
         margin: 10px 0px;
 
-        background-color: var(--panel);
+        background-color: transparent;
 
         overflow-y: scroll;
         scrollbar-width: none;

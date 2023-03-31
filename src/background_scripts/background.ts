@@ -49,18 +49,18 @@ browser.runtime.onInstalled.addListener(() => {
         allowEntrys.addEntry("domain", "https://www.google.com/");
 
 
-        const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1});
+        const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1, locked: true});
         const testEntrys = new EntryControler(await listServer.getId("entrys", testID));
         testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
-        // for (let i = 0; i < 20; i++) {
-        //     const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-        //     const entrys = new EntryControler(await listServer.requestById("entrys", id));
-        //     for (let j = 0; j < 20; j++) {
-        //         entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
-        //     }
-        // }
+        for (let i = 0; i < 20; i++) {
+            const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
+            const entrys = new EntryControler(await listServer.getId("entrys", id));
+            for (let j = 0; j < 20; j++) {
+                entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
+            }
+        }
 
     }
 
@@ -107,17 +107,17 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
         if (tab.url === undefined) continue;
         if (!isHttp(tab.url)) continue;
 
-        const timers = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url});
+        const timers = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url, activeTimer: false});
 
         
         
         for (const timer of timers) {
             timerControler.timer = timer;
-            if (!timerControler.done) {
-                timerList.push(timerControler.id);
-                timerControler.start();
-                lowestTime = Math.min(lowestTime, timerControler.timeLeft);
-            }
+            
+            timerList.push(timerControler.id);
+            timerControler.start();
+            lowestTime = Math.min(lowestTime, timerControler.timeLeft);
+            
         }
 
     }
@@ -135,17 +135,6 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
 async function check(url: string, tabId: number, { listServer, itemServer }: Servers): Promise<void> {
 
-    function decide(doBlocking: boolean, urlIsBlockedPage: boolean, url: string, tabId: number) {
-        if (doBlocking && !urlIsBlockedPage) {
-            console.log(`BLOCKING a page with url of ${url}`);
-            browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
-        } else if (!doBlocking && urlIsBlockedPage) {
-            console.log(`UNBLOCKING page with url of ${url}`);
-            browser.tabs.update(tabId, { url: url }).catch(handelError);
-        }
-    }
-
-
     let urlIsBlockedPage = false;
 
     if (url.includes(blockedPageURL)) {
@@ -157,38 +146,29 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
 
     if (!isHttp(url)) return;
 
+
+    // really should change this to the actual event listener instead of here 
     const runtimeSettings = await itemServer.get("runtimeSettings")
     if (!runtimeSettings.isActive) return;
 
 
     console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
-    const infos = await listServer.request("info", {active: true, mode: runtimeSettings.mode, match: url});
+    // I mean at this point I feel like I should just make a listServer function that checks a url and return a boolean
+    // but then again it would literally just be this and this is the only place that would use it
+    const infos = await listServer.request("info", {active: true, mode: runtimeSettings.mode, match: url, activeTimer: true});
 
 
     let doBlocking = runtimeSettings.mode === "allow";
+    if (infos.length !== 0) doBlocking = !doBlocking;
 
-    // need to change this to the new request system NOW
-    for (const info of infos) {
-        if (info.useTimer) {
-            const timer = new TimerControler(await listServer.getId("timer", info.id));
-            // could change this to xor but i'm lazy
-            if (timer.done && info.mode === "block") {
-                doBlocking = true;
-                break;
-            } else if(!timer.done && info.mode === "allow") {
-                doBlocking = false;
-                break;
-            }
-        } else {
-            doBlocking = !doBlocking;
-            break;
-        }
+    if (doBlocking && !urlIsBlockedPage) {
+        console.log(`BLOCKING a page with url of ${url}`);
+        browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
+    } else if (!doBlocking && urlIsBlockedPage) {
+        console.log(`UNBLOCKING page with url of ${url}`);
+        browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
-
-    decide(doBlocking, urlIsBlockedPage, url, tabId);
-
-
 }
 
 
@@ -288,9 +268,6 @@ browser.alarms.onAlarm.addListener((alarm) => {
 
 
 
-
-
-
 browser.runtime.onMessage.addListener((message) => {
 
     async function messaged(message: Message): Promise<void> {
@@ -302,7 +279,7 @@ browser.runtime.onMessage.addListener((message) => {
         }
     }
 
-    console.log("got message")
+    console.log("got message");
     messaged(message).catch(handelError);
 
 });

@@ -115,7 +115,10 @@ export default class ListServer {
      * Deletes a list and all of its components 
      */
     deleteList(id: string): void {
+        console.log("deleting list");
+        console.log(this.#record);
         this.#record.splice(this.#record.indexOf(id), 1);
+        console.log(this.#record);
         this.#storage.delete([ListServer.infoId(id), ListServer.entryListId(id), ListServer.timerId(id)]);
     }
 
@@ -124,7 +127,7 @@ export default class ListServer {
     /**
      * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #entrysFilter(url: string, info: Info, entryControler: EntryControler) {
+    async #entrysFilter(url: string, info: Info, entryControler: EntryControler): Promise<boolean> {
         
         const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
         if (entryList === undefined) throw new Error("listServer got undefined when filtering an entryList");
@@ -133,7 +136,7 @@ export default class ListServer {
     }
 
 
-    async #timerFilter(info: Info, timerControler: TimerControler) {
+    async #timerFilter(info: Info, timerControler: TimerControler): Promise<boolean> {
         const timer = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
         if (timer === undefined) throw new Error("listServer got undefined when filtering a timer");
         timerControler.timer = timer;
@@ -146,6 +149,7 @@ export default class ListServer {
      * Takes a list component type and a set of filter parameters and returns a list of all matching components.
      */
     async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
+        console.log("requesting with:", this.#record);
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
         const filteredInfos: Info[] = [];
 
@@ -157,7 +161,7 @@ export default class ListServer {
             if (active !== undefined && info.active !== active) continue;
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
-            if (activeTimer && !(await this.#timerFilter(info, timerControler))) continue;
+            if (activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerControler))) continue;
             if (match !== undefined && !(await this.#entrysFilter(match, info, entryControler))) continue;
             filteredInfos.push(info);
         }

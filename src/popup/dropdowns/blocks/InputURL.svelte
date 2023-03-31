@@ -1,6 +1,6 @@
 
 <script lang="ts">
-    import { isBadURL } from "../../../modules/util";
+    import { isURL } from "../../../modules/util";
     import { currentUrlStore } from "../../../modules/stores/dataStores";
     import type { Options } from "../../popupTypes";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
@@ -8,12 +8,12 @@
 
 
     export let value = "";
-    export let isValid = false;
+    export let isValid: boolean;
 
     let self: HTMLElement;
     let dirty: boolean = false;
     
-    $: isValid = isBadURL(value);
+    $: isValid = isURL(value);
     $: value = value.trim();
 
     function onKey(event: KeyboardEvent) {
@@ -89,7 +89,6 @@
 
     input:focus {
         background-color: var(--focus);
-        
     }
 
     h2 {

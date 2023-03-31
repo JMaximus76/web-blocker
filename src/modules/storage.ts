@@ -123,9 +123,8 @@ export default class Storage {
 
             return new Proxy(obj, {
                 set: (target, prop, value) => {
-                    if (prop === "length") doUpdates(target);
                     Reflect.set(target, prop, value);
-                    
+                    if (prop === "length") doUpdates(target);
                     return true;
                 }
             });

@@ -2,9 +2,6 @@
     import { tweened } from "svelte/motion";
 
 
-
-
-
     let container: HTMLDivElement;
     const scroll = tweened(0, { duration: 70 });
 

@@ -3,7 +3,7 @@
 
     /* Main Colors */
     --background: #24283B;
-    --panel: #24283B;
+    --panel: #2F334C;
     --popup: #2F334C;
     --element: #EBF1FF;
     --outline: #EBF1FF;
@@ -19,6 +19,7 @@
     --invalid: #ff1b0a;
     --valid: #008bf5;
     --neutral: #EBF1FF;
+    --darkNeutral: #99A6C2;
     --focus: rgba(0, 0, 0, 10%);
 
 

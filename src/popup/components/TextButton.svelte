@@ -1,11 +1,17 @@
 <script lang="ts">
     export let isActive: boolean = true;
+    export let onClick: () => void;
+
+
+    function handleClick() {
+        if (isActive) onClick();
+    }
 </script>
 
 
 
 <div class="backgroundColor">
-    <button on:click class={isActive ? "active" : "inactive"}>
+    <button on:click={handleClick} class={isActive ? "active" : "inactive"}>
         <div class="content">
             <slot></slot>
         </div>
@@ -28,6 +34,7 @@
         color: var(--text);
         font-family: 'Roboto', sans-serif;
         font-size: 14px;
+        transition: color 0.3s;
     }
 
     button.inactive .content {
@@ -52,11 +59,12 @@
     }
 
     .active:hover {
-        background-color: var(--hover);
+        background-color: var(--buttonHover);
     }
 
     .active:active {
-        background-color: var(--active);
+        transition: background-color 0s;
+        background-color: var(--buttonActive);
     }
 
     
