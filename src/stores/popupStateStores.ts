@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import ItemServer from "../itemServer";
-import type { List } from "../listComponets";
+import ItemServer from "../modules/itemServer";
+import type { List } from "../modules/listComponets";
 
 
 
@@ -16,7 +16,7 @@ type PopupPage = {
     out: number;
 }
 
-export const popupPageStore = createPopupPageStore();
+export const popupPage = createPopupPageStore();
 
 function createPopupPageStore() {
     const index = {
@@ -81,39 +81,52 @@ function createPopupPageStore() {
         }
 
     }
-
 }
 
 
 
-type AddEntryPopupState = {
-    active: boolean;
+type Dropdowns = "addEntry" | "confirm" | "blank";
+
+type DropdownState = {
+    state: Dropdowns;
     list: List | null;
+    confirm: {
+        callback: () => void;
+        text: string;
+    } | null;
 }
 
-export const addEntryDropdownStore = createAddEntryDropdownStore();
 
-function createAddEntryDropdownStore() {
+export const dropdown = createDropdownStore();
 
-    const state: AddEntryPopupState = {
-        active: false,
+function createDropdownStore() {
+    const state: DropdownState = {
+        state: "blank",
         list: null,
+        confirm: null,
     }
 
     const store = writable(state);
 
     return {
         subscribe: store.subscribe,
-        open: (list: List) => {
-            state.active = true;
+
+        addEntry(list: List) {
+            state.state = "addEntry";
             state.list = list;
             store.set(state);
         },
 
-        close: () => {
-            state.active = false;
+        confirm(callback: () => void, text: string) {
+            state.state = "confirm";
+            state.confirm = {callback, text};
             store.set(state);
         },
 
+        close() {
+            state.state = "blank";
+            store.set(state);
+        }
     }
 }
+

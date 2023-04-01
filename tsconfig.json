@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "importsNotUsedAsValues": "error",
-    "preserveValueImports": true,
-    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,

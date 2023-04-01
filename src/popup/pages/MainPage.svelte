@@ -1,7 +1,7 @@
 <script lang="ts">
     import TextButton from "../components/TextButton.svelte";
-    import { storageStore } from "../../modules/stores/storageStores";
-    import { popupPageStore } from "../../modules/stores/popupStateStores";
+    import { storageStore } from "../../stores/storageStores";
+    import { popupPage } from "../../stores/popupStateStores";
     import Lists from "./blocks/Lists.svelte";
     import { fade } from "svelte/transition";
 
@@ -14,7 +14,7 @@
 
     function deactivate(): void {
         $storageStore.runtimeSettings.isActive = false;
-        popupPageStore.deactivated();
+        popupPage.deactivated();
     }
 
     function changeMode(): void {

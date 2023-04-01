@@ -2,11 +2,12 @@
     import MainPage from "./pages/MainPage.svelte";
     import DeactivatedPage from "./pages/DeactivatedPage.svelte";
     import Header from "./pages/blocks/Header.svelte";
-    import { addEntryDropdownStore, popupPageStore } from "../modules/stores/popupStateStores";
+    import { dropdown, popupPage } from "../stores/popupStateStores";
     import { fly } from "svelte/transition";
-    import AddEntryPopup from "./dropdowns/AddEntry.svelte";
+    import AddEntry from "./dropdowns/AddEntry.svelte";
     import EditList from "./pages/EditListPage.svelte";
-    import { storageStore } from "../modules/stores/storageStores";
+    import { storageStore } from "../stores/storageStores";
+    import Confirm from "./dropdowns/Confirm.svelte";
 
 
     const transitionTime = 200;
@@ -17,41 +18,42 @@
 
 
 
-<div class:blur={$addEntryDropdownStore.active} id="popup">
+<div class:blur={$dropdown.state !== "blank"} id="popup">
     <Header />
 
     {#if $storageStore.ready }
-        {#if $popupPageStore.page === "main"}
+        {#if $popupPage.page === "main"}
             <div id="main" 
-            in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
-            out:fly={{x: $popupPageStore.out, duration: transitionTime}}>
+            in:fly={{x: $popupPage.in, duration: transitionTime}} 
+            out:fly={{x: $popupPage.out, duration: transitionTime}}>
                 <MainPage />
             </div>
         {/if}
 
-        {#if $popupPageStore.page === "deactivated"}
+        {#if $popupPage.page === "deactivated"}
             <div id="deactivated" 
-            in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
-            out:fly={{x: $popupPageStore.out, duration: transitionTime}}>
+            in:fly={{x: $popupPage.in, duration: transitionTime}} 
+            out:fly={{x: $popupPage.out, duration: transitionTime}}>
                 <DeactivatedPage />
             </div>
         {/if}
 
-        {#if $popupPageStore.page === "list"}
+        {#if $popupPage.page === "list"}
             <div id="list" 
-            in:fly={{x: $popupPageStore.in, duration: transitionTime}} 
-            out:fly={{x: $popupPageStore.out, duration: transitionTime}}>
+            in:fly={{x: $popupPage.in, duration: transitionTime}} 
+            out:fly={{x: $popupPage.out, duration: transitionTime}}>
                 <EditList />
             </div>
         {/if}
     {/if}
-
-    
-    
 </div>
 
-{#if $addEntryDropdownStore.active}
-    <AddEntryPopup />
+{#if $dropdown.state === "addEntry"}
+    <AddEntry />
+{/if}
+
+{#if $dropdown.state === "confirm"}
+    <Confirm />
 {/if}
 
 
@@ -60,7 +62,6 @@
     #deactivated, #main, #list {
         position: absolute;
     }
-
 
     div {
         height: 400px;
@@ -75,8 +76,6 @@
     .blur {
         filter: blur(20px);
     }
-
-    
 
     :global(body) {
         background: var(--background);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Mode } from "../../../modules/listComponets";
-    import { storageStore } from "../../../modules/stores/storageStores";
+    import { storageStore } from "../../../stores/storageStores";
     
 
     

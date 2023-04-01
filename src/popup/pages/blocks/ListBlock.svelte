@@ -3,8 +3,8 @@
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { List } from "../../../modules/listComponets";
     import EntryControler from "../../../modules/entryControler";
-    import { currentUrlStore, timerStore } from "../../../modules/stores/dataStores";
-    import { addEntryDropdownStore, popupPageStore } from "../../../modules/stores/popupStateStores";
+    import { currentUrlStore, timerStore } from "../../../stores/dataStores";
+    import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
 
 
@@ -40,12 +40,12 @@
         buttons: [
             {
                 name: "Add Entry",
-                onClick: () => addEntryDropdownStore.open(list),
+                onClick: () => dropdown.addEntry(list),
                 title: "Add a list entry"
             },
             {
-                name: "Edit List",
-                onClick: () => popupPageStore.list(list),
+                name: `${(list.info.locked ? "View" : "Edit")} List`,
+                onClick: () => popupPage.list(list),
                 title: "View List"
             }
         ]

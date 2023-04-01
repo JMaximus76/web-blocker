@@ -124,7 +124,21 @@ export type Servers = {
 };
 
 
+export function formatTime(time: number): string {
+    if (time < 1000) return "0:00";
+    const second = 1000;
+    const minute = second * 60;
+    const hour = minute * 60;
 
+    const h = Math.trunc(time / hour);
+    const m = Math.trunc((time - h * hour) / minute);
+    const s = Math.trunc((time - h * hour - m * minute) / second);
+
+
+
+    if (h === 0 || m === 0) return `${m}:${(s < 10 ? "0" : "") + s}`;
+    return `${h}:${(m < 10 ? "0" : "") + m}:${(s < 10 ? "0" : "") + s}`;
+}
 
 
 

@@ -1,7 +1,7 @@
 
 <script lang="ts">
     import { isURL } from "../../../modules/util";
-    import { currentUrlStore } from "../../../modules/stores/dataStores";
+    import { currentUrlStore } from "../../../stores/dataStores";
     import type { Options } from "../../popupTypes";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
 

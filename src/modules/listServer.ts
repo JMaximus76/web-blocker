@@ -161,7 +161,7 @@ export default class ListServer {
             if (active !== undefined && info.active !== active) continue;
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
-            if (activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerControler))) continue;
+            if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerControler))) continue;
             if (match !== undefined && !(await this.#entrysFilter(match, info, entryControler))) continue;
             filteredInfos.push(info);
         }

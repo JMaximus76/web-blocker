@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
-import ItemServer, { type RuntimeSettings } from "../itemServer";
-import { buildList, type List } from "../listComponets";
-import ListServer from "../listServer";
+import ItemServer, { type RuntimeSettings } from "../modules/itemServer";
+import { buildList, type List } from "../modules/listComponets";
+import ListServer from "../modules/listServer";
 
 
 

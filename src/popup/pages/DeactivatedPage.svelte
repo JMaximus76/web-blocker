@@ -1,14 +1,14 @@
 
 <script lang="ts">
     import TextButton from "../components/TextButton.svelte";
-    import { popupPageStore } from "../../modules/stores/popupStateStores";
-    import { storageStore } from "../../modules/stores/storageStores";
+    import { popupPage } from "../../stores/popupStateStores";
+    import { storageStore } from "../../stores/storageStores";
 
 
 
     function activate(): void {
         $storageStore.runtimeSettings.isActive = true;
-        popupPageStore.main();
+        popupPage.main();
     }
 </script>
 

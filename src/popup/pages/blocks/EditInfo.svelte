@@ -3,6 +3,9 @@
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { Info } from "../../../modules/listComponets";
     import { capitalizeFirstLetter } from "../../../modules/util";;
+    import { storageStore } from "../../../stores/storageStores";
+    import { popupPage } from "../../../stores/popupStateStores";
+    import { dropdown } from "../../../stores/popupStateStores";
 
 
 
@@ -11,7 +14,7 @@
     let isValid = true;
     let value: string = info.name;
     let self: HTMLInputElement;
-    let inFocus: boolean = false;
+
 
 
      
@@ -23,11 +26,11 @@
         if (isValid && value !== "") {
             info.name = value
         }
-        inFocus = false;
     }
 
-    function onFocus() {
-        inFocus = true;
+    function deleteList() {
+        storageStore.deleteList(info.id);
+        popupPage.main();
     }
 
 
@@ -46,7 +49,7 @@
             isValid = false;
             textKey = "empty";
         } else {
-            lineColor = inFocus ? "var(--neutral)" : "var(--darkNeutral)";
+            lineColor = "var(--neutral)";
             isValid = true;
             textKey = "";
         }
@@ -56,12 +59,16 @@
     const options: Options = {
         buttons: [
             {   
-                name: "Change Mode",
+                name: "Toggle Mode",
                 title: "Changes the mode of the list",
-                onClick: () => {
-                    if (info.locked) return;
-                    info.mode = (info.mode === "block")? "allow" : "block";
-                }
+                onClick: () => info.mode = (info.mode === "block")? "allow" : "block"
+                
+            },
+            {
+                name: "Delete",
+                title: "Deletes the list",
+                onClick: () => dropdown.confirm(deleteList, `Delete ${info.name}`)
+                
             }
         ],
 
@@ -69,11 +76,11 @@
             globalColor: "var(--lightRed)",
             entrys: {
                 length: {
-                    text: "List name is too long",
+                    text: "Name is too long",
                     title: "List names must be less than 16 characters long"
                 },
                 empty: {
-                    text: "List name cannot be empty",
+                    text: "Name cannot be empty",
                     title: "List names must be at least 1 character long"
                 }
             }
@@ -84,19 +91,14 @@
 
 
 
-<div class="main">
 
-    <div class="container">
-        <h2>Mode</h2>
-        <h2 style:margin-left="51px">Name</h2>
-    </div>
 
-    <OptionsBlock options={options} bind:lineColor bind:textKey enabled={!info.locked}>
-        <div class="container">
-            <div class="mode">
-                {capitalizeFirstLetter(info.mode)}
-            </div>
+    
 
+<OptionsBlock options={options} bind:lineColor bind:textKey enabled={!info.locked}>
+    <div class="main">
+
+        <div class="row">
             <div class="name" >
                 <input
                     type="text" 
@@ -105,14 +107,21 @@
                     bind:value
                     on:keypress={onKey}
                     on:blur={onBlur}
-                    on:focus={onFocus}
                     spellcheck="false"
                     disabled={info.locked}
                 />
             </div>
+
+            <div class="mode">
+                {capitalizeFirstLetter(info.mode)}
+            </div>
+
         </div>
-    </OptionsBlock>
-</div>   
+
+
+    </div>
+</OptionsBlock>
+  
 
         
  
@@ -121,28 +130,20 @@
     .main {
         display: flex;
         flex-direction: column;
-
+        font-size: 17px;
     }
 
-    .container {
+    .row {
         display: flex;
         flex-direction: row;
         justify-content: left;
         align-items: baseline;
     }
 
-    .mode {
-        width: 35px;
-        margin-left: 2px;
-    }
-
-    .name {
-        margin-left: 46px;
-    }
 
     input {
         width: 100%;
-        font-size: 14px;
+        font-size: 17px;
         font-family: 'Roboto', sans-serif;
         color: var(--text);
         border: none;
@@ -150,22 +151,12 @@
         background-color: transparent;
         overflow-x: visible;
         box-sizing: border-box;
-        padding: 4px 0 0 3px;
+        padding: 4px 10px 0 3px;
         transition: background-color 0.3s;
     }
 
     input::placeholder {
         color: var(--textFade); 
-    }
-
-    
-
-    h2 {
-        font-size: 13px;
-        color: var(--text); 
-        font-family: 'Roboto', sans-serif;
-        margin: 3px 0 0 0;
-        font-weight: normal;
     }
 
 

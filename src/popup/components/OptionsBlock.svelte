@@ -8,6 +8,7 @@
     export let lineColor: string = "var(--neutral)";
     export let enabled = true;
 
+   
 
 </script>
 
@@ -21,8 +22,8 @@
 
     <div class="options">
 
-        {#if options.radio !== undefined}
-            <div class="radio block" class:enabled>
+        {#if options.radio !== undefined && enabled}
+            <div class="radio block">
                 {#each options.radio as radio (radio.name)}
                     <label title={radio.title}>
                         <input type=radio bind:group={radioValue} name="radio" value={radio.value}>
@@ -33,21 +34,21 @@
         {/if}
 
 
-        {#if options.buttons !== undefined}
-            <div class="buttons block" class:enabled>
+        {#if options.buttons !== undefined && enabled}
+            <div class="buttons block">
                 {#each options.buttons as button (button.name)}
-                    <button class="option" title={button.title} on:click={button.onClick}>{button.name}</button>
+                    <button class="option" title={button.title} on:click={button.onClick}>
+                        {button.name}
+                    </button>
                 {/each}
             </div>
         {/if}
 
         {#if options.text?.entrys[textKey] !== undefined}
             <div class="text block">   
-                <span 
-                    title={options.text.entrys[textKey].title} 
+                <span title={options.text.entrys[textKey].title} 
                     style:color={options.text.entrys[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
-                    class="option"
-                >
+                    class="option">
                     {options.text.entrys[textKey].text}
                 </span>  
             </div>
@@ -95,7 +96,7 @@
         font-family: inherit;
         transition: color 0.3s;
         margin: 0;
-        margin-right: 7px;
+        margin-right: 12px;
         color: var(--textFade);
     }
 
@@ -104,7 +105,7 @@
         display: none;
     }
 
-    .radio.enabled span {
+    .radio span {
         cursor: pointer;
     }
 
@@ -118,11 +119,11 @@
         background-color: transparent;   
     }
 
-    .buttons.enabled button {
+    .buttons button {
         cursor: pointer;
     }
 
-    .buttons.enabled button:hover {
+    .buttons button:hover {
         color: var(--text);
     }
 
