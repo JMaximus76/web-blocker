@@ -74,7 +74,6 @@
         font-family: 'Roboto', sans-serif;
         margin: 0;
         padding: 2px 5px 2px 2px;
-        white-space: nowrap;
     }
 
 </style>

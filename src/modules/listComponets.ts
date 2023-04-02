@@ -19,7 +19,8 @@ export type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
 export type Entry = {
     mode: EntryMode;
-    value: string;
+    cliped: string;
+    original: string;
 };
 
 export type EntryList = Entry[];

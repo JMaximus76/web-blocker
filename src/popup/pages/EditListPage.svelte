@@ -4,6 +4,7 @@
     import TextButton from "../components/TextButton.svelte";
     import EditNameMode from "./blocks/EditInfo.svelte";
     import EditTimer from "./blocks/EditTimer.svelte";
+    import Entry from "./blocks/Entry.svelte";
 
 
     // should be safe because if its on this page then it must have passed a list to do it.
@@ -36,6 +37,12 @@
         </div>
     </div>
 
+    <div class="entrys">
+        {#each list.entrys.list as entry}
+            <Entry entry={entry} />
+        {/each}
+    </div>
+
     
 {/if}
 
@@ -50,6 +57,17 @@
 
     .edit div {
         margin-bottom: 10px;
+    }
+
+    .entrys {
+        padding: 10px;
+        overflow-y: scroll;
+        height: 100px;
+        scrollbar-width: none;
+    }
+
+    .entrys::-webkit-scrollbar {
+        display: none;
     }
 
     .buttons {

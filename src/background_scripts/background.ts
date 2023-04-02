@@ -54,13 +54,13 @@ browser.runtime.onInstalled.addListener(() => {
         testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
-        // for (let i = 0; i < 20; i++) {
-        //     const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-        //     const entrys = new EntryControler(await listServer.getId("entrys", id));
-        //     for (let j = 0; j < 20; j++) {
-        //         entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
-        //     }
-        // }
+        for (let i = 0; i < 20; i++) {
+            const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
+            const entrys = new EntryControler(await listServer.getId("entrys", id));
+            for (let j = 0; j < 20; j++) {
+                entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
+            }
+        }
 
     }
 

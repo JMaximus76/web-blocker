@@ -41,6 +41,7 @@
     .scroll {
         overflow-y: scroll;
         scrollbar-width: none;
+        white-space: nowrap;
     }
 
     .scroll::-webkit-scrollbar {
