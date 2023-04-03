@@ -1,16 +1,17 @@
 <script lang="ts">
     import { Entry, EntryMode } from "../../../modules/listComponets";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
-
+    import { fade } from 'svelte/transition';
 
     export let entry: Entry;
+    export let deleteEntry: () => void;
 
 
     function prettyMode(mode: EntryMode) {
         switch (mode) {
             case "domain": return "Domain";
             case "exact": return "Exact";
-            case "fullDomain": return "Full Domain";
+            case "fullDomain": return "Full";
             case "url": return "URL";
         }
     }
@@ -46,12 +47,14 @@
 
 
 
-<div class="entry">
+<div class="entry" out:fade={{duration: 150}}>
     <button on:click={() => nextMode()}>{prettyMode(entry.mode)}</button>
 
     <div>
         <HorizontalScroll>{entry.cliped}</HorizontalScroll>
     </div>
+
+    <button on:click={deleteEntry} class="delete" title="Delete Entry">X</button>
 </div>
 
 
@@ -66,7 +69,7 @@
     .entry button {
         margin: 0;
         margin-right: 10px;
-        width: 70px;
+        width: 53px;
         cursor: pointer;
 
         padding: 0;
@@ -79,5 +82,17 @@
 
     .entry div {
         width: 200px;
+    }
+
+
+    .entry button.delete {
+        color: var(--textFade);
+        transition: color 0.3s;
+        width: auto;
+        margin: 0;
+    }
+
+    .entry button.delete:hover {
+        color: var(--text);
     }
 </style>

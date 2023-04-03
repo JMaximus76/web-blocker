@@ -19,8 +19,13 @@ export type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
 export type Entry = {
     mode: EntryMode;
+
+    // I'm not sure if I should keep this because you can alway jsut clip original and this takes up extra storage space
     cliped: string;
+
+
     original: string;
+    id: number;
 };
 
 export type EntryList = Entry[];

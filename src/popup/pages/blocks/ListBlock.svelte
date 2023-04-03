@@ -6,6 +6,7 @@
     import { currentUrlStore, timerStore } from "../../../stores/dataStores";
     import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
+    import { storageStore } from "../../../stores/storageStores";
 
 
 
@@ -44,10 +45,16 @@
                 title: "Add a list entry"
             },
             {
+                name: "Delete",
+                onClick: () => dropdown.confirm(() => storageStore.deleteList(list.info.id), `Delete ${list.info.name}`),
+                title: "Deletes the list"
+            },
+            {
                 name: `${(list.info.locked ? "View" : "Edit")} List`,
                 onClick: () => popupPage.list(list),
                 title: "View List"
-            }
+            },
+            
         ]
     }
 

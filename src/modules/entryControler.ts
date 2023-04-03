@@ -83,33 +83,21 @@ export default class EntryControler {
     addEntry(mode: EntryMode, url: string): void {
         const clipedURL = EntryControler.clipURL(mode, url);
         if (clipedURL === null) throw new Error("addEntry() got null when cliping a url");
-        this.#list.push({ mode, cliped: clipedURL, original: url });
+
+        const entry: Entry = {
+            mode: mode,
+            cliped: clipedURL,
+            original: url,
+            id: (this.#list.at(-1) !== undefined) ? this.#list.at(-1)!.id + 1 : 0
+        }
+
+        this.#list.push(entry);
     }
 
     removeEntry(index: number): void {
         if (index < 0 || index >= this.#list.length) throw new Error(`removeEntry() was given an index that was out of bounds`);
         this.#list.splice(index, 1);
     }
-
-
-
-
-
-
-
-    // not sure if I'll need these
-
-    // getIndex(entry: Entry): number {
-    //     return this.list.findIndex((e) => EntryControler.compareEntries(e, entry));
-    // }
-
-    // getEntry(index: number): Entry {
-    //     if (index < 0 || index >= this.list.length) throw new Error(`getEntry() was given an index that was out of bounds`);
-    //     return this.list[index];
-    // }
-
-
-
 
 
     static clipURL(mode: EntryMode, url: string): string | null {
@@ -137,10 +125,5 @@ export default class EntryControler {
         }
         
     }
-
-    static compareEntries(a: Entry, b: Entry): boolean {
-        return a.mode === b.mode && a.cliped === b.cliped;
-    }
-
 
 }

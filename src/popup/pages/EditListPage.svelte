@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { List } from "../../modules/listComponets";
+    import { fade } from "svelte/transition";
     import { dropdown, popupPage } from "../../stores/popupStateStores";
     import TextButton from "../components/TextButton.svelte";
     import EditNameMode from "./blocks/EditInfo.svelte";
@@ -8,9 +8,16 @@
 
 
     // should be safe because if its on this page then it must have passed a list to do it.
-    $: list = $popupPage.list as List;
+    $: list = $popupPage.list!;
 
+    function deleteEntry(index: number) {
+        list.entrys.removeEntry(index);
+        list = list;
+    }
 
+    function addEntry() {
+        dropdown.addEntry(list).then(() => list = list);
+    }
     
 </script>
 
@@ -21,7 +28,7 @@
         
 
         <div>
-            <TextButton isActive={!list.info.locked} onClick={() => dropdown.addEntry(list)}>
+            <TextButton isActive={!list.info.locked} onClick={addEntry}>
                 Add Entry
             </TextButton>
         </div>
@@ -38,9 +45,14 @@
     </div>
 
     <div class="entrys">
-        {#each list.entrys.list as entry}
-            <Entry entry={entry} />
+        {#if list.entrys.list.length === 0}
+            <div transition:fade|local>No Entrys</div>
+        {/if}
+
+        {#each list.entrys.list as entry, i (entry.id)}
+            <Entry entry={entry} deleteEntry={() => deleteEntry(i)}/>
         {/each}
+        
     </div>
 
     
@@ -64,6 +76,20 @@
         overflow-y: scroll;
         height: 100px;
         scrollbar-width: none;
+        border: solid var(--border) 1px;
+    }
+
+    .entrys div {
+        text-align: center;
+        color: var(--text);
+        font-size: 15px;
+        font-family: 'Roboto', sans-serif;
+        
+        position: relative;
+        width: 100%;
+        height: 0;
+        top: 0;
+        left: 0;
     }
 
     .entrys::-webkit-scrollbar {

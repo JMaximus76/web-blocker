@@ -21,6 +21,10 @@
         $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
     }
 
+    function newList(): void {
+        storageStore.addList({mode: $storageStore.runtimeSettings.mode});
+    }
+
     const transitionSpeed = 150;
 
 </script>
@@ -49,7 +53,7 @@
 
         <TextButton onClick={deactivate}>Deactivate</TextButton>
         <TextButton onClick={changeMode}>Change Mode</TextButton>
-
+        <TextButton onClick={newList}>New List</TextButton>
 
     </div>
 {/if}

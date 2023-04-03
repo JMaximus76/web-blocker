@@ -111,10 +111,14 @@ function createDropdownStore() {
     return {
         subscribe: store.subscribe,
 
-        addEntry(list: List) {
+        async addEntry(list: List) {
             state.state = "addEntry";
             state.list = list;
             store.set(state);
+            
+            while (state.state === "addEntry") {
+                await new Promise((resolve) => setTimeout(resolve, 40));
+            }
         },
 
         confirm(callback: () => void, text: string) {
