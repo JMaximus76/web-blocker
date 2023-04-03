@@ -19,7 +19,7 @@
 
 
 <div class:blur={$dropdown.state !== "blank"} id="popup">
-    <Header />
+    <Header showDeactivate={$popupPage.page !== "deactivated"} />
 
     {#if $storageStore.ready }
         {#if $popupPage.page === "main"}
@@ -71,6 +71,8 @@
     #popup {
         transition: filter 0.2s;
         overflow: hidden;
+        height: 400px;
+        width: 300px;
     }
 
     .blur {

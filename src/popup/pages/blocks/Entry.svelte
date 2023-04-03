@@ -81,7 +81,7 @@
     }
 
     .entry div {
-        width: 200px;
+        width: 196px;
     }
 
 
@@ -90,6 +90,7 @@
         transition: color 0.3s;
         width: auto;
         margin: 0;
+        margin-left: 10px;
     }
 
     .entry button.delete:hover {

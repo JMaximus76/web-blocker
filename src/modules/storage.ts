@@ -9,24 +9,21 @@ import { jsonCopy, sendMessage, type Data, type Id, type Message } from './util'
 
 export default class Storage {
 
-    // should work like a singleton so that across all instances of storage they all share the same cache
-    // should be using a map here but i'm lazy and this works so prob wont' change it
+
     #cache: Record<string, object> = {};
-    // ^ this might cause problems
-    // if for some reason in the ui the store gets totally turned off and then data get modifyed
-    // then this will not get updated, it would then have an invalid copy\
-    // yeah so it did cause problems for the backgroudn script
+
     
 
 
     /** 
      * Gets keys from cache or local storage.
-     * If key does not exist in either location it throws an error.
+     * If key does not exist in either location it returns undefined.
     */
     async getKeys<T extends object>(keys: string[]): Promise<(T | undefined)[]> {
-         // gets all items from cache, some of those might be undefined so we get those from local storage.
+        // gets all items from cache, some of those might be undefined so we get those from local storage.
         // if its also undefined in local storage will return undefined for that key.
         const items: (object | undefined)[] = [];
+        
         for (const key of keys) {
             const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
 
@@ -52,8 +49,7 @@ export default class Storage {
 
 
     /** 
-     * Gets an item from local storage and wraps it in a proxy object.
-     * This item is then placed in the cache and returned.
+     * Gets an item from local storage, places it in the cache and returns it.
      * Returns undefined if the item does not exist in local storage.
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {

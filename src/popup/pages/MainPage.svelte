@@ -1,9 +1,9 @@
 <script lang="ts">
     import TextButton from "../components/TextButton.svelte";
     import { storageStore } from "../../stores/storageStores";
-    import { popupPage } from "../../stores/popupStateStores";
     import Lists from "./blocks/Lists.svelte";
     import { fade } from "svelte/transition";
+    import { capitalizeFirstLetter } from "../../modules/util";
 
 
 
@@ -12,10 +12,7 @@
     // if flickering use onMount and a default version of rts, await the promise then load it on.
 
 
-    function deactivate(): void {
-        $storageStore.runtimeSettings.isActive = false;
-        popupPage.deactivated();
-    }
+    
 
     function changeMode(): void {
         $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
@@ -33,9 +30,19 @@
 
 
 {#if $storageStore.ready}
-    <div id="main">
+    <div class="main">
 
-        <div id="lists">
+        
+        <div class="topButtons">
+            <TextButton onClick={changeMode}>Change Mode</TextButton>
+            <TextButton onClick={newList}>New List</TextButton>
+        </div>
+        
+        <div class="info">
+            Curent Mode: {capitalizeFirstLetter($storageStore.runtimeSettings.mode)}
+        </div>
+
+        <div class="lists">
             {#if $storageStore.runtimeSettings.mode === "block"}
                 <div 
                 in:fade|local={{duration: transitionSpeed, delay: transitionSpeed}} 
@@ -51,9 +58,8 @@
             {/if}
         </div>
 
-        <TextButton onClick={deactivate}>Deactivate</TextButton>
-        <TextButton onClick={changeMode}>Change Mode</TextButton>
-        <TextButton onClick={newList}>New List</TextButton>
+        
+        
 
     </div>
 {/if}
@@ -63,15 +69,19 @@
 
 <style>
 
-    #main {
+    .main {
         background-color: transparent;
-        height: 100%;
         width: 100%;
         display: inline-block;
-        padding-left: 10px;
+        padding: 10px;
+        box-sizing: border-box;
     }
 
-    #lists {
+    .topButtons {
+        margin-bottom: 10px;
+    }
+
+    .lists {
         display: inline-block;
         height: 215px;
         width: 100%;
@@ -83,7 +93,7 @@
         scrollbar-width: none;
     }
 
-    #lists::-webkit-scrollbar {
+    .lists::-webkit-scrollbar {
         display: none;
     }
 

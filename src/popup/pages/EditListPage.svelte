@@ -24,15 +24,7 @@
 
 {#if list !== null}
 
-    <div class="buttons">
-        
-
-        <div>
-            <TextButton isActive={!list.info.locked} onClick={addEntry}>
-                Add Entry
-            </TextButton>
-        </div>
-    </div>
+    
 
     <div class="edit">
         <div>
@@ -42,6 +34,11 @@
         <div>
             <EditTimer list={list} />
         </div>
+    </div>
+
+    <div class="buttons">
+        <TextButton isActive={!list.info.locked} onClick={addEntry}>Add Entry</TextButton>
+        <TextButton onClick={() => popupPage.main()}>Back</TextButton>
     </div>
 
     <div class="entrys">
@@ -58,9 +55,7 @@
     
 {/if}
 
-<TextButton onClick={() => popupPage.main()}>
-    Back
-</TextButton>
+
 
 <style>
     .edit {
@@ -99,9 +94,10 @@
     .buttons {
         display: flex;
         justify-content: left;
+        margin-bottom: 10px;
     }
 
-    .buttons div {
-        margin: 0 10px;
-    }
+    
+
+    
 </style>
