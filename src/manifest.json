@@ -6,8 +6,12 @@
   "name": "Web Block",
   "description": "Allows users to specify certain websites to be blocked.",
 
-  "icons": {
+  "{{firefox}}.icons": {
     "48": "icons/logo_black.svg"
+  },
+
+  "{{chrome}}.icons": {
+    "48": "icons/logo_black_48.png"
   },
 
   "permissions": [
@@ -19,7 +23,15 @@
 
 
 
-  "action": {
+  "{{chrome}}.action": {
+    "default_icon": {
+      "32": "icons/logo_black_32.png"
+    },
+    "default_title": "Web Block",
+    "default_popup": "src/popup/popup.html"
+  },
+
+  "{{firefox}}.action": {
     "default_icon": {
       "19": "icons/logo_black.svg"
     },

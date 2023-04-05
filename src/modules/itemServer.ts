@@ -9,6 +9,7 @@ import browser from "webextension-polyfill";
 export type RuntimeSettings = {
     isActive: boolean;
     mode: Mode;
+    resetTime: number;
 }
 
 type ActiveTimers = string[];

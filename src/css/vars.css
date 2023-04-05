@@ -8,6 +8,8 @@
     --element: #EBF1FF;
     --border: #5D6598;
 
+    --blockedPageBackground: #242840;
+
     --buttonColor: #4B0AFF;
     --buttonHover: rgba(0, 0, 0, 15%);
     --buttonActive: rgba(0, 0, 0, 30%);

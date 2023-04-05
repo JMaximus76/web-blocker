@@ -23,15 +23,8 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 browser.runtime.onInstalled.addListener(() => {
 
-    async function init(): Promise<void> {
 
-        // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
-        await browser.storage.local.clear();
-
-
-        ListServer.init();
-        ItemServer.init();
-        
+    async function test(): Promise<void> {
 
         const listServer = new ListServer();
         await listServer.sync();
@@ -54,19 +47,72 @@ browser.runtime.onInstalled.addListener(() => {
         testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
-        // for (let i = 0; i < 20; i++) {
-        //     const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-        //     const entrys = new EntryControler(await listServer.getId("entrys", id));
-        //     for (let j = 0; j < 20; j++) {
-        //         entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
-        //     }
-        // }
+        for (let i = 0; i < 20; i++) {
+            const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
+            const entrys = new EntryControler(await listServer.getId("entrys", id));
+            for (let j = 0; j < 20; j++) {
+                entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
+            }
+        }
+    }
 
+    async function init(): Promise<void> {
+
+        // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
+        // await browser.storage.local.clear();
+        
+
+        ListServer.init();
+        ItemServer.init();
+        
+    
+        await test();
     }
 
 
     init().catch(handelError);
     
+});
+
+
+
+
+
+async function resetTimers() {
+    const listServer = new ListServer();
+    await listServer.sync();
+
+    const timerList = await listServer.request("timer", {});
+    const timerControler = new TimerControler();
+
+    timerList.forEach(timer => {
+        timerControler.timer = timer;
+        timerControler.reset();
+    });
+
+    checkAll({listServer, itemServer: new ItemServer()});
+}
+
+async function setTimerResets() {
+    const itemServer = new ItemServer();
+    const runtimeSettings = await itemServer.get("runtimeSettings");
+    const currentDate = Date.now();
+
+    const millisecondsinDay = 1000 * 60 * 60 * 24;
+
+    if (runtimeSettings.resetTime + millisecondsinDay <= currentDate) {
+        resetTimers();
+        runtimeSettings.resetTime = currentDate - (currentDate % millisecondsinDay);
+    }
+
+    const nextResetTime = runtimeSettings.resetTime + millisecondsinDay;
+
+    browser.alarms.create("resetTimers", { when: nextResetTime + 1 });
+}
+
+
+browser.runtime.onStartup.addListener(() => {
+    setTimerResets().catch(handelError);
 });
 
 
@@ -254,15 +300,23 @@ browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
 browser.alarms.onAlarm.addListener((alarm) => {
     console.log("timer went off");
 
-    async function alarmed() {
+    async function blockTimer() {
         const servers = await makeServers();
         await manageTimers(servers);
         await checkAll(servers);
     }
 
-    if (alarm.name === "blockTimer") {
-       alarmed().catch(handelError); 
+    switch (alarm.name) {
+        case "blockTimer":
+            blockTimer().catch(handelError);
+            break;
+        case "resetTimers":
+            resetTimers().catch(handelError);
+            break;
     }
+
+
+
 });
 
 
