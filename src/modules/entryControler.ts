@@ -68,11 +68,12 @@ export default class EntryControler {
         }
     }
 
-    
-    check(url: string): boolean {
+    check(url: string): boolean;
+    check(clipsOrUrl: ReturnType<typeof EntryControler.allClips> | string): boolean {
+        const clips = (typeof clipsOrUrl === "string") ? EntryControler.allClips(clipsOrUrl) : clipsOrUrl;
+
         for (const entry of this.#list) {
-            const clipedURL = EntryControler.clipURL(entry.mode, url);
-            if (clipedURL === entry.cliped) {
+            if (clips[entry.mode] === entry.cliped) {
                 return true;
             };
         }
@@ -124,6 +125,21 @@ export default class EntryControler {
             return regex[regex.length - 1];
         }
         
+    }
+
+    static allClips(url: string): { [key in EntryMode]: string | null } {
+        const clips: { [key in EntryMode]: string | null } = {
+            domain: null,
+            fullDomain: null,
+            url: null,
+            exact: null
+        };
+
+        for (const mode of Object.keys(clips) as EntryMode[]) {
+            clips[mode] = EntryControler.clipURL(mode, url);
+        }
+
+        return clips;
     }
 
 }

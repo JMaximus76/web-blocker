@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { List } from "../../../modules/listComponets";
+    import type { List } from "../../../modules/listComponets";
     import { formatTime } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
-    import { Options } from "../../popupTypes";
+    import type { Options } from "../../popupTypes";
 
     export let list: List;
 
@@ -42,6 +42,9 @@
         list.timer.max = 0;
     }
 
+    function toggleTimer() {
+        list.info.useTimer = !list.info.useTimer;
+    }
     
 
     let lineColor = "var(--neutral)";
@@ -64,12 +67,12 @@
             {
                 name: "Toggle Timer", 
                 title: "Toggle the timer on or off",
-                onClick: () => list.info.useTimer = !list.info.useTimer
+                onClick: toggleTimer
             },
             {
                 name: "Clear",
                 title: "Clear the timer",
-                onClick: () => clear()
+                onClick: clear
             }
         ],
 
@@ -89,9 +92,9 @@
 
 <OptionsBlock options={options} enabled={!list.info.locked} bind:lineColor bind:textKey>
     <div class = "row">
-        <div class="state">
+        <button class="state clearButton" on:click={toggleTimer}>
             {list.info.useTimer ? "On" : "Off"}
-        </div>
+        </button>
 
         <div class="time">
             <span>hour</span>
@@ -177,7 +180,14 @@
 
     
 
-    
+    .clearButton {
+        background-color: transparent;
+        border: none;
+        margin: none;
+        padding: none;
+        color: inherit;
+        font: inherit;
+    }
 
 
     

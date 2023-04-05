@@ -1,11 +1,18 @@
 <script lang="ts">
-    import { Entry, EntryMode } from "../../../modules/listComponets";
+    import type { Entry, EntryMode } from "../../../modules/listComponets";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
     import { fade } from 'svelte/transition';
 
     export let entry: Entry;
     export let deleteEntry: () => void;
 
+
+    const modeTitleLookup: {[key in EntryMode]: string} = {
+        domain: "Domain: Blocks specific subdomain ingnoring other subdomains",
+        fullDomain: "Full Domain: Blocks all pages under the domain",
+        url: "URL: Only blocks specified URL",
+        exact: "Exact: Only blocks exact URL"
+    }
 
     function prettyMode(mode: EntryMode) {
         switch (mode) {
@@ -48,7 +55,7 @@
 
 
 <div class="entry" out:fade={{duration: 150}}>
-    <button on:click={() => nextMode()}>{prettyMode(entry.mode)}</button>
+    <button title={modeTitleLookup[entry.mode]} on:click={() => nextMode()}>{prettyMode(entry.mode)}</button>
 
     <div>
         <HorizontalScroll>{entry.cliped}</HorizontalScroll>
@@ -90,7 +97,7 @@
         transition: color 0.3s;
         width: auto;
         margin: 0;
-        margin-left: 10px;
+        margin-left: auto;
     }
 
     .entry button.delete:hover {

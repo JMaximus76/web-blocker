@@ -4,22 +4,15 @@
     import Lists from "./blocks/Lists.svelte";
     import { fade } from "svelte/transition";
     import { capitalizeFirstLetter } from "../../modules/util";
+    import { popupPage } from "../../stores/popupStateStores";
 
-
-
-
-
-    // if flickering use onMount and a default version of rts, await the promise then load it on.
-
-
-    
 
     function changeMode(): void {
         $storageStore.runtimeSettings.mode = ($storageStore.runtimeSettings.mode === "block")? "allow" : "block";
     }
 
     function newList(): void {
-        storageStore.addList({mode: $storageStore.runtimeSettings.mode});
+        storageStore.addList({mode: $storageStore.runtimeSettings.mode}).then((list) => popupPage.list(list));
     }
 
     const transitionSpeed = 150;
@@ -33,15 +26,12 @@
     <div class="main">
 
         
-        <div class="topButtons">
-            <TextButton onClick={changeMode}>Change Mode</TextButton>
-            <TextButton onClick={newList}>New List</TextButton>
-        </div>
         
-        <div class="info">
+        
+        <div class="listsHeader">
             Curent Mode: {capitalizeFirstLetter($storageStore.runtimeSettings.mode)}
+            
         </div>
-
         <div class="lists">
             {#if $storageStore.runtimeSettings.mode === "block"}
                 <div 
@@ -58,9 +48,10 @@
             {/if}
         </div>
 
-        
-        
-
+        <div class="buttons">
+            <div><TextButton onClick={newList}>New List</TextButton></div>
+            <div><TextButton onClick={changeMode}>Change Mode</TextButton></div>
+        </div>
     </div>
 {/if}
 
@@ -71,14 +62,8 @@
 
     .main {
         background-color: transparent;
-        width: 100%;
         display: inline-block;
-        padding: 10px;
-        box-sizing: border-box;
-    }
-
-    .topButtons {
-        margin-bottom: 10px;
+        padding: 0 10px;
     }
 
     .lists {
@@ -95,6 +80,22 @@
 
     .lists::-webkit-scrollbar {
         display: none;
+    }
+
+    .listsHeader {
+        font-size: 20px;
+        color: var(--text);
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .buttons {
+        margin-top: 10px;
+        display: flex;
+
+    }
+
+    .buttons div {
+        margin-right: 10px;
     }
 
 

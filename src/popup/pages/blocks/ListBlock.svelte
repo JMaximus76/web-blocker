@@ -52,7 +52,7 @@
             {
                 name: `${(list.info.locked ? "View" : "Edit")} List`,
                 onClick: () => popupPage.list(list),
-                title: "View List"
+                title: "Page to control lists"
             },
             
         ]

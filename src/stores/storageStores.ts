@@ -61,12 +61,13 @@ function createStorageStore() {
     return {
         ...store,
 
-        addList(details?: Parameters<ListServer["registerList"]>[0]) {
+        async addList(details?: Parameters<ListServer["registerList"]>[0]) {
             const id = listServer.registerList(details);
-            listServer.biuldListFromStorage(id).then((list) => {
-                storage.lists[id] = list;
-                store.set(storage);
-            });
+
+            const list = await listServer.buildListFromStorage(id);
+            storage.lists[id] = list;
+            store.set(storage);
+            return list;
         },
 
         deleteList(id: string) {

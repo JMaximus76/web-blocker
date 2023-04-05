@@ -59,7 +59,7 @@ export default class ListServer {
     }
 
     
-    async biuldListFromStorage(id: string) {
+    async buildListFromStorage(id: string) {
         const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
         if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
 

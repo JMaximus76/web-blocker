@@ -27,21 +27,27 @@
     
 
     <div class="edit">
+        <h1>Name & Mode</h1>
         <div>
             <EditNameMode info={list.info} />
         </div>
 
+        <h1>Timer</h1>
         <div>
             <EditTimer list={list} />
         </div>
     </div>
 
-    <div class="buttons">
+    
+
+    <div class="entrysHeader">
+        <h1>List Entrys</h1>
         <TextButton isActive={!list.info.locked} onClick={addEntry}>Add Entry</TextButton>
-        <TextButton onClick={() => popupPage.main()}>Back</TextButton>
     </div>
 
     <div class="entrys">
+        
+
         {#if list.entrys.list.length === 0}
             <div transition:fade|local>No Entrys</div>
         {/if}
@@ -49,17 +55,19 @@
         {#each list.entrys.list as entry, i (entry.id)}
             <Entry entry={entry} deleteEntry={() => deleteEntry(i)}/>
         {/each}
-        
     </div>
 
     
 {/if}
 
-
+<div class="back">
+    <TextButton onClick={() => popupPage.main()}>Back</TextButton>
+</div>
 
 <style>
     .edit {
-        padding: 10px;
+        margin: 10px;
+        margin-top: 0;
     }
 
     .edit div {
@@ -91,13 +99,30 @@
         display: none;
     }
 
-    .buttons {
+    .entrysHeader {
         display: flex;
         justify-content: left;
+        align-items: center;
         margin-bottom: 10px;
+    }
+
+    .entrysHeader h1 {
+        margin: 0 10px;
+        font-size: 18px;
     }
 
     
 
-    
+    h1 {
+        color: var(--text);
+        margin: 0;
+        font-size: 13px;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .back {
+        float: right;
+        margin-top: 10px;
+        margin-right: 10px;
+    }
 </style>

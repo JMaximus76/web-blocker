@@ -20,12 +20,12 @@
             {
                 name: "Full Domain",
                 value: "fullDomain",
-                title: "Fully blocks the domain"
+                title: "Blocks all pages under the domain"
             },
             {
                 name: "Domain",
                 value: "domain",
-                title: "Fully blocks all pages under the subdomain"
+                title: "Blocks specific subdomain ingnoring other subdomains"
             },
             {
                 name: "URL",

@@ -33,6 +33,10 @@
         popupPage.main();
     }
 
+    function changeMode() {
+        info.mode = (info.mode === "block")? "allow" : "block";
+    }
+
 
 
     let lineColor: string;
@@ -61,7 +65,7 @@
             {   
                 name: "Toggle Mode",
                 title: "Changes the mode of the list",
-                onClick: () => info.mode = (info.mode === "block")? "allow" : "block"
+                onClick: changeMode
                 
             },
             {
@@ -112,9 +116,9 @@
                 />
             </div>
 
-            <div class="mode">
+            <button class="clearButton" on:click={changeMode}>
                 {capitalizeFirstLetter(info.mode)}
-            </div>
+            </button>
 
         </div>
 
@@ -159,5 +163,13 @@
         color: var(--textFade); 
     }
 
+    .clearButton {
+        background-color: transparent;
+        border: none;
+        margin: none;
+        padding: none;
+        color: inherit;
+        font: inherit;
+    }
 
 </style>
