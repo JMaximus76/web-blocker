@@ -1,11 +1,7 @@
-# Web Block Firefox Addon
+# Web Block
 
-This extention blocks specified websites from the user.
+Block unwated websites easily.
 
+In Beta: This extension is under active development and is still missing planed features. Expect that there might be bugs and other issues. It is currently in a stable and complete enough state that I feel comfortable releasing it.
 
- 
-# WORK IN PROGRESS
-I am making this for a self directed school project and to be honest I don't really know what I'm doing. If for some reason you find yourself looking at this repository and my code, I'm sorry. (Also I just lerned how to use git 3 days ago so its kind of scuffed)
-
-# Don't look at my Svelte code
-When I started working on this project I barely read the documentation for it so I designed terribly. Sorry.
+Web Block manages lists of websites that you create. When you navigate to a website on a list it will redirect you to a block page. There are two different types of lists: block lists block the websites on them, allow lists allow the websites on them while blocking everything else. Lists can also have timers that will keep track of how long you are breaking the rules of the list, once time is up it will go back to blocking the website.
