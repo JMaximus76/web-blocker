@@ -24,37 +24,40 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 browser.runtime.onInstalled.addListener(() => {
 
 
-    async function test(): Promise<void> {
+    // async function test(): Promise<void> {
 
-        const listServer = new ListServer();
-        await listServer.sync();
+    //     const listServer = new ListServer();
+    //     await listServer.sync();
 
-        const blockListID = listServer.registerList({name: "Block List", mode: "block"});
-        const blockEntrys = new EntryControler(await listServer.getId("entrys", blockListID));
-        blockEntrys.addEntry("domain", "https://www.youtube.com/");
-        blockEntrys.addEntry("domain", "https://www.netflix.com/");
-        blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
+    //     const blockListID = listServer.registerList({name: "Block List", mode: "block"});
+    //     const blockEntrys = new EntryControler(await listServer.getId("entrys", blockListID));
+    //     blockEntrys.addEntry("domain", "https://www.youtube.com/");
+    //     blockEntrys.addEntry("domain", "https://www.netflix.com/");
+    //     blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
 
-        const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-        const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
-        allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
-        allowEntrys.addEntry("domain", "https://www.learncpp.com/");
-        allowEntrys.addEntry("domain", "https://www.google.com/");
+    //     const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
+    //     const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
+    //     allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
+    //     allowEntrys.addEntry("domain", "https://www.learncpp.com/");
+    //     allowEntrys.addEntry("domain", "https://www.google.com/");
 
 
-        const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1, locked: true});
-        const testEntrys = new EntryControler(await listServer.getId("entrys", testID));
-        testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
+    //     const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1, locked: true});
+    //     const testEntrys = new EntryControler(await listServer.getId("entrys", testID));
+    //     testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
-        for (let i = 0; i < 20; i++) {
-            const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-            const entrys = new EntryControler(await listServer.getId("entrys", id));
-            for (let j = 0; j < 20; j++) {
-                entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
-            }
-        }
-    }
+    //     for (let i = 0; i < 20; i++) {
+    //         const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
+    //         const entrys = new EntryControler(await listServer.getId("entrys", id));
+    //         for (let j = 0; j < 20; j++) {
+    //             entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
+    //         }
+    //     }
+    // }
+
+
+
 
     async function init(): Promise<void> {
 
@@ -64,9 +67,14 @@ browser.runtime.onInstalled.addListener(() => {
 
         ListServer.init();
         ItemServer.init();
-        
-    
-        await test();
+        //await test();
+
+        const listServer = new ListServer();
+        await listServer.sync();
+        listServer.registerList({name: "Block List", mode: "block"});
+        const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
+        const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
+        allowEntrys.addEntry("domain", "https://www.google.com/");
     }
 
 
@@ -144,7 +152,7 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
     const tabs = await browser.tabs.query({ active: true });
     if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
 
-    console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
+    //console.log(`------managing timers for ${tabs.length} tab${tabs.length === 1 ? "" : "s"}`);
 
 
     let lowestTime = Number.POSITIVE_INFINITY;
@@ -198,7 +206,7 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
     if (!runtimeSettings.isActive) return;
 
 
-    console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
+    //console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
     // I mean at this point I feel like I should just make a listServer function that checks a url and return a boolean
     // but then again it would literally just be this and this is the only place that would use it
@@ -209,10 +217,10 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
     if (infos.length !== 0) doBlocking = !doBlocking;
 
     if (doBlocking && !urlIsBlockedPage) {
-        console.log(`BLOCKING a page with url of ${url}`);
+        //console.log(`BLOCKING a page with url of ${url}`);
         browser.tabs.update(tabId, { url: blockedPageURL + `?url=${url}` });
     } else if (!doBlocking && urlIsBlockedPage) {
-        console.log(`UNBLOCKING page with url of ${url}`);
+        //console.log(`UNBLOCKING page with url of ${url}`);
         browser.tabs.update(tabId, { url: url }).catch(handelError);
     }
 }
@@ -236,7 +244,7 @@ async function checkAll(servers: Servers) {
 
 browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     if (navigate.frameId !== 0) return;
-    console.log("doing on navigate");
+    //console.log("doing on navigate");
 
     async function navigated() {
         await check(navigate.url, navigate.tabId, await makeServers()).catch(handelError);
@@ -251,11 +259,11 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
 
 
 browser.tabs.onActivated.addListener((activeInfo) => {
-    console.log("on activated");
+    //console.log("on activated");
 
     async function activated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
-            console.log("doing on activated");
+            //console.log("doing on activated");
             const servers = await makeServers();
 
             await manageTimers(servers);
@@ -271,7 +279,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 // would filter this but chrome does not have support for that :/
 browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-    console.log("on updated");
+    //console.log("on updated");
     
     async function updated(tab: browser.Tabs.Tab) {
         if (tab.id !== undefined && tab.url !== undefined) {
@@ -298,7 +306,7 @@ browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
 
 
 browser.alarms.onAlarm.addListener((alarm) => {
-    console.log("timer went off");
+    //console.log("timer went off");
 
     async function blockTimer() {
         const servers = await makeServers();
@@ -333,17 +341,17 @@ browser.runtime.onMessage.addListener((message) => {
         }
     }
 
-    console.log("got message");
+    //console.log("got message");
     messaged(message).catch(handelError);
 
 });
 
 
-browser.storage.local.onChanged.addListener((changes) => {
+// browser.storage.local.onChanged.addListener((changes) => {
 
-    console.table(changes);
+//     console.table(changes);
     
-});
+// });
 
 
 

@@ -39,7 +39,8 @@ function createStorageStore() {
         ready: false,
         runtimeSettings: {
             isActive: true,
-            mode: "block"
+            mode: "block",
+            resetTime: 0
         },
         lists: {}
     };

@@ -29,3 +29,15 @@
     {/if}
 </div>
 
+
+
+<style>
+    p {
+        font-family: 'Roboto', sans-serif;
+        color: var(--text);
+        font-size: 18px;
+        text-align: center;
+        margin-top: 50px;
+    }
+</style>
+

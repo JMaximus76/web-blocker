@@ -69,7 +69,7 @@
     .lists {
         display: inline-block;
         height: 215px;
-        width: 100%;
+        width: 300px;
         margin: 10px 0px;
 
         background-color: transparent;

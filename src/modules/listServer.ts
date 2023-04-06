@@ -58,7 +58,7 @@ export default class ListServer {
         this.#record = item;
     }
 
-    
+    // VERY inneficient, would need to re work the storage system to fix this
     async buildListFromStorage(id: string) {
         const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
         if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
@@ -115,10 +115,7 @@ export default class ListServer {
      * Deletes a list and all of its components 
      */
     deleteList(id: string): void {
-        console.log("deleting list");
-        console.log(this.#record);
         this.#record.splice(this.#record.indexOf(id), 1);
-        console.log(this.#record);
         this.#storage.delete([ListServer.infoId(id), ListServer.entryListId(id), ListServer.timerId(id)]);
     }
 
@@ -149,7 +146,6 @@ export default class ListServer {
      * Takes a list component type and a set of filter parameters and returns a list of all matching components.
      */
     async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
-        console.log("requesting with:", this.#record);
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
         const filteredInfos: Info[] = [];
 
