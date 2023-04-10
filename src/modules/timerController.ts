@@ -5,16 +5,16 @@ import { sendMessage } from "./util";
 
 
 
-export default class TimerControler {
+export default class TimerController {
 
 
 
     timer: Timer = new Proxy({} as Timer, {
         set: () => {
-            throw new Error("TimerControler was never given a timer");
+            throw new Error("TimerController was never given a timer");
         },
         get: () => {
-            throw new Error("TimerControler was never given a timer");
+            throw new Error("TimerController was never given a timer");
         }
     });
 

@@ -1,8 +1,8 @@
 import browser from 'webextension-polyfill';
-import EntryControler from '../modules/entryControler';
+import EntryController from '../modules/entryController';
 import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
-import TimerControler from '../modules/timerControler';
+import TimerController from '../modules/timerController';
 import { handelError, isHttp, makeServers, type Id, type Message, type Servers } from '../modules/util';
 
 
@@ -30,26 +30,26 @@ browser.runtime.onInstalled.addListener(() => {
     //     await listServer.sync();
 
     //     const blockListID = listServer.registerList({name: "Block List", mode: "block"});
-    //     const blockEntrys = new EntryControler(await listServer.getId("entrys", blockListID));
+    //     const blockEntrys = new EntryController(await listServer.getId("entrys", blockListID));
     //     blockEntrys.addEntry("domain", "https://www.youtube.com/");
     //     blockEntrys.addEntry("domain", "https://www.netflix.com/");
     //     blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
 
     //     const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-    //     const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
+    //     const allowEntrys = new EntryController(await listServer.getId("entrys", allowListID));
     //     allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
     //     allowEntrys.addEntry("domain", "https://www.learncpp.com/");
     //     allowEntrys.addEntry("domain", "https://www.google.com/");
 
 
     //     const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1, locked: true});
-    //     const testEntrys = new EntryControler(await listServer.getId("entrys", testID));
+    //     const testEntrys = new EntryController(await listServer.getId("entrys", testID));
     //     testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
     //     for (let i = 0; i < 20; i++) {
     //         const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-    //         const entrys = new EntryControler(await listServer.getId("entrys", id));
+    //         const entrys = new EntryController(await listServer.getId("entrys", id));
     //         for (let j = 0; j < 20; j++) {
     //             entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
     //         }
@@ -73,7 +73,7 @@ browser.runtime.onInstalled.addListener(() => {
         await listServer.sync();
         listServer.registerList({name: "Block List", mode: "block"});
         const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-        const allowEntrys = new EntryControler(await listServer.getId("entrys", allowListID));
+        const allowEntrys = new EntryController(await listServer.getId("entrys", allowListID));
         allowEntrys.addEntry("domain", "https://www.google.com/");
     }
 
@@ -91,11 +91,11 @@ async function resetTimers() {
     await listServer.sync();
 
     const timerList = await listServer.request("timer", {});
-    const timerControler = new TimerControler();
+    const timerController = new TimerController();
 
     timerList.forEach(timer => {
-        timerControler.timer = timer;
-        timerControler.reset();
+        timerController.timer = timer;
+        timerController.reset();
     });
 
     checkAll({listServer, itemServer: new ItemServer()});
@@ -136,11 +136,11 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
     const timerList = await itemServer.get("activeTimers");
     const timers = await listServer.getIds("timer", timerList);
-    const timerControler = new TimerControler();
+    const timerController = new TimerController();
 
     timers.forEach(timer => {
-        timerControler.timer = timer;
-        timerControler.stop();
+        timerController.timer = timer;
+        timerController.stop();
     });
 
     timerList.length = 0;
@@ -166,11 +166,11 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
         
         
         for (const timer of timers) {
-            timerControler.timer = timer;
+            timerController.timer = timer;
             
-            timerList.push(timerControler.id);
-            timerControler.start();
-            lowestTime = Math.min(lowestTime, timerControler.timeLeft);
+            timerList.push(timerController.id);
+            timerController.start();
+            lowestTime = Math.min(lowestTime, timerController.timeLeft);
             
         }
 

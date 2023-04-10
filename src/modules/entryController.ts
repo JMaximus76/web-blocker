@@ -3,16 +3,16 @@ import type { Entry, EntryList } from "./listComponets";
 
 type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
-export default class EntryControler {
+export default class EntryController {
 
 
 
     #list: EntryList = new Proxy([], {
         set: () => {
-            throw new Error("EntryControler: was never given a timer");
+            throw new Error("EntryController: was never given a timer");
         },
         get: () => {
-            throw new Error("EntryControler: was never given a timer");
+            throw new Error("EntryController: was never given a timer");
         }
     });
 
@@ -27,7 +27,7 @@ export default class EntryControler {
 
                     switch (prop as keyof Entry) {
                         case "mode": {
-                            const newClip = EntryControler.clipURL(value, target.original);
+                            const newClip = EntryController.clipURL(value, target.original);
                             if (newClip === null) throw new Error("EntryConteroler: when updating an Entry for 'mode' got null after cliping");
                             target.mode = value;
                             target.cliped = newClip;
@@ -35,15 +35,15 @@ export default class EntryControler {
                         }
 
                         case "original": {
-                            const newClip = EntryControler.clipURL(target.mode, value);
-                            if (newClip === null) throw new Error("EntryControler: when updating an Entry for 'original' got null after cliping");
+                            const newClip = EntryController.clipURL(target.mode, value);
+                            if (newClip === null) throw new Error("EntryController: when updating an Entry for 'original' got null after cliping");
                             target.original = value;
                             target.cliped = newClip;
                             break;
                         }
 
                         case "cliped": {
-                            throw new Error("EntryControler: can't set 'cliped' directly");
+                            throw new Error("EntryController: can't set 'cliped' directly");
                         }
                     }
 
@@ -69,8 +69,8 @@ export default class EntryControler {
     }
 
     check(url: string): boolean;
-    check(clipsOrUrl: ReturnType<typeof EntryControler.allClips> | string): boolean {
-        const clips = (typeof clipsOrUrl === "string") ? EntryControler.allClips(clipsOrUrl) : clipsOrUrl;
+    check(clipsOrUrl: ReturnType<typeof EntryController.allClips> | string): boolean {
+        const clips = (typeof clipsOrUrl === "string") ? EntryController.allClips(clipsOrUrl) : clipsOrUrl;
 
         for (const entry of this.#list) {
             if (clips[entry.mode] === entry.cliped) {
@@ -82,7 +82,7 @@ export default class EntryControler {
 
 
     addEntry(mode: EntryMode, url: string): void {
-        const clipedURL = EntryControler.clipURL(mode, url);
+        const clipedURL = EntryController.clipURL(mode, url);
         if (clipedURL === null) throw new Error("addEntry() got null when cliping a url");
 
         const entry: Entry = {
@@ -136,7 +136,7 @@ export default class EntryControler {
         };
 
         for (const mode of Object.keys(clips) as EntryMode[]) {
-            clips[mode] = EntryControler.clipURL(mode, url);
+            clips[mode] = EntryController.clipURL(mode, url);
         }
 
         return clips;

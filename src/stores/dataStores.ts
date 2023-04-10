@@ -15,6 +15,7 @@ export const currentTabFaviconStore = readable("", function start(set) {
 
 
 export const currentUrlStore = readable("", function start(set) {
+
     browser.tabs.query({ active: true, currentWindow: true })
         .then((tabs) => {
             if (tabs[0].url !== undefined) {
@@ -26,20 +27,12 @@ export const currentUrlStore = readable("", function start(set) {
 
 
 
-
-
-
-
 type TimerRecord = {
     [key: string]: {
         active: boolean;
         timeLeft: number;
     };
 };
-
-
-
-
 
 
 
@@ -107,7 +100,7 @@ function createTimerStore() {
 
     return {
         subscribe: store.subscribe,
-        addTimer: (id: string, active: boolean, timeLeft: number) => {
+        setTimer: (id: string, active: boolean, timeLeft: number) => {
             timerRecord[id] = {
                 active: active,
                 timeLeft: timeLeft,

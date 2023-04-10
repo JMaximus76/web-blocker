@@ -6,6 +6,7 @@
     import { dropdown } from "../../stores/popupStateStores";
     import DropdownContainer from "./blocks/DropdownContainer.svelte";
     import Exit from "./blocks/Exit.svelte";
+    import { sendMessage } from "../../modules/util";
 
 
     let url: string;
@@ -20,6 +21,7 @@
     function addEntry() {
         if (isValid) {
             list.entrys.addEntry(mode, url);
+            sendMessage("currentUrlStore", "update", null);
             dropdown.close();
         }
     }

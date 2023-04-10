@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { List } from "../../../modules/listComponets";
-    import EntryControler from "../../../modules/entryControler";
+    import EntryController from "../../../modules/entryController";
     import { currentUrlStore, timerStore } from "../../../stores/dataStores";
     import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
@@ -17,7 +17,7 @@
 
 
     $: match = list.entrys.check($currentUrlStore);
-    $: matchTitle = `Match Found: This list matched with ${EntryControler.clipURL("domain", $currentUrlStore)}`;
+    $: matchTitle = `Match Found: This list matched with ${EntryController.clipURL("domain", $currentUrlStore)}`;
     const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
 
 
@@ -28,7 +28,7 @@
 
     onMount(() => {
         if (list.info.useTimer) {
-            timerStore.addTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+            timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
         }
     });
 
@@ -41,7 +41,7 @@
         buttons: [
             {
                 name: "Add Entry",
-                onClick: () => dropdown.addEntry(list),
+                onClick: () => dropdown.addEntry(list).then(() => match = list.entrys.check($currentUrlStore)),
                 title: "Add a list entry"
             },
             {

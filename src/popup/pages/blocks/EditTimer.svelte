@@ -1,45 +1,51 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import type { List } from "../../../modules/listComponets";
     import { formatTime } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { Options } from "../../popupTypes";
+    import { timerStore } from "../../../stores/dataStores";
 
     export let list: List;
 
     let minutesValue: string = (Math.floor(list.timer.max / 60000) % 60).toString();
     let hoursValue: string = Math.floor(Math.floor(list.timer.max / 60000) / 60).toString();
-    //let isValid = true;
-    
 
-    function shiftMinutes(minutes: number, hours: number) {
-        let newHours = hours + Math.floor(minutes / 60);
-        let newMinutes = minutes % 60;
-        if (newHours >= 24) {
-            newHours = 23;
-            newMinutes = 59;
+
+    onMount(() => {
+        if (list.info.useTimer) {
+            timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+        }
+    });
+
+    function shiftMinutes() {
+        let minutes = Number.parseInt(minutesValue);
+        let hours = Number.parseInt(hoursValue);
+
+        const overFlow = Math.floor(minutes / 60);
+        minutes -= overFlow * 60;
+        hours += overFlow;
+
+        if (hours >= 24) {
+            hours = 23;
+            minutes = 59;
         }
 
-        minutesValue = newMinutes.toString();
-        hoursValue = newHours.toString();
-
-        return (newHours * 60) + newMinutes;
+        minutesValue = minutes.toString();
+        hoursValue = hours.toString();
+        return (hours * 60) + minutes;
     }
 
     function onBlur() {
         if (minutesValue === "") minutesValue = "0";
         if (hoursValue === "") hoursValue = "0";
-
-        // if (isValid) {
-        //     const minutes = Number.parseInt(minutesValue);
-        //     const hours = Number.parseInt(hoursValue);
-        //     list.timer.max = shiftMinutes(minutes, hours);
-        // }
     }
 
     function clear() {
         minutesValue = "0";
         hoursValue = "0";
         list.timer.max = 0;
+        timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
     }
 
     function toggleTimer() {
@@ -50,16 +56,16 @@
     let lineColor = "var(--neutral)";
     let textKey = "";
 
-    $: {
-        if (minutesValue.match(/^\d+$/) === null || hoursValue.match(/^\d+$/) === null) {
-            lineColor = "var(--invalid)";
-            textKey = "letter";
-        } else {
-            lineColor = "var(--neutral)";
-            textKey = "";
-            list.timer.max = shiftMinutes(Number.parseInt(minutesValue), Number.parseInt(hoursValue));
-        }
+    $: if (hoursValue.match(/^\d+$/) === null || minutesValue.match(/^\d+$/) === null) {
+        lineColor = "var(--invalid)";
+        textKey = "letter";
+    } else {
+        lineColor = "var(--neutral)";
+        textKey = "";
+        list.timer.max = shiftMinutes();
+        timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
     }
+    
 
 
     const options: Options = {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import EntryControler from "../modules/entryControler";
+    import EntryController from "../modules/entryController";
 
     // the 'as string' is kinda scuffed but oh well
     const blockedURL = new URLSearchParams(window.location.search).get("url") as string;
@@ -9,7 +9,7 @@
 <div class="main">
     <div class="info">
         <h2>This page has been blocked</h2>
-        <a href="{blockedURL}">{`${EntryControler.clipURL("fullDomain", blockedURL)} : ${blockedURL}`}</a>
+        <a href="{blockedURL}">{`${EntryController.clipURL("fullDomain", blockedURL)} : ${blockedURL}`}</a>
     </div>
 </div>
 

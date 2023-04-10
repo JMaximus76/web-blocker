@@ -2,8 +2,8 @@ import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
 import { buildList, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
 import browser from "webextension-polyfill";
-import EntryControler from "./entryControler";
-import TimerControler from "./timerControler";
+import EntryController from "./entryController";
+import TimerController from "./timerController";
 
 
 
@@ -124,22 +124,22 @@ export default class ListServer {
     /**
      * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #entrysFilter(url: string, info: Info, entryControler: EntryControler): Promise<boolean> {
+    async #entrysFilter(url: string, info: Info, entryController: EntryController): Promise<boolean> {
         
         const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
         if (entryList === undefined) throw new Error("listServer got undefined when filtering an entryList");
-        entryControler.list = entryList;
-        return entryControler.check(url);   
+        entryController.list = entryList;
+        return entryController.check(url);   
     }
 
 
-    async #timerFilter(info: Info, timerControler: TimerControler): Promise<boolean> {
+    async #timerFilter(info: Info, timerController: TimerController): Promise<boolean> {
         const timer = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
         if (timer === undefined) throw new Error("listServer got undefined when filtering a timer");
-        timerControler.timer = timer;
+        timerController.timer = timer;
 
         // works like an xor
-        return (info.mode === "block") === timerControler.done;
+        return (info.mode === "block") === timerController.done;
     }
 
     /**
@@ -149,16 +149,16 @@ export default class ListServer {
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
         const filteredInfos: Info[] = [];
 
-        const entryControler = new EntryControler();
-        const timerControler = new TimerControler();
+        const entryController = new EntryController();
+        const timerController = new TimerController();
 
         for (const info of infos) {
             if (info === undefined) throw new Error("listServer got an undefined info when filtering");
             if (active !== undefined && info.active !== active) continue;
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
-            if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerControler))) continue;
-            if (match !== undefined && !(await this.#entrysFilter(match, info, entryControler))) continue;
+            if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerController))) continue;
+            if (match !== undefined && !(await this.#entrysFilter(match, info, entryController))) continue;
             filteredInfos.push(info);
         }
 

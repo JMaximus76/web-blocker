@@ -49,7 +49,7 @@
         
 
         {#if list.entrys.list.length === 0}
-            <div transition:fade|local>No Entrys</div>
+            <div transition:fade|local={{duration: 100}}>No Entrys</div>
         {/if}
 
         {#each list.entrys.list as entry, i (entry.id)}

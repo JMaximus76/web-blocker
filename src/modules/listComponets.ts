@@ -1,5 +1,5 @@
-import EntryControler from "./entryControler";
-import TimerControler from "./timerControler";
+import EntryController from "./entryController";
+import TimerController from "./timerController";
 
 
 
@@ -41,8 +41,8 @@ export type Timer = {
 export function buildList(info: Info, entrys: EntryList, timer: Timer) {
     return {
         info: info,
-        entrys: new EntryControler(entrys),
-        timer: new TimerControler(timer)
+        entrys: new EntryController(entrys),
+        timer: new TimerController(timer)
     };
 }
 

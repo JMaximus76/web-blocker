@@ -117,7 +117,7 @@ function createDropdownStore() {
             store.set(state);
             
             while (state.state === "addEntry") {
-                await new Promise((resolve) => setTimeout(resolve, 40));
+                await new Promise((resolve) => setTimeout(resolve, 80));
             }
         },
 
