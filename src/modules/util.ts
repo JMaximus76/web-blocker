@@ -145,7 +145,13 @@ export function formatTime(time: number): string {
 
 
 
-
+export function trimLength(str: string, length: number) {
+    if (str.length > length) {
+        return str.slice(0, length) + "...";
+    } else {
+        return str;
+    }
+}
 
 
 

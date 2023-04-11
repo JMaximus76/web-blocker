@@ -1,15 +1,19 @@
 <script lang="ts">
     import EntryController from "../modules/entryController";
+    import { trimLength } from "../modules/util";
 
     // the 'as string' is kinda scuffed but oh well
     const blockedURL = new URLSearchParams(window.location.search).get("url") as string;
+
+
+    
 </script>
 
 
 <div class="main">
     <div class="info">
         <h2>This page has been blocked</h2>
-        <a href="{blockedURL}">{`${EntryController.clipURL("fullDomain", blockedURL)} : ${blockedURL}`}</a>
+        <a href="{blockedURL}">{`${EntryController.clipURL("domain", blockedURL)} : ${trimLength(blockedURL, 60)}`}</a>
     </div>
 </div>
 
@@ -38,6 +42,11 @@
         font: inherit;
         color: inherit;
         text-decoration: none;
+        transition: box-shadow 0.3s;
+    }
+
+    .info a:hover {
+        box-shadow: 0 2px 0 0 var(--text);
     }
 
     .info h2 {
