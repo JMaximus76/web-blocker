@@ -4,7 +4,7 @@
 
   "version": "0.0.1",
   "name": "Web Block",
-  "description": "Allows users to specify certain websites to be blocked.",
+  "description": "Block unwated websites easily.",
 
   "{{firefox}}.icons": {
     "48": "icons/logo_black.svg"

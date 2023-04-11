@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type { List } from "../../../modules/listComponets";
-    import { formatTime } from "../../../modules/util";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { Options } from "../../popupTypes";
     import { timerStore } from "../../../stores/dataStores";
@@ -124,7 +123,7 @@
 
         <div class="time">
             <span>left</span>
-            <div>{formatTime(list.timer.timeLeft)}</div>
+            <div>{$timerStore.get(list.timer.id)}</div>
         </div>
 
         
