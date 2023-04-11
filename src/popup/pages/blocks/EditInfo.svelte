@@ -37,6 +37,10 @@
         info.mode = (info.mode === "block")? "allow" : "block";
     }
 
+    function toggleActive() {
+        info.active = !info.active;
+    }
+
 
 
     let lineColor: string;
@@ -63,10 +67,15 @@
     const options: Options = {
         buttons: [
             {   
-                name: "Toggle Mode",
-                title: "Changes the mode of the list",
-                onClick: changeMode
+                name: "Toggle",
+                title: "Turns the list on or off",
+                onClick: toggleActive
                 
+            },
+            {
+                name: "Change Mode",
+                title: "Switches between blocking and allowing modes",
+                onClick: changeMode
             },
             {
                 name: "Delete",
@@ -116,10 +125,15 @@
                 />
             </div>
 
+
             <button class="clearButton" on:click={changeMode}>
                 {capitalizeFirstLetter(info.mode)}
             </button>
 
+
+            <button class="clearButton activeButton" on:click={toggleActive}>
+                {(info.active) ? "On" : "Off"}
+            </button>
         </div>
 
 
@@ -166,10 +180,15 @@
     .clearButton {
         background-color: transparent;
         border: none;
-        margin: none;
-        padding: none;
+        margin: 0;
+        padding: 0;
         color: inherit;
         font: inherit;
+    }
+
+    .activeButton {
+        width: 36px;
+        margin-left: 8px;
     }
 
 </style>

@@ -25,7 +25,7 @@
             {
                 name: "Domain",
                 value: "domain",
-                title: "Blocks specific subdomain ingnoring other subdomains"
+                title: "Blocks specific subdomains ignoring other subdomains"
             },
             {
                 name: "URL",

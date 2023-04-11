@@ -23,7 +23,7 @@
     <div class="options">
 
         {#if options.radio !== undefined && enabled}
-            <div class="radio block">
+            <div class="radio">
                 {#each options.radio as radio (radio.name)}
                     <label title={radio.title}>
                         <input type=radio bind:group={radioValue} name="radio" value={radio.value}>
@@ -35,7 +35,7 @@
 
 
         {#if options.buttons !== undefined && enabled}
-            <div class="buttons block">
+            <div class="buttons">
                 {#each options.buttons as button (button.name)}
                     <button class="option" title={button.title} on:click={button.onClick}>
                         {button.name}
@@ -45,7 +45,7 @@
         {/if}
 
         {#if options.text?.entrys[textKey] !== undefined}
-            <div class="text block">   
+            <div class="text">   
                 <span title={options.text.entrys[textKey].title} 
                     style:color={options.text.entrys[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
                     class="option">
@@ -86,9 +86,7 @@
     }
 
 
-    .block {
-        margin-right: 7px;
-    }
+    
 
     .option {
         display: inline-block;

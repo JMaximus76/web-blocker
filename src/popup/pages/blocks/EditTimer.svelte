@@ -70,7 +70,7 @@
     const options: Options = {
         buttons: [
             {
-                name: "Toggle Timer", 
+                name: "Toggle", 
                 title: "Toggle the timer on or off",
                 onClick: toggleTimer
             },
@@ -188,8 +188,8 @@
     .clearButton {
         background-color: transparent;
         border: none;
-        margin: none;
-        padding: none;
+
+        padding: 0;
         color: inherit;
         font: inherit;
     }

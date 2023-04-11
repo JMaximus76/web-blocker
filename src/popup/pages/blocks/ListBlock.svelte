@@ -6,7 +6,6 @@
     import { currentUrlStore, timerStore } from "../../../stores/dataStores";
     import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
-    import { storageStore } from "../../../stores/storageStores";
 
 
 
@@ -40,26 +39,33 @@
     const options: Options = {
         buttons: [
             {
-                name: "Add Entry",
+                name: "Toggle",
+                onClick: toggleActive,
+                title: "Toggles the list on and off"
+            },
+            {
+                name: "Quicik Add",
                 onClick: () => dropdown.addEntry(list).then(() => match = list.entrys.check($currentUrlStore)),
                 title: "Add a list entry"
-            },
-            {
-                name: "Delete",
-                onClick: () => dropdown.confirm(() => storageStore.deleteList(list.info.id), `Delete ${list.info.name}`),
-                title: "Deletes the list"
-            },
-            {
-                name: `${(list.info.locked ? "View" : "Edit")} List`,
-                onClick: () => popupPage.list(list),
-                title: "Page to control lists"
-            },
-            
-        ]
+            }  
+        ],
+
+        text: {
+            entrys: {
+                on: {
+                    text: "On",
+                    color: "var(--blue)"
+                },
+                off: {
+                    text: "Off",
+                    color: "var(--lightRed)"
+                }
+            }
+        }
     }
 
 
-    $: lineColor = (list.info.active) ? "var(--text)" : "var(--textFade)";
+    $: textKey = (list.info.active) ? "on" : "off";
 
 </script>
 
@@ -68,9 +74,9 @@
 
 <div class="main">
 
-    <OptionsBlock options={options} bind:lineColor>
-        <div class:active={list.info.active} class="infoButton">
-            <button class:locked={list.info.locked} on:click={toggleActive}>{list.info.name}</button>
+    <OptionsBlock bind:textKey options={options}>
+        <div class="infoButton">
+            <button title="Edit List" on:click={() => popupPage.list(list)}>{list.info.name}</button>
 
             <div class="spacer"></div>
 
@@ -123,22 +129,12 @@
         cursor: pointer;
         font-family: 'Roboto', sans-serif;
         font-size: 17px;
-        color: var(--textFade);
+        color: var(--text);
         text-align: left;
         transition: color 0.3s;
     }
-
-    .infoButton button.locked {
-        cursor: default;
-    }
-
-    .infoButton.active {
-        color: var(--text);
-    }
-
-    .infoButton.active button {
-        color: var(--text);
-    }
+    
+    
 
 
     .indicators {
@@ -172,18 +168,16 @@
         font-style: italic;
         font-size: 14px;
         margin-top: auto;
-        color: var(--textFade);
+        color: var(--text);
         transition: color 0.3s;
         font-family: 'Roboto', sans-serif; 
         margin-right: 5px;
     }
 
-    .infoButton.active .timer {
-        color: var(--text);
-    }
     
     button {
         background-color: transparent;
+        color: var(--text);
     }
 
 
