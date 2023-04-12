@@ -3,7 +3,7 @@
     import type { List } from "../../../modules/listComponets";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { Options } from "../../popupTypes";
-    import { timerStore } from "../../../stores/dataStores";
+    import { timerStore, type timerDisplayMode } from "../../../stores/dataStores";
     import { formatTime } from "../../../modules/util";
 
     export let list: List;
@@ -14,7 +14,7 @@
 
     onMount(() => {
         if (list.info.useTimer) {
-            timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+            timerStore.setTimer(list.timer);
         }
     });
 
@@ -45,7 +45,7 @@
         minutesValue = "0";
         hoursValue = "0";
         list.timer.max = 0;
-        timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+        timerStore.setTimer(list.timer);
     }
 
     function toggleTimer() {
@@ -54,19 +54,23 @@
     
 
     let lineColor = "var(--neutral)";
-    let textKey = "";
+    let textKeys = "";
 
     $: if (hoursValue.match(/^\d+$/) === null || minutesValue.match(/^\d+$/) === null) {
         lineColor = "var(--invalid)";
-        textKey = "letter";
+        textKeys = "letter";
     } else {
         lineColor = "var(--neutral)";
-        textKey = "";
+        textKeys = "";
         list.timer.max = shiftMinutes();
-        timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+        timerStore.setTimer(list.timer);
     }
     
+    let timerDisplayMode: timerDisplayMode = "total";
 
+    function toggleTimerDisplayMode() {
+        timerDisplayMode = timerDisplayMode === "total" ? "remaining" : "total";
+    }
 
     const options: Options = {
         buttons: [
@@ -96,7 +100,7 @@
 
 
 
-<OptionsBlock options={options} enabled={!list.info.locked} bind:lineColor bind:textKey>
+<OptionsBlock options={options} enabled={!list.info.locked} bind:lineColor bind:textKeys>
     <div class = "row">
         <button class="state clearButton" on:click={toggleTimer}>
             {list.info.useTimer ? "On" : "Off"}
@@ -123,8 +127,9 @@
         </div>
 
         <div class="time">
-            
-            <div>{formatTime(list.timer.max - $timerStore.get(list.timer.id, false))} / {formatTime(list.timer.max)}</div>
+                <button class="clearButton times" on:click={toggleTimerDisplayMode}>
+                    {$timerStore.get(list.timer.id, timerDisplayMode) + " / " + formatTime(list.timer.max)}
+                </button>
         </div>
 
         
@@ -152,8 +157,9 @@
 
     .state {
         width: 24px;
-        margin-right: 20px;
-        margin-left: 3px;
+        margin-right: 7px;
+        margin-left: 4px;
+        text-align: left;
     }
 
     
@@ -165,13 +171,15 @@
         
     }
 
-    .time div {
+    .time button {
         display: inline;
-        font-size: 15px;
+        font-size: 13px;
+        width: 112px;
+        text-align: right;
     }
 
     .time input {
-        width: 34px;
+        width: 25px;
         font-size: 15px;
         font-family: 'Roboto', sans-serif;
         color: var(--text);
@@ -182,17 +190,12 @@
         transition: background-color 0.3s;
     }
 
-    
-
-    
-
     .clearButton {
         background-color: transparent;
         border: none;
-
         padding: 0;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
     }
 
 

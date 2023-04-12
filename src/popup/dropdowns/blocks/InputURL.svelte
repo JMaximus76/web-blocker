@@ -32,6 +32,11 @@
                 name: "Current URL",
                 onClick: setToCurrentURL,
                 title: "Inserts the URL of the current page"
+            },
+            {
+                name: "Clear",
+                onClick: () => value = "",
+                title: "Clears the URL"
             }
         ]
     }

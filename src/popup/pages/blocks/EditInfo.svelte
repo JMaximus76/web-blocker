@@ -44,22 +44,22 @@
 
 
     let lineColor: string;
-    let textKey: string;
+    let textKeys: string;
 
 
     $: {
         if (value.length > 16) {
             lineColor = "var(--invalid)";
             isValid = false;
-            textKey = "length";
+            textKeys = "length";
         } else if (value.length <= 0) {
             lineColor = "var(--invalid)";
             isValid = false;
-            textKey = "empty";
+            textKeys = "empty";
         } else {
             lineColor = "var(--neutral)";
             isValid = true;
-            textKey = "";
+            textKeys = "";
         }
     }
 
@@ -89,12 +89,12 @@
             globalColor: "var(--lightRed)",
             entrys: {
                 length: {
-                    text: "Name is too long",
+                    text: "Too long",
                     title: "List names must be less than 16 characters long"
                 },
                 empty: {
-                    text: "Name cannot be empty",
-                    title: "List names must be at least 1 character long"
+                    text: "Empty",
+                    title: "List names cannot be empty"
                 }
             }
         }
@@ -108,7 +108,7 @@
 
     
 
-<OptionsBlock options={options} bind:lineColor bind:textKey enabled={!info.locked}>
+<OptionsBlock options={options} bind:lineColor bind:textKeys enabled={!info.locked}>
     <div class="main">
 
         <div class="row">

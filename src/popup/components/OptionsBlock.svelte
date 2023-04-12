@@ -3,7 +3,7 @@
 
     // not sure how to avoid using any here, I'm bad at type script ;-;
     export let radioValue: any = null;
-    export let textKey: string = "";
+    export let textKeys: string[] | string = "";
     export let options: Options = {};
     export let lineColor: string = "var(--neutral)";
     export let enabled = true;
@@ -43,16 +43,18 @@
                 {/each}
             </div>
         {/if}
-
-        {#if options.text?.entrys[textKey] !== undefined}
-            <div class="text">   
-                <span title={options.text.entrys[textKey].title} 
-                    style:color={options.text.entrys[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
-                    class="option">
-                    {options.text.entrys[textKey].text}
-                </span>  
-            </div>
-        {/if}
+        
+        {#each textKeys as textKey}
+            {#if options.text?.entrys[textKey] !== undefined}
+                <div class="text">   
+                    <span title={options.text.entrys[textKey].title} 
+                        style:color={options.text.entrys[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
+                        class="option">
+                        {options.text.entrys[textKey].text}
+                    </span>  
+                </div>
+            {/if}
+        {/each}
 
         
     </div>

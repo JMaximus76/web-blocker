@@ -1,6 +1,7 @@
 import { readable, writable } from "svelte/store";
 import browser from "webextension-polyfill";
 import { filterBlockPage, type Data, type Id, type Message, formatTime } from "../modules/util";
+import type TimerController from "../modules/timerController";
 
 
 
@@ -31,12 +32,13 @@ type TimerRecord = {
     [key: string]: {
         active: boolean;
         timeLeft: number;
+        max: number;
     };
 };
 
 
 
-
+export type timerDisplayMode = "total" | "remaining";
 
 export const timerStore = createTimerStore();
 
@@ -45,12 +47,16 @@ function createTimerStore() {
     const timerRecord: TimerRecord = {};
 
     const timerView = {
-        get: <T extends boolean>(id: string, format: T): T extends true ? string : number => {
-            const data = timerRecord[id];
-            if (data === undefined) {
-                return (format ? formatTime(0) : 0) as T extends true ? string : number;
+        get: (id: string, format: timerDisplayMode): string => {
+            const timer = timerRecord[id];
+            if (timer === undefined) {
+                return "0:00"
             } else {
-                return (format ? formatTime(data.timeLeft) : data.timeLeft) as T extends true ? string : number;
+                if (format === "total") {
+                    return formatTime(timer.max - timer.timeLeft);
+                } else {
+                    return formatTime(timer.timeLeft)
+                }
             }
         },
     }
@@ -100,10 +106,11 @@ function createTimerStore() {
 
     return {
         subscribe: store.subscribe,
-        setTimer: (id: string, active: boolean, timeLeft: number) => {
+        setTimer: ({id, active, timeLeft, max}: TimerController) => {
             timerRecord[id] = {
                 active: active,
                 timeLeft: timeLeft,
+                max: max
             };
             store.set(timerView);
         }

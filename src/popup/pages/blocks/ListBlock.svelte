@@ -7,17 +7,8 @@
     import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
 
-
-
-
+    
     export let list: List;
-
-
-
-
-    $: match = list.entrys.check($currentUrlStore);
-    $: matchTitle = `Match Found: This list matched with ${EntryController.clipURL("domain", $currentUrlStore)}`;
-    const lockedTitle = "List Locked: This list has been locked, you will not be able to edit it in the popup";
 
 
     function toggleActive(): void {
@@ -27,35 +18,40 @@
 
     onMount(() => {
         if (list.info.useTimer) {
-            timerStore.setTimer(list.timer.id, list.timer.active, list.timer.timeLeft);
+            timerStore.setTimer(list.timer);
         }
     });
 
 
 
     
+    function buildOptions() {
+        const options: Options = {}
 
+        if (!list.info.locked) {
+            options.buttons = [
+                {
+                    name: "On/Off",
+                    onClick: toggleActive,
+                    title: "Toggles the list on and off"
+                },
+                {
+                    name: "Quick Add",
+                    onClick: () => dropdown.addEntry(list, true).then(() => match = list.entrys.check($currentUrlStore)),
+                    title: "Add a list entry"
+                },
+                {
+                    name: "Toggle Timer",
+                    onClick: () => {
+                        list.info.useTimer = !list.info.useTimer;
+                        timerStore.setTimer(list.timer);
+                    },
+                    title: "Toggles the timer on and off"
+                }  
+            ]
+        }
 
-    const options: Options = {
-        buttons: [
-            {
-                name: "Power",
-                onClick: toggleActive,
-                title: "Toggles the list on and off"
-            },
-            {
-                name: "Quicik Add",
-                onClick: () => dropdown.addEntry(list, true).then(() => match = list.entrys.check($currentUrlStore)),
-                title: "Add a list entry"
-            },
-            {
-                name: "Toggle Timer",
-                onClick: () => list.info.useTimer = !list.info.useTimer,
-                title: "Toggles the timer on and off"
-            }  
-        ],
-
-        text: {
+        options.text = {
             entrys: {
                 on: {
                     text: "On",
@@ -64,13 +60,38 @@
                 off: {
                     text: "Off",
                     color: "var(--lightRed)"
+                },
+                locked: {
+                    text: "Locked",
+                    color: "var(--red)",
+                    title: "List Locked: This list has been locked, you will not be able to edit it in the popup"
+                },
+                match: {
+                    text: "Match",
+                    color: "var(--orange)",
+                    title: `Match Found: This list matched with ${EntryController.clipURL("domain", $currentUrlStore)}`
+                },
+                scheduled: {
+                    text: "Scheduled",
+                    color: "var(--purple)"
                 }
             }
         }
+
+        return options;
     }
 
+    $: match = list.entrys.check($currentUrlStore);
 
-    $: textKey = (list.info.active) ? "on" : "off";
+    let textKeys: string[] = [];
+
+    $: {
+        textKeys.length = 0;
+        textKeys.push(list.info.active ? "on" : "off");
+        if (list.info.locked) textKeys.push("locked");
+        if (match) textKeys.push("match")
+    }
+    
 
 </script>
 
@@ -79,7 +100,7 @@
 
 <div class="main">
 
-    <OptionsBlock bind:textKey options={options}>
+    <OptionsBlock bind:textKeys options={buildOptions()}>
         <div class="infoButton">
             <button title="Edit List" on:click={() => popupPage.list(list)}>{list.info.name}</button>
 
@@ -88,15 +109,10 @@
 
             {#if list.info.useTimer}
                 <div class="timer">
-                    {$timerStore.get(list.info.id, true)}
+                    {$timerStore.get(list.info.id, "remaining")}
                 </div>
             {/if}
 
-
-            <div class="indicators">
-                <div class:invisible={!match} id="match" title={matchTitle}>M</div>
-                <div class:invisible={!list.info.locked} id="lock" title={lockedTitle}>L</div>
-            </div>
 
         </div>
     </OptionsBlock>
@@ -107,11 +123,6 @@
 
 
 <style>
- 
-    
-
-
-
 
     .main {
         box-sizing: content-box;
@@ -138,33 +149,6 @@
         text-align: left;
         transition: color 0.3s;
     }
-    
-    
-
-
-    .indicators {
-        margin-left: 4px;
-        margin-top: auto;
-        display: flex;
-        flex-direction: row-reverse;
-        cursor: default;
-        width: 45px;
-    }
-    .indicators div {
-        font-family: 'Tilt Neon', cursive;
-        font-size: 13px;
-        margin: 0 5px;
-    }
-    #match {
-        color: var(--darkBlue);
-    }
-    #lock {
-        color: var(--lightRed);
-    }
-    .invisible {
-        display: none;
-    }
-
 
     .spacer {
         margin-left: auto;
