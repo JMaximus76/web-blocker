@@ -104,18 +104,15 @@ async function resetTimers() {
 async function setTimerResets() {
     const itemServer = new ItemServer();
     const runtimeSettings = await itemServer.get("runtimeSettings");
-    const currentDate = Date.now();
-
+    const now = new Date();
     const millisecondsinDay = 1000 * 60 * 60 * 24;
 
-    if (runtimeSettings.resetTime + millisecondsinDay <= currentDate) {
+    if (runtimeSettings.resetTime + millisecondsinDay <= now.getTime()) {
         resetTimers();
-        runtimeSettings.resetTime = currentDate - (currentDate % millisecondsinDay);
+        runtimeSettings.resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
     }
 
-    const nextResetTime = runtimeSettings.resetTime + millisecondsinDay;
-
-    browser.alarms.create("resetTimers", { when: nextResetTime + 1 });
+    browser.alarms.create("resetTimers", { when: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime() - now.getTime() });
 }
 
 
@@ -319,7 +316,7 @@ browser.alarms.onAlarm.addListener((alarm) => {
             blockTimer().catch(handelError);
             break;
         case "resetTimers":
-            resetTimers().catch(handelError);
+            setTimerResets().catch(handelError);
             break;
     }
 

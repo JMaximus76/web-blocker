@@ -89,7 +89,10 @@ type Dropdowns = "addEntry" | "confirm" | "blank";
 
 type DropdownState = {
     state: Dropdowns;
-    list: List | null;
+    addEntry: {
+        list: List;
+        quickURL: boolean;
+    } | null;
     confirm: {
         callback: () => void;
         text: string;
@@ -102,7 +105,7 @@ export const dropdown = createDropdownStore();
 function createDropdownStore() {
     const state: DropdownState = {
         state: "blank",
-        list: null,
+        addEntry: null,
         confirm: null,
     }
 
@@ -111,9 +114,9 @@ function createDropdownStore() {
     return {
         subscribe: store.subscribe,
 
-        async addEntry(list: List) {
+        async addEntry(list: List, quckURL = false) {
             state.state = "addEntry";
-            state.list = list;
+            state.addEntry = {list, quickURL: quckURL};
             store.set(state);
             
             while (state.state === "addEntry") {

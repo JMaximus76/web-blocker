@@ -39,14 +39,19 @@
     const options: Options = {
         buttons: [
             {
-                name: "Toggle",
+                name: "Power",
                 onClick: toggleActive,
                 title: "Toggles the list on and off"
             },
             {
                 name: "Quicik Add",
-                onClick: () => dropdown.addEntry(list).then(() => match = list.entrys.check($currentUrlStore)),
+                onClick: () => dropdown.addEntry(list, true).then(() => match = list.entrys.check($currentUrlStore)),
                 title: "Add a list entry"
+            },
+            {
+                name: "Toggle Timer",
+                onClick: () => list.info.useTimer = !list.info.useTimer,
+                title: "Toggles the timer on and off"
             }  
         ],
 
@@ -83,7 +88,7 @@
 
             {#if list.info.useTimer}
                 <div class="timer">
-                    {$timerStore.get(list.info.id)}
+                    {$timerStore.get(list.info.id, true)}
                 </div>
             {/if}
 

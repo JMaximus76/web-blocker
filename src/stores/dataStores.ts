@@ -45,12 +45,12 @@ function createTimerStore() {
     const timerRecord: TimerRecord = {};
 
     const timerView = {
-        get: (id: string) => {
+        get: <T extends boolean>(id: string, format: T): T extends true ? string : number => {
             const data = timerRecord[id];
             if (data === undefined) {
-                return "00:00";
+                return (format ? formatTime(0) : 0) as T extends true ? string : number;
             } else {
-                return formatTime(data.timeLeft);
+                return (format ? formatTime(data.timeLeft) : data.timeLeft) as T extends true ? string : number;
             }
         },
     }

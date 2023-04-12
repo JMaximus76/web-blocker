@@ -7,14 +7,14 @@
     import DropdownContainer from "./blocks/DropdownContainer.svelte";
     import Exit from "./blocks/Exit.svelte";
     import { sendMessage } from "../../modules/util";
+    import { currentUrlStore } from "../../stores/dataStores";
 
 
-    let url: string;
+    let url: string = $dropdown.addEntry!.quickURL ? $currentUrlStore : "";
     let mode: EntryMode;
     let isValid: boolean;
 
-    // should work but it might be null ?? but it also should be an list.
-    let list = $dropdown.list!;
+    let list = $dropdown.addEntry!.list;
 
     let addButtonTitle = `Add new entry to ${list.info.name}`;
 

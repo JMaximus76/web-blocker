@@ -4,6 +4,7 @@
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { Options } from "../../popupTypes";
     import { timerStore } from "../../../stores/dataStores";
+    import { formatTime } from "../../../modules/util";
 
     export let list: List;
 
@@ -122,8 +123,8 @@
         </div>
 
         <div class="time">
-            <span>left</span>
-            <div>{$timerStore.get(list.timer.id)}</div>
+            
+            <div>{formatTime(list.timer.max - $timerStore.get(list.timer.id, false))} / {formatTime(list.timer.max)}</div>
         </div>
 
         
