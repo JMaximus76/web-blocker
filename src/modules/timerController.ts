@@ -29,8 +29,7 @@ export default class TimerController {
     }
 
     get timeLeft(): number {
-        if (this.timer.start === null) return this.timer.max - this.timer.total;
-        return this.timer.max - this.timer.total - (Date.now() - this.timer.start);
+        return this.timer.max - this.timer.total - (this.timer.start === null ? 0 : (Date.now() - this.timer.start));
     }
 
     get done(): boolean {
@@ -53,7 +52,6 @@ export default class TimerController {
 
     reset() {
         this.timer.total = 0;
-
         // this is ok to do because when reset is called we should recheck all tabs
         this.timer.start = null;
     }

@@ -74,7 +74,21 @@ browser.runtime.onInstalled.addListener(() => {
         listServer.registerList({name: "Block List", mode: "block"});
         const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
         const allowEntrys = new EntryController(await listServer.getId("entrys", allowListID));
-        allowEntrys.addEntry("domain", "https://www.google.com/");
+        allowEntrys.addEntry("fullDomain", "https://www.google.com/");
+
+        const socialListId = listServer.registerList({name: "Social Media", mode: "block"});
+        const socialEntrys = new EntryController(await listServer.getId("entrys", socialListId));
+        socialEntrys.addEntry("fullDomain", "https://www.facebook.com/");
+        socialEntrys.addEntry("fullDomain", "https://www.instagram.com/");
+        socialEntrys.addEntry("fullDomain", "https://www.twitter.com/");
+        socialEntrys.addEntry("fullDomain", "https://www.reddit.com/");
+        socialEntrys.addEntry("fullDomain", "https://www.youtube.com/");
+        socialEntrys.addEntry("fullDomain", "https://www.tiktok.com/");
+        const socialTimer = new TimerController(await listServer.getId("timer", socialListId));
+        socialTimer.max = 30;
+
+
+
     }
 
 

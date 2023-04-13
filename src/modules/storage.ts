@@ -91,7 +91,7 @@ export default class Storage {
                     if (this.#cache[key] === undefined) return;
                     if (Array.isArray(this.#cache[key])) (this.#cache[key] as any[]).length = 0;
                     Object.assign(this.#cache[key], value);
-                    Object.defineProperties
+                    // I don't think this will update the ui because the proxy won't know
                 }
             }
         };
