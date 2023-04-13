@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import type { List } from "../../../modules/listComponets";
-    import EntryController from "../../../modules/entryController";
     import { currentUrlStore, timerStore } from "../../../stores/dataStores";
     import { dropdown, popupPage } from "../../../stores/popupStateStores";
     import type { Options } from "../../popupTypes";
@@ -69,7 +68,7 @@
                 match: {
                     text: "Match",
                     color: "var(--orange)",
-                    title: `Match Found: This list matched with ${EntryController.clipURL("domain", $currentUrlStore)}`
+                    title: `Match Found: This list matched with the current website`
                 },
                 scheduled: {
                     text: "Scheduled",

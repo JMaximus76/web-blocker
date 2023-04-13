@@ -67,7 +67,10 @@
     }
     
     let timerDisplayMode: timerDisplayMode = "total";
-
+    let timesTitle = {
+        total: "Time elapsed / Total time",
+        remaining: "Time remaining / Total time"
+    }
     function toggleTimerDisplayMode() {
         timerDisplayMode = timerDisplayMode === "total" ? "remaining" : "total";
     }
@@ -127,7 +130,7 @@
         </div>
 
         <div class="time">
-                <button class="clearButton times" on:click={toggleTimerDisplayMode}>
+                <button class="clearButton times" on:click={toggleTimerDisplayMode} title={timesTitle[timerDisplayMode]}>
                     {$timerStore.get(list.timer.id, timerDisplayMode) + " / " + formatTime(list.timer.max)}
                 </button>
         </div>

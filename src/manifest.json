@@ -4,7 +4,7 @@
 
   "version": "0.0.2",
   "name": "Web Block",
-  "description": "Block unwated websites easily.",
+  "description": "Block unwanted websites easily.",
 
   "{{firefox}}.icons": {
     "48": "icons/logo_black.svg"
