@@ -62,7 +62,7 @@ browser.runtime.onInstalled.addListener(() => {
     async function init(): Promise<void> {
 
         // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
-        await browser.storage.local.clear();
+        // await browser.storage.local.clear();
         
 
         ListServer.init();
@@ -201,7 +201,6 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
 
 async function unBlockAll() {
-    console.log('hit');
     const tabs = await browser.tabs.query({});
 
     for (const tab of tabs) {
