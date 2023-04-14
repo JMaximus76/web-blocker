@@ -90,6 +90,7 @@
         ],
 
         text: {
+            globalColor: "var(--lightRed)",
             entrys: {
                 letter: {
                     text: "Invalid Character",

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { toArray } from "../../modules/util";
     import type { Options } from "../popupTypes";
 
     // not sure how to avoid using any here, I'm bad at type script ;-;
@@ -8,7 +9,7 @@
     export let lineColor: string = "var(--neutral)";
     export let enabled = true;
 
-   
+    
 
 </script>
 
@@ -44,7 +45,7 @@
             </div>
         {/if}
         
-        {#each textKeys as textKey}
+        {#each toArray(textKeys) as textKey}
             {#if options.text?.entrys[textKey] !== undefined}
                 <div class="text">   
                     <span title={options.text.entrys[textKey].title} 

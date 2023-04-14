@@ -59,7 +59,9 @@ export async function sendMessage<T extends keyof M, I extends keyof M[T], D ext
 
 
 
-
+export function toArray<T>(value: T | T[]): T[] {
+    return Array.isArray(value) ? value : [value];
+}
 
 
 

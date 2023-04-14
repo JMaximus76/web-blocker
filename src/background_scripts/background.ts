@@ -62,7 +62,7 @@ browser.runtime.onInstalled.addListener(() => {
     async function init(): Promise<void> {
 
         // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
-        // await browser.storage.local.clear();
+        await browser.storage.local.clear();
         
 
         ListServer.init();
@@ -136,6 +136,20 @@ browser.runtime.onStartup.addListener(() => {
 
 
 
+async function clearTimers(listServer: ListServer, itemServer: ItemServer, timerController: TimerController) {
+    const timerList = await itemServer.get("activeTimers");
+    const timers = await listServer.getIds("timer", timerList);
+
+    timers.forEach(timer => {
+        timerController.timer = timer;
+        timerController.stop();
+    });
+
+    timerList.length = 0;
+
+    browser.alarms.clear("blockTimer");
+}
+
 
 
 // hey future me:
@@ -145,20 +159,12 @@ browser.runtime.onStartup.addListener(() => {
 async function manageTimers({ listServer, itemServer }: Servers): Promise<void> {
 
 
-    const timerList = await itemServer.get("activeTimers");
-    const timers = await listServer.getIds("timer", timerList);
-    const timerController = new TimerController();
-
-    timers.forEach(timer => {
-        timerController.timer = timer;
-        timerController.stop();
-    });
-
-    timerList.length = 0;
     
-    browser.alarms.clear("blockTimer");
+    const timerController = new TimerController();
+    await clearTimers(listServer, itemServer, timerController);
+
     const runtimeSettings = await itemServer.get("runtimeSettings");
-    if (!runtimeSettings.isActive) return;
+    const timerList = await itemServer.get("activeTimers");
 
     const tabs = await browser.tabs.query({ active: true });
     if (tabs.length === 0) throw new Error("manageTimers got an empty tab query");
@@ -194,7 +200,18 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
 
 
+async function unBlockAll() {
+    console.log('hit');
+    const tabs = await browser.tabs.query({});
 
+    for (const tab of tabs) {
+        if (tab.url === undefined) continue;
+        const regexArray = /(?<=\?url=).*/.exec(tab.url);
+        if (regexArray === null) continue;
+        const url = regexArray[0];
+        browser.tabs.update(tab.id, { url: url });
+    }
+}
 
 
 
@@ -211,11 +228,7 @@ async function check(url: string, tabId: number, { listServer, itemServer }: Ser
 
     if (!isHttp(url)) return;
 
-
-    // really should change this to the actual event listener instead of here 
-    const runtimeSettings = await itemServer.get("runtimeSettings")
-    if (!runtimeSettings.isActive) return;
-
+    const runtimeSettings = await itemServer.get("runtimeSettings");
 
     //console.log(`------checking${urlIsBlockedPage ? " Blocked Page " : " "}${url} on tab ${tabId}`);
 
@@ -258,7 +271,11 @@ browser.webNavigation.onBeforeNavigate.addListener((navigate) => {
     //console.log("doing on navigate");
 
     async function navigated() {
-        await check(navigate.url, navigate.tabId, await makeServers()).catch(handelError);
+        const servers = await makeServers();
+        if ((await servers.itemServer.get("runtimeSettings")).isActive) {
+            await check(navigate.url, navigate.tabId, servers);
+        }
+        
     }
 
     navigated().catch(handelError);
@@ -277,8 +294,10 @@ browser.tabs.onActivated.addListener((activeInfo) => {
             //console.log("doing on activated");
             const servers = await makeServers();
 
-            await manageTimers(servers);
-            await check(tab.url, tab.id, servers);
+            if ((await servers.itemServer.get("runtimeSettings")).isActive) {
+                await manageTimers(servers);
+                await check(tab.url, tab.id, servers);
+            }
         }
     }
 
@@ -298,10 +317,10 @@ browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
             if (active.id === tab.id && active.url === tab.url) {
                 //console.log("doing on updated");
                 const servers = await makeServers();
-
-                await manageTimers(servers);
-
-                if (changeInfo.status !== "loading") check(tab.url, tab.id, servers);
+                if ((await servers.itemServer.get("runtimeSettings")).isActive) {
+                    await manageTimers(servers);
+                    if (changeInfo.status !== "loading") check(tab.url, tab.id, servers);
+                }
             }
         }
     }
@@ -348,7 +367,17 @@ browser.runtime.onMessage.addListener((message) => {
         if (message.target === "background" && message.id as Id<"background"> === "update") {
             const servers = await makeServers();
             await manageTimers(servers);
-            await checkAll(servers);
+
+            // when isActive is changed this should be called first
+            if ((await servers.itemServer.get("runtimeSettings")).isActive) {
+                await checkAll(servers);
+            } else {
+                await unBlockAll();
+                browser.alarms.clearAll();
+                await manageTimers(servers);
+                await clearTimers(servers.listServer, servers.itemServer, new TimerController());
+
+            }
         }
     }
 

@@ -67,7 +67,7 @@
     const options: Options = {
         buttons: [
             {   
-                name: "Toggle",
+                name: "On/Off",
                 title: "Turns the list on or off",
                 onClick: toggleActive
                 
