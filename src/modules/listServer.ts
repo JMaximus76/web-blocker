@@ -250,13 +250,9 @@ export default class ListServer {
 
 
 
-
-
-        // if (typeof storage.record !== "object") {
-        //     storage.record = [];
-        // } else if (storage.record === null || !Array.isArray(storage.record)) {
-        //     storage.record = [];
-        // }
+        if (typeof storage.record !== "object" || storage.record === null || !Array.isArray(storage.record)) {
+            storage.record = [];
+        }
 
 
 

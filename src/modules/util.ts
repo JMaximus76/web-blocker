@@ -132,7 +132,6 @@ export type Servers = {
 
 export function formatTime(time: number): string {
     if (time < 1000) return "0:00";
-    console.log("hit")
     const second = 1000;
     const minute = second * 60;
     const hour = minute * 60;

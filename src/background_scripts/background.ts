@@ -91,6 +91,7 @@ browser.runtime.onInstalled.addListener((details) => {
         // if (details.temporary) {
         //     await browser.storage.local.clear();
         //     await init();
+        //     await validateStorage();
         // }
         
         if (details.reason === "install") {
@@ -104,7 +105,6 @@ browser.runtime.onInstalled.addListener((details) => {
 
 
 async function validateStorage() {
-
     const storage = await browser.storage.local.get();
     
     const newStorage = {
