@@ -6,7 +6,7 @@ import TimerController from "./timerController";
 export type Mode = "block" | "allow";
 
 export type Info = {
-    readonly id: string;
+    id: string;
     name: string;
     mode: Mode;
     active: boolean;

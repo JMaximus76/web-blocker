@@ -1,9 +1,10 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
-import { buildList, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
+import { buildList, type Entry, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
 import browser from "webextension-polyfill";
 import EntryController from "./entryController";
 import TimerController from "./timerController";
+import { conform, isOf } from "./util";
 
 
 
@@ -218,5 +219,96 @@ export default class ListServer {
             default: throw new Error("listServer got invalid request type");
         }
     }
+
+
+
+
+    static validate(storage: Record<string, any>): Record<string, any> {
+
+        const templateInfo: Info = {
+            name: "New List",
+            mode: "block",
+            id: "",
+            active: true,
+            locked: false,
+            useTimer: false
+        };
+
+        const templateTimer: Timer = {
+            total: 0,
+            max: 0,
+            start: null,
+            id: ""
+        };
+
+        const templateEntry: string[] = [
+            "mode",
+            "cliped",
+            "original",
+            "id"
+        ];
+
+
+
+
+
+        // if (typeof storage.record !== "object") {
+        //     storage.record = [];
+        // } else if (storage.record === null || !Array.isArray(storage.record)) {
+        //     storage.record = [];
+        // }
+
+
+
+        const validLists: Record<string, any> = {
+            record: storage.record
+        };
+
+        for (const id of storage.record) {
+
+            templateInfo.id = id;
+            templateTimer.id = id;
+
+            const infoId = ListServer.infoId(id);
+            const entrysId = ListServer.entryListId(id);
+            const timerId = ListServer.timerId(id);
+
+            const info: unknown = storage[infoId];
+            const entrys: unknown = storage[entrysId];
+            const timer: unknown = storage[timerId];
+
+            if (typeof info === "object" && info !== null) {
+                conform(info, templateInfo);
+                validLists[infoId] = info;
+            } else {
+                validLists[infoId] = templateInfo;
+            }
+
+
+            if (Array.isArray(entrys)) {
+                const newEntrys: Entry[] = [];
+                for (const entry of entrys) {
+                    if (isOf(entry, templateEntry)) {
+                        newEntrys.push(entry);
+                    }
+                }
+                validLists[entrysId] = newEntrys;
+            } else {
+                validLists[entrysId] = [];
+            }
+
+            if (typeof timer === "object" && timer !== null) {
+                conform(timer, templateTimer);
+                validLists[timerId] = timer;
+            } else {
+                validLists[timerId] = templateTimer;
+            }
+        }
+
+
+        return validLists;
+    }
+
+    
 
 }

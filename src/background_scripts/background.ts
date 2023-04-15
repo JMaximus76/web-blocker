@@ -21,10 +21,14 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 
 
-browser.runtime.onInstalled.addListener(() => {
+browser.runtime.onInstalled.addListener((details) => {
 
 
     // async function test(): Promise<void> {
+
+    //     ListServer.init();
+    //     ItemServer.init();
+
 
     //     const listServer = new ListServer();
     //     await listServer.sync();
@@ -60,14 +64,8 @@ browser.runtime.onInstalled.addListener(() => {
 
 
     async function init(): Promise<void> {
-
-        // REMOVE THIS BEFORE RELEAE OH GOD @@@@@@@@@@@@@@@@@@@@@@@@
-        // await browser.storage.local.clear();
-        
-
         ListServer.init();
         ItemServer.init();
-        //await test();
 
         const listServer = new ListServer();
         await listServer.sync();
@@ -86,17 +84,57 @@ browser.runtime.onInstalled.addListener(() => {
         socialEntrys.addEntry("fullDomain", "https://www.tiktok.com/");
         const socialTimer = new TimerController(await listServer.getId("timer", socialListId));
         socialTimer.max = 30;
-
-
-
     }
 
 
-    init().catch(handelError);
-    
+    async function installed() {
+        // if (details.temporary) {
+        //     await browser.storage.local.clear();
+        //     await init();
+        // }
+        
+        if (details.reason === "install") {
+            await init();
+        }
+    }
+
+    installed().catch(handelError);
+
 });
 
 
+async function validateStorage() {
+
+    const storage = await browser.storage.local.get();
+    
+    const newStorage = {
+        ...ListServer.validate(storage),
+        ...ItemServer.validate(storage)
+    }
+
+    const newKeys = Object.keys(newStorage);
+    for (const key of Object.keys(storage)){
+        if (!newKeys.includes(key)) {
+            await browser.storage.local.remove(key);
+            console.log("ho no")
+        }
+    }
+
+
+    await browser.storage.local.set(newStorage);
+}
+
+
+browser.runtime.onStartup.addListener(() => {
+
+    async function onStartup() {
+        await validateStorage();
+        await setTimerResets();
+
+    }
+
+    onStartup().catch(handelError);
+});
 
 
 
@@ -128,13 +166,6 @@ async function setTimerResets() {
 
     browser.alarms.create("resetTimers", { when: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime() - now.getTime() });
 }
-
-
-browser.runtime.onStartup.addListener(() => {
-    setTimerResets().catch(handelError);
-});
-
-
 
 async function clearTimers(listServer: ListServer, itemServer: ItemServer, timerController: TimerController) {
     const timerList = await itemServer.get("activeTimers");

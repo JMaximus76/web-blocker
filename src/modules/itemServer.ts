@@ -2,6 +2,7 @@ import type { Mode } from "./listComponets";
 import Storage from "./storage";
 
 import browser from "webextension-polyfill";
+import { conform } from "./util";
 
 
 
@@ -39,6 +40,37 @@ export default class ItemServer {
         const item = await this.#storage.getKey<StorageMap[T]>(key);
         if (item === undefined) throw new Error(`ItemServer: got undefined when getting ${key}`);
         return item;
+        
+    }
+
+
+
+
+    static validate(storage: Record<string, any>): Record<string, any> {
+
+
+        const templateRuntimeSettings: RuntimeSettings = {
+            isActive: true,
+            mode: "block",
+            resetTime: Date.now()
+        };
+
+        const validItems: Record<string, any> = {};
+
+        if (typeof storage.runtimeSettings === "object" && storage.runtimeSettings !== null) {
+            validItems.runtimeSettings = conform(storage.runtimeSettings, templateRuntimeSettings);
+        } else {
+            validItems.runtimeSettings = templateRuntimeSettings;
+        }
+
+
+        if (Array.isArray(storage.activeTimers)) {
+            validItems.activeTimers = storage.activeTimers;
+        } else {
+            validItems.activeTimers = [];
+        }
+
+        return validItems;
         
     }
 

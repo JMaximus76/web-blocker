@@ -158,6 +158,33 @@ export function trimLength(str: string, length: number) {
 
 
 
+export function conform<T extends Object>(obj: object, template: T): T {
+    for (const key of Object.keys(template)) {
+        if (!Object.hasOwn(obj, key)) {
+            (obj as any)[key] = (template as any)[key];
+        }
+    }
+
+    for (const key of Object.keys(obj)) {
+        if (!Object.hasOwn(template, key)) {
+            delete (obj as any)[key];
+        } 
+    }
+
+    return obj as T;
+}
+
+export function isOf(obj: object, template: string[]): boolean {
+    for (const key of Object.keys(obj)) {
+        if (!template.includes(key)) return false;
+    }
+
+    return true;
+}
+
+
+
+
 
 
 

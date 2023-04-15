@@ -45,6 +45,11 @@ export default class EntryController {
                         case "cliped": {
                             throw new Error("EntryController: can't set 'cliped' directly");
                         }
+
+
+                        case "id": {
+                            throw new Error("EntryController: can't set 'id' directly");
+                        }
                     }
 
                     // should trick the storage proxy into saving the list
