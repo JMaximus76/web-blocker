@@ -1,8 +1,8 @@
 import browser from 'webextension-polyfill';
-import EntryController from '../modules/entryController';
+import EntryController from '../modules/controllers/entryController';
 import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
-import TimerController from '../modules/timerController';
+import TimerController from '../modules/controllers/timerController';
 import { handelError, isHttp, makeServers, type Id, type Message, type Servers } from '../modules/util';
 
 

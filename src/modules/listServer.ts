@@ -2,8 +2,8 @@ import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
 import { buildList, type Entry, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
 import browser from "webextension-polyfill";
-import EntryController from "./entryController";
-import TimerController from "./timerController";
+import EntryController from "./controllers/entryController";
+import TimerController from "./controllers/timerController";
 import { conform, isOf } from "./util";
 
 
@@ -103,7 +103,7 @@ export default class ListServer {
         }
 
 
-        this.#storage.add({
+        this.#storage.createNewItem({
             [ListServer.infoId(id)]: info,
             [ListServer.entryListId(id)]: entrys,
             [ListServer.timerId(id)]: timer

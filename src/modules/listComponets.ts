@@ -1,5 +1,5 @@
-import EntryController from "./entryController";
-import TimerController from "./timerController";
+import EntryController from "./controllers/entryController";
+import TimerController from "./controllers/timerController";
 
 
 
@@ -23,8 +23,10 @@ export type Entry = {
     // I'm not sure if I should keep this because you can alway jsut clip original and this takes up extra storage space
     cliped: string;
 
-
     original: string;
+
+
+    // change so this doesn't get stored in storage (used only in entry controller)
     id: number;
 };
 
@@ -34,6 +36,20 @@ export type Timer = {
     total: number;
     max: number;
     start: number | null;
+    id: string;
+}
+
+
+
+export type ScheduleBlock = {
+    start: number;
+    end: number;
+
+};
+
+export type Schedule = {
+    reversed: boolean;
+    blocks: ScheduleBlock[];
     id: string;
 }
 

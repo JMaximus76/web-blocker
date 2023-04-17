@@ -4,9 +4,6 @@ import { jsonCopy, sendMessage, type Data, type Id, type Message } from './util'
 
 
 
-// dont' think I'll need to seal the objects because typescript should make sure I don't 
-// add any properties to them. And I also need to add props for the entry lists so... not sure.
-
 export default class Storage {
 
 
@@ -14,66 +11,71 @@ export default class Storage {
 
     
 
-
-    /** 
-     * Gets keys from cache or local storage.
-     * If key does not exist in either location it returns undefined.
-    */
-    async getKeys<T extends object>(keys: string[]): Promise<(T | undefined)[]> {
-        // gets all items from cache, some of those might be undefined so we get those from local storage.
-        // if its also undefined in local storage will return undefined for that key.
-        const items: (object | undefined)[] = [];
-        
-        for (const key of keys) {
-            const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
-
-            if (typeof item === "object") {
-                items.push(this.#proxy(key, item));
-            } else {
-                items.push(item);
-            }
-            
-        }
-        return items as (T | undefined)[];
-    }
-
-
-    async getKey<T extends object>(key: string) {
-        const item = Object.hasOwn(this.#cache, key) ? this.#cache[key] : await this.#getLocalStorage(key);
-        if (typeof item === "object") {
-            return this.#proxy(key, item) as T;
-        } else {
-            return item;
-        }
-    }
-
-
-    /** 
-     * Gets an item from local storage, places it in the cache and returns it.
-     * Returns undefined if the item does not exist in local storage.
+    /**
+     * Gets a key from local storage and adds it to the cache.
+     * @param key The key of the requested item
+     * @returns The item ascociated with the key from local storage or undefined if it does not exist.
      */
     async #getLocalStorage(key: string): Promise<object | undefined> {
         const item = await browser.storage.local.get(key);
-        if (item[key] !== undefined) Object.assign(this.#cache, item);
-        return item[key];
+        if (item[key] !== undefined) {
+            this.#cache[key] = this.#proxy(key, item[key]);
+        };
+        return this.#cache[key];
     }
 
 
-    /** 
-     * Adds items to local storage and cache. 
-     * This should only be used to set brand new objects ie. not in the cache or local storage.
+    /**
+     * Gets an array of keys from cache or local storage.
+     * @param keys An array of keys to get from cache or local storage.
+     * @returns An array of items ascociated with the keys from cache or local storage. Entrys are undefined if they don't exist.
      */
-    add(items: Record<string, object>): void {
+    async getKeys<T extends object>(keys: string[]): Promise<(T | undefined)[]> {
+        
+        const items: (T | undefined)[] = [];
+        
+        for (const key of keys) {
+            items.push(await this.getKey<T>(key));
+        }
+        
+        return Promise.all(keys.map(async key => await this.getKey<T>(key)));
+    }
+
+
+    /**
+     * Gets a key from cache or local storage.
+     * @param key The key of the requested item.
+     * @returns The item ascociated with the key from cache or local storage. Undefined if it does not exist.
+     */
+    async getKey<T extends object>(key: string): Promise<T | undefined> {
+
+        if (Object.hasOwn(this.#cache, key)) {
+            return this.#cache[key] as T;
+        } else {
+            return await this.#getLocalStorage(key) as T;
+            
+        }
+    }
+
+
+    
+
+
+    /**
+     * Adds new objects to cache and local storage. Will overwrite existing objects with the same key.
+     * @param items The key value pairs to add to cache and local storage.
+     */
+    createNewItem(items: Record<string, object>): void {
         for (const [key, value] of Object.entries(items)) {
-            this.#cache[key] = jsonCopy(value);
+            this.#cache[key] = this.#proxy(key, jsonCopy(value));
         }
         browser.storage.local.set(items).catch((e) => console.error(e));
     }
 
 
-    /** 
-     * Delete items from cache and local storage.
-     * Passing keys that are not in cach or local storage does not matter.
+    /**
+     * Deletes key value pairs from cache and local storage.
+     * @param keys An array of keys to delete from cache and local storage.
      */
     delete(keys: string[]): void {
         for (const key of keys) {
@@ -83,16 +85,18 @@ export default class Storage {
     }
 
 
+
+
     startListening() {
         const onMessage = (message: Message) => {
-            if (message.target === "storage") {
-                if (message.id as Id<"storage"> === "update") {
-                    const { key, value } = message.data as Data<"storage", "update">;
-                    if (this.#cache[key] === undefined) return;
-                    if (Array.isArray(this.#cache[key])) (this.#cache[key] as any[]).length = 0;
-                    Object.assign(this.#cache[key], value);
-                    // I don't think this will update the ui because the proxy won't know
-                }
+            if (message.target === "storage" && message.id as Id<"storage"> === "update") {
+                
+                const { key, value } = message.data as Data<"storage", "update">;
+                
+                if (Array.isArray(this.#cache[key])) (this.#cache[key] as any[]).length = 0;
+                Object.assign(this.#cache[key], value);
+                // I don't think this will update the ui because svelte won't know that the object has changed
+                
             }
         };
 
@@ -104,19 +108,25 @@ export default class Storage {
 
 
 
-
-    #proxy<T extends object>(key: string, obj: T): T {
-        const doUpdates = (target: T) => {
-
-
+    // DOES NOT WORK
+    // WILL SAVE ALL PROPERTIES OF THE PROXY TO LOCAL STORAGE
+    #proxy(key: string, obj: Record<string, any>): object {
+        const doUpdates = (target: object) => {
             browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
             sendMessage("storage", "update", { key, value: target });
             sendMessage("background", "update", null);
-
         }
 
-        if (Array.isArray(obj)) {
 
+        // recursively makes all objects in obj proxies
+        for (const [key, value] of Object.entries(obj)) {
+            if (typeof value === "object") {
+                obj[key] = this.#proxy(key, value);
+            }
+        }
+
+
+        if (Array.isArray(obj)) {
             return new Proxy(obj, {
                 set: (target, prop, value) => {
                     Reflect.set(target, prop, value);
@@ -126,7 +136,6 @@ export default class Storage {
             });
 
         } else {
-
             return new Proxy(obj, {
                 set: (target, prop, value) => {
                     Reflect.set(target, prop, value);
@@ -134,8 +143,7 @@ export default class Storage {
                     return true;
                 }
             });
-            
-        }
+        } 
     }
 
 

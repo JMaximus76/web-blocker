@@ -1,7 +1,7 @@
 import { readable, writable } from "svelte/store";
 import browser from "webextension-polyfill";
 import { filterBlockPage, type Data, type Id, type Message, formatTime } from "../modules/util";
-import type TimerController from "../modules/timerController";
+import type TimerController from "../modules/controllers/timerController";
 
 
 

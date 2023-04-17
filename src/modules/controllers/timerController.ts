@@ -1,5 +1,5 @@
-import type { Timer } from "./listComponets";
-import { sendMessage } from "./util";
+import type { Timer } from "../listComponets";
+import { sendMessage } from "../util";
 
 
 

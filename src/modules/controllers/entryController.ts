@@ -1,4 +1,4 @@
-import type { Entry, EntryList } from "./listComponets";
+import type { Entry, EntryList } from "../listComponets";
 
 
 type EntryMode = "domain" | "fullDomain" | "url" | "exact";
