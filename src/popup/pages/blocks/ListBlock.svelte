@@ -36,7 +36,7 @@
                 },
                 {
                     name: "Quick Add",
-                    onClick: () => dropdown.addEntry(list, true).then(() => match = list.entrys.check($currentUrlStore)),
+                    onClick: () => dropdown.addEntry(list, true).then(() => match = list.entries.check($currentUrlStore)),
                     title: "Add a list entry"
                 },
                 {
@@ -51,7 +51,7 @@
         }
 
         options.text = {
-            entrys: {
+            entries: {
                 on: {
                     text: "On",
                     color: "var(--blue)"
@@ -80,7 +80,7 @@
         return options;
     }
 
-    $: match = list.entrys.check($currentUrlStore);
+    $: match = list.entries.check($currentUrlStore);
 
     let textKeys: string[] = [];
 

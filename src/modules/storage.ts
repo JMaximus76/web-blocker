@@ -28,7 +28,7 @@ export default class Storage {
     /**
      * Gets an array of keys from cache or local storage.
      * @param keys An array of keys to get from cache or local storage.
-     * @returns An array of items ascociated with the keys from cache or local storage. Entrys are undefined if they don't exist.
+     * @returns An array of items ascociated with the keys from cache or local storage. Entries are undefined if they don't exist.
      */
     async getKeys<T extends object>(keys: string[]): Promise<(T | undefined)[]> {
         
@@ -86,17 +86,19 @@ export default class Storage {
 
 
 
-
+    /**
+     * Adds a listener for storage updates.
+     * @returns A function that will stop listening for storage updates.
+     */
     startListening() {
         const onMessage = (message: Message) => {
             if (message.target === "storage" && message.id as Id<"storage"> === "update") {
-                
                 const { key, value } = message.data as Data<"storage", "update">;
-                
-                if (Array.isArray(this.#cache[key])) (this.#cache[key] as any[]).length = 0;
                 Object.assign(this.#cache[key], value);
+                if (Array.isArray(this.#cache[key]) && Array.isArray(value)) {
+                    (this.#cache[key] as any[]).length = value.length;
+                }
                 // I don't think this will update the ui because svelte won't know that the object has changed
-                
             }
         };
 
@@ -106,44 +108,50 @@ export default class Storage {
 
     
 
-
-
-    // DOES NOT WORK
-    // WILL SAVE ALL PROPERTIES OF THE PROXY TO LOCAL STORAGE
-    #proxy(key: string, obj: Record<string, any>): object {
+    /**
+     * Creates a proxy of an object that will update the cache and local storage when it is changed.
+     * @param key The storage key of the object.
+     * @param obj The object to make a proxy of.
+     * @returns The proxied object.
+     */
+    #proxy(key: string, obj: object): object {
         const doUpdates = (target: object) => {
             browser.storage.local.set({ [key]: target }).catch((e) => console.error(e));
             sendMessage("storage", "update", { key, value: target });
             sendMessage("background", "update", null);
         }
 
+        function create(obj: Record<string, any>) {
+            // recursively makes all objects in obj proxies
+            for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === "object" && value !== null) {
+                    obj[key] = create(value);
+                }
+            }
 
-        // recursively makes all objects in obj proxies
-        for (const [key, value] of Object.entries(obj)) {
-            if (typeof value === "object") {
-                obj[key] = this.#proxy(key, value);
+
+            if (Array.isArray(obj)) {
+                return new Proxy(obj, {
+                    set: (target, prop, value) => {
+                        Reflect.set(target, prop, value);
+                        if (prop === "length") doUpdates(target);
+                        return true;
+                    }
+                });
+
+            } else {
+                return new Proxy(obj, {
+                    set: (target, prop, value) => {
+                        Reflect.set(target, prop, value);
+                        doUpdates(target);
+                        return true;
+                    }
+                });
             }
         }
 
 
-        if (Array.isArray(obj)) {
-            return new Proxy(obj, {
-                set: (target, prop, value) => {
-                    Reflect.set(target, prop, value);
-                    if (prop === "length") doUpdates(target);
-                    return true;
-                }
-            });
-
-        } else {
-            return new Proxy(obj, {
-                set: (target, prop, value) => {
-                    Reflect.set(target, prop, value);
-                    doUpdates(target);
-                    return true;
-                }
-            });
-        } 
+       return create(obj);
     }
 
 

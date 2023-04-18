@@ -22,9 +22,9 @@ function createStorageStore() {
         const infos = await listServer.request("info", {});
 
         for (const info of infos) {
-            const entrys = await listServer.getId("entrys", info.id);
+            const entries = await listServer.getId("entries", info.id);
             const timer = await listServer.getId("timer", info.id);
-            storage.lists[info.id] = buildList(info, entrys, timer);
+            storage.lists[info.id] = buildList(info, entries, timer);
         }
         const rts = await itemServer.get("runtimeSettings");
         storage.runtimeSettings = rts;

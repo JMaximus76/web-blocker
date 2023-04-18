@@ -3,7 +3,7 @@
     import OptionsBlock from "../../components/OptionsBlock.svelte";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
     import type { EntryMode } from "../../../modules/listComponets";
-    import EntryController from "../../../modules/entryController";
+    import EntryWrapper from "../../../modules/wrappers/entriesWrapper";
     import type { Options } from "../../popupTypes";
 
 
@@ -13,7 +13,7 @@
 
 
 
-    $: previewText = isValid? (EntryController.clipURL(mode, url) ?? "Invalid URL") : "Invalid URL";
+    $: previewText = isValid? (EntryWrapper.clipURL(mode, url) ?? "Invalid URL") : "Invalid URL";
 
     const options: Options = {
         radio: [

@@ -87,7 +87,7 @@
 
         text: {
             globalColor: "var(--lightRed)",
-            entrys: {
+            entries: {
                 length: {
                     text: "Too long",
                     title: "List names must be less than 16 characters long"

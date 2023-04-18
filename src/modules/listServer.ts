@@ -1,10 +1,11 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
-import { buildList, type Entry, type EntryList, type Info, type Mode, type Timer } from "./listComponets";
+import { type Entry, type Entries, type Info, type Mode, type Timer, type List } from "./listComponets";
 import browser from "webextension-polyfill";
-import EntryController from "./controllers/entryController";
-import TimerController from "./controllers/timerController";
+import EntriesWrapper from "./wrappers/entriesWrapper";
+import TimerWrapper from "./wrappers/timerWrapper";
 import { conform, isOf } from "./util";
+import WrapperFactory from "./wrappers/wrapperFactory";
 
 
 
@@ -12,7 +13,7 @@ type ListRecord = string[];
 
 type RequestMap = {
     info: Info;
-    entrys: EntryList;
+    entries: Entries;
     timer: Timer;
 };
 
@@ -29,8 +30,9 @@ type Request = {
 
 export default class ListServer {
 
-    /** Sets a new "ListRecord" into local storage.
-     *  ONLY all this on extension install.
+    /** 
+     * Sets a new "ListRecord" into local storage.
+     * ONLY use this on extension install.
      */
     static async init() {
         await browser.storage.local.set({record: []});
@@ -40,11 +42,11 @@ export default class ListServer {
     #storage = new Storage();
     #record: ListRecord = [];
 
+    #entriesFactory = new WrapperFactory<Entries, EntriesWrapper>(entries => new EntriesWrapper(entries));
+    #timerFactory = new WrapperFactory<Timer, TimerWrapper>(timer => new TimerWrapper(timer));
 
 
-    /** 
-     * The svelte seter for keeping in sync with ui 
-     */
+
     startListening() {
         return this.#storage.startListening();
     }
@@ -59,23 +61,8 @@ export default class ListServer {
         this.#record = item;
     }
 
-    // VERY inneficient, would need to re work the storage system to fix this
-    async buildListFromStorage(id: string) {
-        const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
-        if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
 
-        const entrys = await this.#storage.getKey<EntryList>(ListServer.entryListId(id));
-        if (entrys === undefined) throw new Error("ListServer: When building list from storage got undefiend entrys");
-
-        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(id));
-        if (timer === undefined) throw new Error("ListServer: When building list from storage got undefiend timer");
-
-
-        return buildList(info, entrys, timer);
-    }
     
-
-
     /** 
      * Registers a new list and all of its components. 
      */
@@ -93,7 +80,7 @@ export default class ListServer {
             useTimer: details.useTimer ?? false
         }
 
-        const entrys: EntryList = [];
+        const entries: Entries = [];
 
         const timer: Timer = {
             total: 0,
@@ -105,7 +92,7 @@ export default class ListServer {
 
         this.#storage.createNewItem({
             [ListServer.infoId(id)]: info,
-            [ListServer.entryListId(id)]: entrys,
+            [ListServer.entriesId(id)]: entries,
             [ListServer.timerId(id)]: timer
         });
 
@@ -117,7 +104,7 @@ export default class ListServer {
      */
     deleteList(id: string): void {
         this.#record.splice(this.#record.indexOf(id), 1);
-        this.#storage.delete([ListServer.infoId(id), ListServer.entryListId(id), ListServer.timerId(id)]);
+        this.#storage.delete([ListServer.infoId(id), ListServer.entriesId(id), ListServer.timerId(id)]);
     }
 
 
@@ -125,19 +112,19 @@ export default class ListServer {
     /**
      * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #entrysFilter(url: string, info: Info, entryController: EntryController): Promise<boolean> {
+    async #entriesFilter(url: string, info: Info, entryController: EntriesWrapper): Promise<boolean> {
         
-        const entryList = await this.#storage.getKey<EntryList>(ListServer.entryListId(info.id));
+        const entryList = await this.#storage.getKey<Entries>(ListServer.entriesId(info.id));
         if (entryList === undefined) throw new Error("listServer got undefined when filtering an entryList");
         entryController.list = entryList;
         return entryController.check(url);   
     }
 
 
-    async #timerFilter(info: Info, timerController: TimerController): Promise<boolean> {
+    async #timerFilter(info: Info, timerController: TimerWrapper): Promise<boolean> {
         const timer = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
         if (timer === undefined) throw new Error("listServer got undefined when filtering a timer");
-        timerController.timer = timer;
+        timerController.#timer = timer;
 
         // works like an xor
         return (info.mode === "block") === timerController.done;
@@ -148,10 +135,11 @@ export default class ListServer {
      */
     async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
+        console.table(infos)
         const filteredInfos: Info[] = [];
 
-        const entryController = new EntryController();
-        const timerController = new TimerController();
+        const entryController = new EntriesWrapper();
+        const timerController = new TimerWrapper();
 
         for (const info of infos) {
             if (info === undefined) throw new Error("listServer got an undefined info when filtering");
@@ -159,7 +147,7 @@ export default class ListServer {
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
             if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerController))) continue;
-            if (match !== undefined && !(await this.#entrysFilter(match, info, entryController))) continue;
+            if (match !== undefined && !(await this.#entriesFilter(match, info, entryController))) continue;
             filteredInfos.push(info);
         }
 
@@ -202,8 +190,8 @@ export default class ListServer {
         return `info-${id}`;
     }
 
-    static entryListId(id: string): string {
-        return `list-${id}`;
+    static entriesId(id: string): string {
+        return `entries-${id}`;
     }
 
     static timerId(id: string): string {
@@ -214,12 +202,35 @@ export default class ListServer {
     #requestId<T extends keyof RequestMap>(type: T, id: string): string {
         switch(type) {
             case "info": return ListServer.infoId(id);
-            case "entrys": return ListServer.entryListId(id);
+            case "entries": return ListServer.entriesId(id);
             case "timer": return ListServer.timerId(id);
             default: throw new Error("listServer got invalid request type");
         }
     }
 
+
+
+    async buildListFromStorage(id: string) {
+        const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
+        if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
+
+        const entries = await this.#storage.getKey<Entries>(ListServer.entriesId(id));
+        if (entries === undefined) throw new Error("ListServer: When building list from storage got undefiend entries");
+
+        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(id));
+        if (timer === undefined) throw new Error("ListServer: When building list from storage got undefiend timer");
+
+
+        return this.#buildList(info, entries, timer);
+    }
+
+    #buildList(info: Info, entries: Entries, timer: Timer): List {
+        return {
+            info: info,
+            entries: this.#entriesFactory.build(entries),
+            timer: this.#timerFactory.build(timer)
+        }
+    }
 
 
 
@@ -266,11 +277,11 @@ export default class ListServer {
             templateTimer.id = id;
 
             const infoId = ListServer.infoId(id);
-            const entrysId = ListServer.entryListId(id);
+            const entriesId = ListServer.entriesId(id);
             const timerId = ListServer.timerId(id);
 
             const info: unknown = storage[infoId];
-            const entrys: unknown = storage[entrysId];
+            const entries: unknown = storage[entriesId];
             const timer: unknown = storage[timerId];
 
             if (typeof info === "object" && info !== null) {
@@ -281,16 +292,16 @@ export default class ListServer {
             }
 
 
-            if (Array.isArray(entrys)) {
-                const newEntrys: Entry[] = [];
-                for (const entry of entrys) {
+            if (Array.isArray(entries)) {
+                const newEntries: Entry[] = [];
+                for (const entry of entries) {
                     if (isOf(entry, templateEntry)) {
-                        newEntrys.push(entry);
+                        newEntries.push(entry);
                     }
                 }
-                validLists[entrysId] = newEntrys;
+                validLists[entriesId] = newEntries;
             } else {
-                validLists[entrysId] = [];
+                validLists[entriesId] = [];
             }
 
             if (typeof timer === "object" && timer !== null) {

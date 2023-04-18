@@ -1,5 +1,5 @@
-<script lang="ts">
-    import EntryController from "../modules/entryController";
+EntryWrappers">
+    import EntryController from "../modules/wrappers/entryWrapper";
     import { trimLength } from "../modules/util";
 
     // the 'as string' is kinda scuffed but oh well
@@ -14,10 +14,7 @@
     <div class="info">
         <h2>This page has been blocked</h2>
         <a href="{blockedURL}">{`${EntryController.clipURL("domain", blockedURL)} : ${trimLength(blockedURL, 60)}`}</a>
-    </div>
-</div>
-
-<style>
+    </div>EntryWrapperyle>
 
     :root {
         background-color: var(--blockedPageBackground);

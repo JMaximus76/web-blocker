@@ -46,12 +46,12 @@
         {/if}
         
         {#each toArray(textKeys) as textKey}
-            {#if options.text?.entrys[textKey] !== undefined}
+            {#if options.text?.entries[textKey] !== undefined}
                 <div class="text">   
-                    <span title={options.text.entrys[textKey].title} 
-                        style:color={options.text.entrys[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
+                    <span title={options.text.entries[textKey].title} 
+                        style:color={options.text.entries[textKey].color ?? options.text.globalColor ?? "var(--textColor)"}
                         class="option">
-                        {options.text.entrys[textKey].text}
+                        {options.text.entries[textKey].text}
                     </span>  
                 </div>
             {/if}

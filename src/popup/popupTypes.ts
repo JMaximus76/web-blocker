@@ -12,7 +12,7 @@ export type Radio<T> = {
 
 export type Text = {
     globalColor?: string;
-    entrys: {
+    entries: {
         [key: string]: {
             text: string;
             color?: string;

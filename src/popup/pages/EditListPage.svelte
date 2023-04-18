@@ -11,7 +11,7 @@
     $: list = $popupPage.list!;
 
     function deleteEntry(index: number) {
-        list.entrys.removeEntry(index);
+        list.entries.removeEntry(index);
         list = list;
     }
 
@@ -40,19 +40,19 @@
 
     
 
-    <div class="entrysHeader">
-        <h1>List Entrys</h1>
+    <div class="entriesHeader">
+        <h1>List Entries</h1>
         <TextButton isActive={!list.info.locked} onClick={addEntry}>Add Entry</TextButton>
     </div>
 
-    <div class="entrys">
+    <div class="entries">
         
 
-        {#if list.entrys.list.length === 0}
-            <div transition:fade|local={{duration: 100}}>No Entrys</div>
+        {#if list.entries.list.length === 0}
+            <div transition:fade|local={{duration: 100}}>No Entries</div>
         {/if}
 
-        {#each list.entrys.list as entry, i (entry.id)}
+        {#each list.entries.list as entry, i (entry.id)}
             <Entry entry={entry} deleteEntry={() => deleteEntry(i)}/>
         {/each}
     </div>
@@ -74,7 +74,7 @@
         margin-bottom: 10px;
     }
 
-    .entrys {
+    .entries {
         padding: 10px;
         overflow-y: scroll;
         height: 100px;
@@ -82,7 +82,7 @@
         border: solid var(--border) 1px;
     }
 
-    .entrys div {
+    .entries div {
         text-align: center;
         color: var(--text);
         font-size: 15px;
@@ -95,18 +95,18 @@
         left: 0;
     }
 
-    .entrys::-webkit-scrollbar {
+    .entries::-webkit-scrollbar {
         display: none;
     }
 
-    .entrysHeader {
+    .entriesHeader {
         display: flex;
         justify-content: left;
         align-items: center;
         margin-bottom: 10px;
     }
 
-    .entrysHeader h1 {
+    .entriesHeader h1 {
         margin: 0 10px;
         font-size: 18px;
     }

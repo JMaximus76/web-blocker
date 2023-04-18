@@ -20,7 +20,7 @@
 
     function addEntry() {
         if (isValid) {
-            list.entrys.addEntry(mode, url);
+            list.entries.addEntry(mode, url);
             sendMessage("currentUrlStore", "update", null);
             dropdown.close();
         }

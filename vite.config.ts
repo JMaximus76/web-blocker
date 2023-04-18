@@ -27,7 +27,7 @@ export default defineConfig({
     webExtension({
       webExtConfig: loadWebExtConfig(),
       manifest: generateManifest,
-      browser: "chrome",
+      browser: "firefox",
       additionalInputs: [
         "src/blocked_page/blocked-page.html"
       ]
@@ -35,8 +35,8 @@ export default defineConfig({
   ],
 
   build: {
-    minify: true,
-    sourcemap: false,
+    minify: false,
+    sourcemap: true,
     
   }
 });

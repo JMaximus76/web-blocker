@@ -1,8 +1,8 @@
 import browser from 'webextension-polyfill';
-import EntryController from '../modules/controllers/entryController';
+import EntriesWrapper from '../modules/wrappers/entriesWrapper';
 import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
-import TimerController from '../modules/controllers/timerController';
+import TimerWrapper from '../modules/wrappers/timerWrapper';
 import { handelError, isHttp, makeServers, type Id, type Message, type Servers } from '../modules/util';
 
 
@@ -34,28 +34,28 @@ browser.runtime.onInstalled.addListener((details) => {
     //     await listServer.sync();
 
     //     const blockListID = listServer.registerList({name: "Block List", mode: "block"});
-    //     const blockEntrys = new EntryController(await listServer.getId("entrys", blockListID));
-    //     blockEntrys.addEntry("domain", "https://www.youtube.com/");
-    //     blockEntrys.addEntry("domain", "https://www.netflix.com/");
-    //     blockEntrys.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
+    //     const blockEntries = new EntryController(await listServer.getId("entries", blockListID));
+    //     blockEntries.addEntry("domain", "https://www.youtube.com/");
+    //     blockEntries.addEntry("domain", "https://www.netflix.com/");
+    //     blockEntries.addEntry("url", "https://commons.wikimedia.org/wiki/Main_Page");
 
     //     const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-    //     const allowEntrys = new EntryController(await listServer.getId("entrys", allowListID));
-    //     allowEntrys.addEntry("domain", "https://www.freecodecamp.org/");
-    //     allowEntrys.addEntry("domain", "https://www.learncpp.com/");
-    //     allowEntrys.addEntry("domain", "https://www.google.com/");
+    //     const allowEntries = new EntryController(await listServer.getId("entries", allowListID));
+    //     allowEntries.addEntry("domain", "https://www.freecodecamp.org/");
+    //     allowEntries.addEntry("domain", "https://www.learncpp.com/");
+    //     allowEntries.addEntry("domain", "https://www.google.com/");
 
 
     //     const testID = listServer.registerList({name: "Test List", mode: "block", useTimer: true, maxInMin: 1, locked: true});
-    //     const testEntrys = new EntryController(await listServer.getId("entrys", testID));
-    //     testEntrys.addEntry("fullDomain", "https://www.wikipedia.org/");
+    //     const testEntries = new EntryController(await listServer.getId("entries", testID));
+    //     testEntries.addEntry("fullDomain", "https://www.wikipedia.org/");
         
 
     //     for (let i = 0; i < 20; i++) {
     //         const id = listServer.registerList({name: `test${i}`, mode: "block", useTimer: true, maxInMin: 1});
-    //         const entrys = new EntryController(await listServer.getId("entrys", id));
+    //         const entries = new EntryController(await listServer.getId("entries", id));
     //         for (let j = 0; j < 20; j++) {
-    //             entrys.addEntry("fullDomain", `https://www.wikipedia.org/`);
+    //             entries.addEntry("fullDomain", `https://www.wikipedia.org/`);
     //         }
     //     }
     // }
@@ -71,19 +71,21 @@ browser.runtime.onInstalled.addListener((details) => {
         await listServer.sync();
         listServer.registerList({name: "Block List", mode: "block"});
         const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-        const allowEntrys = new EntryController(await listServer.getId("entrys", allowListID));
-        allowEntrys.addEntry("fullDomain", "https://www.google.com/");
+        const allowEntries = new EntriesWrapper(await listServer.getId("entries", allowListID));
+        allowEntries.addEntry("fullDomain", "https://www.google.com/");
 
         const socialListId = listServer.registerList({name: "Social Media", mode: "block"});
-        const socialEntrys = new EntryController(await listServer.getId("entrys", socialListId));
-        socialEntrys.addEntry("fullDomain", "https://www.facebook.com/");
-        socialEntrys.addEntry("fullDomain", "https://www.instagram.com/");
-        socialEntrys.addEntry("fullDomain", "https://www.twitter.com/");
-        socialEntrys.addEntry("fullDomain", "https://www.reddit.com/");
-        socialEntrys.addEntry("fullDomain", "https://www.youtube.com/");
-        socialEntrys.addEntry("fullDomain", "https://www.tiktok.com/");
-        const socialTimer = new TimerController(await listServer.getId("timer", socialListId));
+        const socialEntries = new EntriesWrapper(await listServer.getId("entries", socialListId));
+        socialEntries.addEntry("fullDomain", "https://www.facebook.com/");
+        socialEntries.addEntry("fullDomain", "https://www.instagram.com/");
+        socialEntries.addEntry("fullDomain", "https://www.twitter.com/");
+        socialEntries.addEntry("fullDomain", "https://www.reddit.com/");
+        socialEntries.addEntry("fullDomain", "https://www.youtube.com/");
+        socialEntries.addEntry("fullDomain", "https://www.tiktok.com/");
+        const socialTimer = new TimerWrapper(await listServer.getId("timer", socialListId));
         socialTimer.max = 30;
+
+        console.log("init done")
     }
 
 
@@ -94,9 +96,12 @@ browser.runtime.onInstalled.addListener((details) => {
         //     await validateStorage();
         // }
         
-        if (details.reason === "install") {
-            await init();
-        }
+        // if (details.reason === "install") {
+        //     await init();
+        // }
+
+        await browser.storage.local.clear();
+        await init();
     }
 
     installed().catch(handelError);
@@ -143,10 +148,10 @@ async function resetTimers() {
     await listServer.sync();
 
     const timerList = await listServer.request("timer", {});
-    const timerController = new TimerController();
+    const timerController = new TimerWrapper();
 
     timerList.forEach(timer => {
-        timerController.timer = timer;
+        timerController.#timer = timer;
         timerController.reset();
     });
 
@@ -167,12 +172,12 @@ async function setTimerResets() {
     browser.alarms.create("resetTimers", { when: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime() - now.getTime() });
 }
 
-async function clearTimers(listServer: ListServer, itemServer: ItemServer, timerController: TimerController) {
+async function clearTimers(listServer: ListServer, itemServer: ItemServer, timerController: TimerWrapper) {
     const timerList = await itemServer.get("activeTimers");
     const timers = await listServer.getIds("timer", timerList);
 
     timers.forEach(timer => {
-        timerController.timer = timer;
+        timerController.#timer = timer;
         timerController.stop();
     });
 
@@ -191,7 +196,7 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
 
     
-    const timerController = new TimerController();
+    const timerController = new TimerWrapper();
     await clearTimers(listServer, itemServer, timerController);
 
     const runtimeSettings = await itemServer.get("runtimeSettings");
@@ -214,7 +219,7 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
         
         
         for (const timer of timers) {
-            timerController.timer = timer;
+            timerController.#timer = timer;
             
             timerList.push(timerController.id);
             timerController.start();
@@ -405,7 +410,7 @@ browser.runtime.onMessage.addListener((message) => {
                 await unBlockAll();
                 browser.alarms.clearAll();
                 await manageTimers(servers);
-                await clearTimers(servers.listServer, servers.itemServer, new TimerController());
+                await clearTimers(servers.listServer, servers.itemServer, new TimerWrapper());
 
             }
         }

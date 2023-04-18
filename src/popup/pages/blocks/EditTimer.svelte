@@ -91,7 +91,7 @@
 
         text: {
             globalColor: "var(--lightRed)",
-            entrys: {
+            entries: {
                 letter: {
                     text: "Invalid Character",
                     title: "Times can only have numbers in them"

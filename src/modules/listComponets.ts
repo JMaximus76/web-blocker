@@ -1,5 +1,5 @@
-import EntryController from "./controllers/entryController";
-import TimerController from "./controllers/timerController";
+import EntriesWrapper from "./wrappers/entriesWrapper";
+import TimerWrapper from "./wrappers/timerWrapper";
 
 
 
@@ -19,18 +19,10 @@ export type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
 export type Entry = {
     mode: EntryMode;
-
-    // I'm not sure if I should keep this because you can alway jsut clip original and this takes up extra storage space
-    cliped: string;
-
-    original: string;
-
-
-    // change so this doesn't get stored in storage (used only in entry controller)
-    id: number;
+    url: string;
 };
 
-export type EntryList = Entry[];
+export type Entries = Entry[];
 
 export type Timer = {
     total: number;
@@ -54,14 +46,12 @@ export type Schedule = {
 }
 
 
-export function buildList(info: Info, entrys: EntryList, timer: Timer) {
-    return {
-        info: info,
-        entrys: new EntryController(entrys),
-        timer: new TimerController(timer)
-    };
-}
 
-export type List = ReturnType<typeof buildList>;
+
+export type List = {
+    info: Info;
+    entries: EntriesWrapper;
+    timer: TimerWrapper;
+};
 
 
