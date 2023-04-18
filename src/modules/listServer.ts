@@ -35,7 +35,7 @@ export default class ListServer {
      * ONLY use this on extension install.
      */
     static async init() {
-        await browser.storage.local.set({record: []});
+        await browser.storage.local.set({listRecord: []});
     }
 
 
@@ -53,10 +53,10 @@ export default class ListServer {
     
 
     /** 
-     * Syncs the internal record to the one in local storage.
+     * Syncs the internal list record to the one in local storage.
      */
     async sync(): Promise<void> {
-        const item = await this.#storage.getKey<ListRecord>("record");
+        const item = await this.#storage.getKey<ListRecord>("listRecord");
         if (item === undefined) throw new Error("When syncing a listServer got undefined for the record");
         this.#record = item;
     }
@@ -90,7 +90,7 @@ export default class ListServer {
         }
 
 
-        this.#storage.createNewItem({
+        this.#storage.createNew({
             [ListServer.infoId(id)]: info,
             [ListServer.entriesId(id)]: entries,
             [ListServer.timerId(id)]: timer
@@ -112,22 +112,19 @@ export default class ListServer {
     /**
      * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #entriesFilter(url: string, info: Info, entryController: EntriesWrapper): Promise<boolean> {
-        
-        const entryList = await this.#storage.getKey<Entries>(ListServer.entriesId(info.id));
-        if (entryList === undefined) throw new Error("listServer got undefined when filtering an entryList");
-        entryController.list = entryList;
-        return entryController.check(url);   
+    async #entriesFilter(url: string, info: Info): Promise<boolean> {
+        const item = await this.#storage.getKey<Entries>(ListServer.entriesId(info.id));
+        if (item === undefined) throw new Error("listServer got undefined when filtering an entryList");
+        return this.#entriesFactory.build(item).check(url);   
     }
 
 
-    async #timerFilter(info: Info, timerController: TimerWrapper): Promise<boolean> {
-        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
-        if (timer === undefined) throw new Error("listServer got undefined when filtering a timer");
-        timerController.#timer = timer;
-
+    async #timerFilter(info: Info): Promise<boolean> {
+        const item = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
+        if (item === undefined) throw new Error("listServer got undefined when filtering a timer");
+        
         // works like an xor
-        return (info.mode === "block") === timerController.done;
+        return (info.mode === "block") === this.#timerFactory.build(item).done;
     }
 
     /**
@@ -135,19 +132,32 @@ export default class ListServer {
      */
     async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
         const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
-        console.table(infos)
+
         const filteredInfos: Info[] = [];
 
-        const entryController = new EntriesWrapper();
-        const timerController = new TimerWrapper();
+        const checkMap = {
+            active: (info: Info) => info.active !== active,
+            mode: (info: Info) => info.mode !== mode,
+            useTimer: (info: Info) => info.useTimer !== useTimer,
+            activeTimer: async (info: Info) => info.useTimer && activeTimer !== (await this.#timerFilter(info)),
+            match: async (info: Info) => !(await this.#entriesFilter(match!, info))
+        }
 
+        
+
+
+
+        // make a function builder to make a custom check functin for each call. Less loop time more memory
         for (const info of infos) {
             if (info === undefined) throw new Error("listServer got an undefined info when filtering");
+
             if (active !== undefined && info.active !== active) continue;
             if (mode !== undefined && info.mode !== mode) continue;
             if (useTimer !== undefined && info.useTimer !== useTimer) continue;
-            if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info, timerController))) continue;
-            if (match !== undefined && !(await this.#entriesFilter(match, info, entryController))) continue;
+
+            if (info.useTimer && activeTimer !== undefined && activeTimer !== (await this.#timerFilter(info))) continue;
+            if (match !== undefined && !(await this.#entriesFilter(match, info))) continue;
+
             filteredInfos.push(info);
         }
 

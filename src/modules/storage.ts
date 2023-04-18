@@ -65,7 +65,7 @@ export default class Storage {
      * Adds new objects to cache and local storage. Will overwrite existing objects with the same key.
      * @param items The key value pairs to add to cache and local storage.
      */
-    createNewItem(items: Record<string, object>): void {
+    createNew(items: Record<string, object>): void {
         for (const [key, value] of Object.entries(items)) {
             this.#cache[key] = this.#proxy(key, jsonCopy(value));
         }

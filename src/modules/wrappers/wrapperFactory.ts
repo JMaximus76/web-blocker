@@ -3,7 +3,9 @@
 
 export default class WrapperFactory<Obj extends object, Wrapper extends object> {
 
-    #cache = new Map<object, Wrapper>();
+
+    // not super sure if I should use a WeakMap here but I feel like it makes sense
+    #cache = new WeakMap<object, Wrapper>();
     #builder: (obj: Obj) => Wrapper;
 
     constructor(builder: (obj: Obj) => Wrapper) {
