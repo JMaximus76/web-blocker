@@ -1,9 +1,10 @@
 <script lang="ts">
-    import type { Entry, EntryMode } from "../../../modules/listComponets";
+    import type { EntryMode } from "../../../modules/listComponets";
+    import type EntryWrapper from "../../../modules/wrappers/entryWrapper";
     import HorizontalScroll from "../../components/HorizontalScroll.svelte";
     import { fade } from 'svelte/transition';
 
-    export let entry: Entry;
+    export let entry: EntryWrapper;
     export let deleteEntry: () => void;
 
 

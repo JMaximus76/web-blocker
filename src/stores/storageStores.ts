@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import ItemServer, { type RuntimeSettings } from "../modules/itemServer";
-import { buildList, type List } from "../modules/listComponets";
+import { type List } from "../modules/listComponets";
 import ListServer from "../modules/listServer";
 
 
@@ -19,13 +19,7 @@ function createStorageStore() {
 
     async function init() {
         await listServer.sync();
-        const infos = await listServer.request("info", {});
-
-        for (const info of infos) {
-            const entries = await listServer.getId("entries", info.id);
-            const timer = await listServer.getId("timer", info.id);
-            storage.lists[info.id] = buildList(info, entries, timer);
-        }
+        storage.lists = await listServer.buildAllListsRecord();
         const rts = await itemServer.get("runtimeSettings");
         storage.runtimeSettings = rts;
         storage.ready = true;

@@ -46,14 +46,10 @@
     </div>
 
     <div class="entries">
-        
-
-        {#if list.entries.list.length === 0}
-            <div transition:fade|local={{duration: 100}}>No Entries</div>
-        {/if}
-
-        {#each list.entries.list as entry, i (entry.id)}
+        {#each list.entries.iterable as entry, i (entry)}
             <Entry entry={entry} deleteEntry={() => deleteEntry(i)}/>
+        {:else}
+             <div transition:fade|local={{duration: 100}}>No Entries</div>   
         {/each}
     </div>
 

@@ -1,8 +1,7 @@
 import browser from 'webextension-polyfill';
-import EntriesWrapper from '../modules/wrappers/entriesWrapper';
 import ItemServer from '../modules/itemServer';
 import ListServer from '../modules/listServer';
-import TimerWrapper from '../modules/wrappers/timerWrapper';
+
 import { handelError, isHttp, makeServers, type Id, type Message, type Servers } from '../modules/util';
 
 
@@ -71,18 +70,18 @@ browser.runtime.onInstalled.addListener((details) => {
         await listServer.sync();
         listServer.registerList({name: "Block List", mode: "block"});
         const allowListID = listServer.registerList({name: "Allow List", mode: "allow"});
-        const allowEntries = new EntriesWrapper(await listServer.getId("entries", allowListID));
+        const allowEntries = await listServer.getId("entries", allowListID);
         allowEntries.addEntry("fullDomain", "https://www.google.com/");
 
         const socialListId = listServer.registerList({name: "Social Media", mode: "block"});
-        const socialEntries = new EntriesWrapper(await listServer.getId("entries", socialListId));
+        const socialEntries = await listServer.getId("entries", socialListId);
         socialEntries.addEntry("fullDomain", "https://www.facebook.com/");
         socialEntries.addEntry("fullDomain", "https://www.instagram.com/");
         socialEntries.addEntry("fullDomain", "https://www.twitter.com/");
         socialEntries.addEntry("fullDomain", "https://www.reddit.com/");
         socialEntries.addEntry("fullDomain", "https://www.youtube.com/");
         socialEntries.addEntry("fullDomain", "https://www.tiktok.com/");
-        const socialTimer = new TimerWrapper(await listServer.getId("timer", socialListId));
+        const socialTimer = await listServer.getId("timer", socialListId);
         socialTimer.max = 30;
 
         console.log("init done")
@@ -109,31 +108,31 @@ browser.runtime.onInstalled.addListener((details) => {
 });
 
 
-async function validateStorage() {
-    const storage = await browser.storage.local.get();
+// async function validateStorage() {
+//     const storage = await browser.storage.local.get();
     
-    const newStorage = {
-        ...ListServer.validate(storage),
-        ...ItemServer.validate(storage)
-    }
+//     const newStorage = {
+//         ...ListServer.validate(storage),
+//         ...ItemServer.validate(storage)
+//     }
 
-    const newKeys = Object.keys(newStorage);
-    for (const key of Object.keys(storage)){
-        if (!newKeys.includes(key)) {
-            await browser.storage.local.remove(key);
-            console.log("ho no")
-        }
-    }
+//     const newKeys = Object.keys(newStorage);
+//     for (const key of Object.keys(storage)){
+//         if (!newKeys.includes(key)) {
+//             await browser.storage.local.remove(key);
+//             console.log("ho no")
+//         }
+//     }
 
 
-    await browser.storage.local.set(newStorage);
-}
+//     await browser.storage.local.set(newStorage);
+// }
 
 
 browser.runtime.onStartup.addListener(() => {
 
     async function onStartup() {
-        await validateStorage();
+        // await validateStorage();
         await setTimerResets();
 
     }
@@ -148,13 +147,7 @@ async function resetTimers() {
     await listServer.sync();
 
     const timerList = await listServer.request("timer", {});
-    const timerController = new TimerWrapper();
-
-    timerList.forEach(timer => {
-        timerController.#timer = timer;
-        timerController.reset();
-    });
-
+    timerList.forEach(timer => timer.reset());
     checkAll({listServer, itemServer: new ItemServer()});
 }
 
@@ -172,32 +165,21 @@ async function setTimerResets() {
     browser.alarms.create("resetTimers", { when: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime() - now.getTime() });
 }
 
-async function clearTimers(listServer: ListServer, itemServer: ItemServer, timerController: TimerWrapper) {
-    const timerList = await itemServer.get("activeTimers");
-    const timers = await listServer.getIds("timer", timerList);
+async function clearTimers(listServer: ListServer, itemServer: ItemServer) {
+    const activeTimers = await itemServer.get("activeTimers");
+    const timers = await listServer.getIds("timer", activeTimers);
 
-    timers.forEach(timer => {
-        timerController.#timer = timer;
-        timerController.stop();
-    });
-
-    timerList.length = 0;
-
+    timers.forEach(timer => timer.stop());
+    activeTimers.length = 0;
     browser.alarms.clear("blockTimer");
 }
 
 
 
-// hey future me:
-// if you start getting weird behavior from the timers you might have a race condition with the ActiveTimers list
-// when you reset it, it sends that to storage BUT if manageTimers is called very quickly after that it might not get the right list
-// this would be bad, good luck *smile* (try putting async on eveything and just ingore them when using?)
+
 async function manageTimers({ listServer, itemServer }: Servers): Promise<void> {
 
-
-    
-    const timerController = new TimerWrapper();
-    await clearTimers(listServer, itemServer, timerController);
+    await clearTimers(listServer, itemServer);
 
     const runtimeSettings = await itemServer.get("runtimeSettings");
     const timerList = await itemServer.get("activeTimers");
@@ -216,15 +198,10 @@ async function manageTimers({ listServer, itemServer }: Servers): Promise<void> 
 
         const timers = await listServer.request("timer", {active: true, mode: runtimeSettings.mode, useTimer: true, match: tab.url, activeTimer: false});
 
-        
-        
         for (const timer of timers) {
-            timerController.#timer = timer;
-            
-            timerList.push(timerController.id);
-            timerController.start();
-            lowestTime = Math.min(lowestTime, timerController.timeLeft);
-            
+            timerList.push(timer.id);
+            timer.start();
+            lowestTime = Math.min(lowestTime, timer.timeLeft);
         }
 
     }
@@ -410,7 +387,7 @@ browser.runtime.onMessage.addListener((message) => {
                 await unBlockAll();
                 browser.alarms.clearAll();
                 await manageTimers(servers);
-                await clearTimers(servers.listServer, servers.itemServer, new TimerWrapper());
+                await clearTimers(servers.listServer, servers.itemServer);
 
             }
         }

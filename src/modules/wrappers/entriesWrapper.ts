@@ -1,4 +1,5 @@
 import type { Entry } from "../listComponets";
+import EntryWrapper from "./entryWrapper";
 import WrapperFactory from "./wrapperFactory";
 
 
@@ -8,38 +9,7 @@ type EntryMode = "domain" | "fullDomain" | "url" | "exact";
 
 
 
-class CustomEntry {
-    //static #idCounter = 0;
-    //#id: number = CustomEntry.#idCounter++;
-    #entry: Entry;
-    #clip: string | null = null;
 
-    constructor(entry: Entry) {
-        this.#entry = entry;
-    }
-
-    get mode() {
-        return this.#entry.mode;
-    }
-
-    set mode(value: EntryMode) {
-        if (this.#clip !== null) this.#clip = null;
-        this.#entry.mode = value;
-    }
-
-    get url() {
-        return this.#entry.url;
-    }
-
-    set url(value: string) {
-        if (this.#clip !== null) this.#clip = null;
-        this.#entry.url = value;
-    }
-
-    get cliped() {
-        return this.#clip ??= EntriesWrapper.clipURL(this.mode, this.url);
-    }
-}
 
 
 
@@ -47,21 +17,24 @@ export default class EntriesWrapper {
 
 
     #entries: Entry[];
-    #customEntries: CustomEntry[] | null = null;
-    #factory = new WrapperFactory<Entry, CustomEntry>(entry => new CustomEntry(entry));
+    #customEntries: EntryWrapper[];
+    #factory = new WrapperFactory<Entry, EntryWrapper>(entry => new EntryWrapper(entry));
 
     constructor(entries: Entry[]) {
         this.#entries = entries;
+        this.#customEntries = entries.map(entry => this.#factory.build(entry));
     }
 
 
     get iterable() {
-        return this.#customEntries ??= this.#entries.map(entry => this.#factory.build(entry));
+        return this.#customEntries;
     }
 
 
+
+
     addEntry(mode: EntryMode, url: string): void {
-        const clipedURL = EntriesWrapper.clipURL(mode, url);
+        const clipedURL = EntryWrapper.clipURL(mode, url);
         if (clipedURL === null) throw new Error("addEntry() got null when cliping a url");
 
         const entry: Entry = {
@@ -70,13 +43,13 @@ export default class EntriesWrapper {
         }
 
         this.#entries.push(entry);
-        if (this.#customEntries) this.#customEntries.push(this.#factory.build(entry));
+        this.#customEntries.push(this.#factory.build(entry));
     }
 
     removeEntry(index: number): void {
         if (index < 0 || index >= this.#entries.length) throw new Error(`removeEntry() was given an index that was out of bounds`);
         this.#entries.splice(index, 1);
-        if(this.#customEntries) this.#customEntries.splice(index, 1);
+        this.#customEntries.splice(index, 1);
     }
 
     
@@ -86,34 +59,15 @@ export default class EntriesWrapper {
 
         const clips: {[key in EntryMode]?: string | null} = {};
 
-        for (const entry of this.iterable) {
-            if ((clips[entry.mode] ??= EntriesWrapper.clipURL(entry.mode, url)) === entry.cliped) {
+        for (const entry of this.#customEntries) {
+            if ((clips[entry.mode] ??= EntryWrapper.clipURL(entry.mode, url)) === entry.cliped) {
                 return true;
             }
         }
         return false;
     }
 
-    static clipURL(mode: EntryMode, url: string): string | null {
-        let regex: RegExpExecArray | null = null;
-
-        switch(mode) {
-            case "fullDomain":
-                regex = /(?<=:\/\/)(?:[\w-]*\.)?([\w-]*\.[\w-]*)/.exec(url);
-                break;
-            case "domain":
-                regex = /(?<=:\/\/)[^?#\/]*(?=\/)?/.exec(url);
-                break;
-            case "url":
-                regex = /(?<=:\/\/)[^?#]*/.exec(url);
-                break;
-            case "exact":
-                return url;
-        }
-
-        return regex === null ? null : regex[regex.length - 1];
-        
-    }
+    
 
 
 

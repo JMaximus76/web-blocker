@@ -1,10 +1,10 @@
 import Storage from "./storage";
 import { v4 as uuidv4 } from 'uuid';
-import { type Entry, type Entries, type Info, type Mode, type Timer, type List } from "./listComponets";
+import { type Entries, type Info, type Mode, type Timer, type List } from "./listComponets";
 import browser from "webextension-polyfill";
 import EntriesWrapper from "./wrappers/entriesWrapper";
 import TimerWrapper from "./wrappers/timerWrapper";
-import { conform, isOf } from "./util";
+//import { conform, isOf } from "./util";
 import WrapperFactory from "./wrappers/wrapperFactory";
 
 
@@ -13,8 +13,8 @@ type ListRecord = string[];
 
 type RequestMap = {
     info: Info;
-    entries: Entries;
-    timer: Timer;
+    entries: EntriesWrapper;
+    timer: TimerWrapper;
 };
 
 type Request = {
@@ -24,6 +24,10 @@ type Request = {
     mode?: Mode;
     useTimer?: boolean;
 };
+
+// type CheckMap = {
+//     [key in keyof Required<Request>]: (info: Info) => boolean;
+// }
 
 
 
@@ -44,7 +48,6 @@ export default class ListServer {
 
     #entriesFactory = new WrapperFactory<Entries, EntriesWrapper>(entries => new EntriesWrapper(entries));
     #timerFactory = new WrapperFactory<Timer, TimerWrapper>(timer => new TimerWrapper(timer));
-
 
 
     startListening() {
@@ -112,40 +115,23 @@ export default class ListServer {
     /**
      * Takes a url and an info the returns true if the url matches on the infos entryList.
      */
-    async #entriesFilter(url: string, info: Info): Promise<boolean> {
-        const item = await this.#storage.getKey<Entries>(ListServer.entriesId(info.id));
-        if (item === undefined) throw new Error("listServer got undefined when filtering an entryList");
-        return this.#entriesFactory.build(item).check(url);   
+    async #entriesFilter(url: string, {id}: Info): Promise<boolean> {
+        return (await this.getId("entries", id)).check(url);   
     }
 
 
-    async #timerFilter(info: Info): Promise<boolean> {
-        const item = await this.#storage.getKey<Timer>(ListServer.timerId(info.id));
-        if (item === undefined) throw new Error("listServer got undefined when filtering a timer");
-        
-        // works like an xor
-        return (info.mode === "block") === this.#timerFactory.build(item).done;
+    async #timerFilter({mode, id}: Info): Promise<boolean> {
+        return (mode === "block") === (await this.getId("timer", id)).done;
     }
 
     /**
      * Takes a list component type and a set of filter parameters and returns a list of all matching components.
+     * 
      */
     async request<T extends keyof RequestMap>(type: T, { match, activeTimer, active, mode, useTimer }: Request): Promise<Array<RequestMap[T]>> {
-        const infos = await this.#storage.getKeys<Info>(this.#record.map((id) => ListServer.infoId(id)));
+        const infos = await this.getIds("info", this.#record);
 
         const filteredInfos: Info[] = [];
-
-        const checkMap = {
-            active: (info: Info) => info.active !== active,
-            mode: (info: Info) => info.mode !== mode,
-            useTimer: (info: Info) => info.useTimer !== useTimer,
-            activeTimer: async (info: Info) => info.useTimer && activeTimer !== (await this.#timerFilter(info)),
-            match: async (info: Info) => !(await this.#entriesFilter(match!, info))
-        }
-
-        
-
-
 
         // make a function builder to make a custom check functin for each call. Less loop time more memory
         for (const info of infos) {
@@ -161,13 +147,15 @@ export default class ListServer {
             filteredInfos.push(info);
         }
 
-        if (type === "info") return filteredInfos as Array<RequestMap[T]>;
 
-        const requestedItems = await this.#storage.getKeys<RequestMap[T]>(filteredInfos.map((info) => this.#requestId(type, info.id)));
-        return requestedItems.map((o) => {
-            if (o === undefined) throw new Error(`listServer got undefined when getting ${type}`);
-            return o;
-        });
+        
+
+
+        if (type === "info") {
+            return filteredInfos as Array<RequestMap[T]>;
+        } else {
+            return await this.getIds(type, filteredInfos.map((info) => info.id));
+        }
     }
 
 
@@ -177,9 +165,17 @@ export default class ListServer {
      */
     async getId<T extends keyof RequestMap>(type: T, id: string): Promise<RequestMap[T]> {
         id = this.#requestId(type, id);
-        const item = await this.#storage.getKey<RequestMap[T]>(id);
+
+        const item = await this.#storage.getKey(id);
         if (item === undefined) throw new Error(`listServer got undefined when getting id ${id}`);
-        return item;
+
+
+        switch (type) {
+            case "entries": return this.#entriesFactory.build(item as Entries) as RequestMap[T];
+            case "timer": return this.#timerFactory.build(item as Timer) as RequestMap[T];
+            case "info": return item as RequestMap[T];
+            default: throw new Error("listServer got an invalid type");
+        }
     }
 
     /**
@@ -188,11 +184,16 @@ export default class ListServer {
     async getIds<T extends keyof RequestMap>(type: T, ids: string[]): Promise<Array<RequestMap[T]>> {
         ids = ids.map((id) => this.#requestId(type, id));
 
-        const items = await this.#storage.getKeys<RequestMap[T]>(ids);
-        return items.map((o) => {
-            if (o === undefined) throw new Error(`listServer got undefined when getting id ${ids}`);
-            return o;
-        });
+        const items = await this.#storage.getKeys(ids);
+
+        items.forEach((item) => {if (item === undefined) throw new Error(`listServer got undefined when getting id ${ids}`)});
+
+        switch (type) {
+            case "entries": return items.map((item) => this.#entriesFactory.build(item as Entries)) as Array<RequestMap[T]>;
+            case "timer": return items.map((item) => this.#timerFactory.build(item as Timer)) as Array<RequestMap[T]>;
+            case "info": return items as Array<RequestMap[T]>;
+            default: throw new Error("listServer got an invalid type");
+        }
     }
 
 
@@ -220,111 +221,103 @@ export default class ListServer {
 
 
 
-    async buildListFromStorage(id: string) {
-        const info = await this.#storage.getKey<Info>(ListServer.infoId(id));
-        if (info === undefined) throw new Error("ListServer: When building list from storage got undefiend info");
-
-        const entries = await this.#storage.getKey<Entries>(ListServer.entriesId(id));
-        if (entries === undefined) throw new Error("ListServer: When building list from storage got undefiend entries");
-
-        const timer = await this.#storage.getKey<Timer>(ListServer.timerId(id));
-        if (timer === undefined) throw new Error("ListServer: When building list from storage got undefiend timer");
-
-
-        return this.#buildList(info, entries, timer);
-    }
-
-    #buildList(info: Info, entries: Entries, timer: Timer): List {
+    async buildListFromStorage(id: string): Promise<List> {
         return {
-            info: info,
-            entries: this.#entriesFactory.build(entries),
-            timer: this.#timerFactory.build(timer)
+            info: await this.getId("info", id),
+            entries: await this.getId("entries", id),
+            timer: await this.getId("timer", id)
         }
     }
 
-
-
-    static validate(storage: Record<string, any>): Record<string, any> {
-
-        const templateInfo: Info = {
-            name: "New List",
-            mode: "block",
-            id: "",
-            active: true,
-            locked: false,
-            useTimer: false
-        };
-
-        const templateTimer: Timer = {
-            total: 0,
-            max: 0,
-            start: null,
-            id: ""
-        };
-
-        const templateEntry: string[] = [
-            "mode",
-            "cliped",
-            "original",
-            "id"
-        ];
-
-
-
-        if (typeof storage.record !== "object" || storage.record === null || !Array.isArray(storage.record)) {
-            storage.record = [];
-        }
-
-
-
-        const validLists: Record<string, any> = {
-            record: storage.record
-        };
-
-        for (const id of storage.record) {
-
-            templateInfo.id = id;
-            templateTimer.id = id;
-
-            const infoId = ListServer.infoId(id);
-            const entriesId = ListServer.entriesId(id);
-            const timerId = ListServer.timerId(id);
-
-            const info: unknown = storage[infoId];
-            const entries: unknown = storage[entriesId];
-            const timer: unknown = storage[timerId];
-
-            if (typeof info === "object" && info !== null) {
-                conform(info, templateInfo);
-                validLists[infoId] = info;
-            } else {
-                validLists[infoId] = templateInfo;
-            }
-
-
-            if (Array.isArray(entries)) {
-                const newEntries: Entry[] = [];
-                for (const entry of entries) {
-                    if (isOf(entry, templateEntry)) {
-                        newEntries.push(entry);
-                    }
-                }
-                validLists[entriesId] = newEntries;
-            } else {
-                validLists[entriesId] = [];
-            }
-
-            if (typeof timer === "object" && timer !== null) {
-                conform(timer, templateTimer);
-                validLists[timerId] = timer;
-            } else {
-                validLists[timerId] = templateTimer;
-            }
-        }
-
-
-        return validLists;
+    async buildAllListsRecord(): Promise<Record<string, List>> {
+        return Object.fromEntries(await Promise.all(this.#record.map(async (id) => [id, await this.buildListFromStorage(id)])));
     }
+
+    
+
+
+
+    // static validate(storage: Record<string, any>): Record<string, any> {
+
+    //     const templateInfo: Info = {
+    //         name: "New List",
+    //         mode: "block",
+    //         id: "",
+    //         active: true,
+    //         locked: false,
+    //         useTimer: false
+    //     };
+
+    //     const templateTimer: Timer = {
+    //         total: 0,
+    //         max: 0,
+    //         start: null,
+    //         id: ""
+    //     };
+
+    //     const templateEntry: string[] = [
+    //         "mode",
+    //         "cliped",
+    //         "original",
+    //         "id"
+    //     ];
+
+
+
+    //     if (typeof storage.record !== "object" || storage.record === null || !Array.isArray(storage.record)) {
+    //         storage.record = [];
+    //     }
+
+
+
+    //     const validLists: Record<string, any> = {
+    //         record: storage.record
+    //     };
+
+    //     for (const id of storage.record) {
+
+    //         templateInfo.id = id;
+    //         templateTimer.id = id;
+
+    //         const infoId = ListServer.infoId(id);
+    //         const entriesId = ListServer.entriesId(id);
+    //         const timerId = ListServer.timerId(id);
+
+    //         const info: unknown = storage[infoId];
+    //         const entries: unknown = storage[entriesId];
+    //         const timer: unknown = storage[timerId];
+
+    //         if (typeof info === "object" && info !== null) {
+    //             conform(info, templateInfo);
+    //             validLists[infoId] = info;
+    //         } else {
+    //             validLists[infoId] = templateInfo;
+    //         }
+
+
+    //         if (Array.isArray(entries)) {
+    //             const newEntries: Entry[] = [];
+    //             for (const entry of entries) {
+    //                 if (isOf(entry, templateEntry)) {
+    //                     newEntries.push(entry);
+    //                 }
+    //             }
+    //             validLists[entriesId] = newEntries;
+    //         } else {
+    //             validLists[entriesId] = [];
+    //         }
+
+    //         if (typeof timer === "object" && timer !== null) {
+    //             conform(timer, templateTimer);
+    //             validLists[timerId] = timer;
+    //         } else {
+    //             validLists[timerId] = templateTimer;
+    //         }
+    //     }
+
+
+    //     return validLists;
+    // }
 
     
 
