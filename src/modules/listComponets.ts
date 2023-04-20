@@ -41,8 +41,17 @@ export type ScheduleBlock = {
 
 export type Schedule = {
     reversed: boolean;
-    blocks: ScheduleBlock[];
     id: string;
+    global?: ScheduleBlock[];
+    days: {
+        mo?: ScheduleBlock[];
+        tu?: ScheduleBlock[];
+        we?: ScheduleBlock[];
+        th?: ScheduleBlock[];
+        fr?: ScheduleBlock[];
+        sa?: ScheduleBlock[];
+        su?: ScheduleBlock[];
+    }
 }
 
 
