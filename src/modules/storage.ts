@@ -50,10 +50,11 @@ export default class Storage {
     async getKey<T extends object>(key: string): Promise<T | undefined> {
 
         if (Object.hasOwn(this.#cache, key)) {
+            console.log("storage used cache");
             return this.#cache[key] as T;
         } else {
+            console.log("storage used local storage");
             return await this.#getLocalStorage(key) as T;
-            
         }
     }
 
@@ -143,6 +144,12 @@ export default class Storage {
                 return new Proxy(obj, {
                     set: (target, prop, value) => {
                         Reflect.set(target, prop, value);
+                        doUpdates(target);
+                        return true;
+                    },
+
+                    deleteProperty: (target, prop) => {
+                        Reflect.deleteProperty(target, prop);
                         doUpdates(target);
                         return true;
                     }

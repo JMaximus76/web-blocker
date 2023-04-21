@@ -15,12 +15,17 @@ export default class WrapperFactory<Obj extends object, Wrapper extends object> 
 
 
     build(obj: Obj): Wrapper {
+
         if (this.#cache.has(obj)) {
+            console.log("used cached wrapper");
             return this.#cache.get(obj)!;
         } else {
+            console.log("created new wrapper");
             const wrapper = this.#builder(obj);
             this.#cache.set(obj, wrapper);
             return wrapper;
         }
+
+        
     }
 }
