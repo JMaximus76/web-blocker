@@ -14,7 +14,7 @@ const blockedPageURL = browser.runtime.getURL("/src/blocked_page/blocked-page.ht
 
 // use browser.webRequest instead of navigate
 // set up message link for storage
-// beter handling of active vs deactive mode (make somethign to turn all timers off and cut the events right at the start instead of in funcitons)
+
 
 
 
